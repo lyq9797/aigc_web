@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI 文本检测系统</title>
+  <link rel="stylesheet" href="/static/styles.css" />
+</head>
+<body>
+  <div class="bg-shape bg-one"></div>
+  <div class="bg-shape bg-two"></div>
+
+  <header class="topbar">
+    <h1>AI 文本检测系统</h1>
+    <div class="user-panel">
+      <span id="currentUser" class="muted">未登录</span>
+      <button id="logoutBtn" class="ghost">退出</button>
+    </div>
+  </header>
+
+  <main class="layout">
+    <section class="card auth-card">
+      <h2>用户认证</h2>
+      <div class="auth-tabs">
+        <button id="tabLogin" class="tab active">登录</button>
+        <button id="tabRegister" class="tab">注册</button>
+      </div>
+
+      <div id="loginPanel" class="auth-panel">
+        <label>用户名</label>
+        <input id="loginUsername" type="text" placeholder="输入用户名" />
+        <label>密码</label>
+        <input id="loginPassword" type="password" placeholder="输入密码" />
+        <button id="loginBtn" class="primary">登录</button>
+      </div>
+
+      <div id="registerPanel" class="auth-panel hidden">
+        <label>用户名</label>
+        <input id="registerUsername" type="text" placeholder="3-50 字符" />
+        <label>密码</label>
+        <input id="registerPassword" type="password" placeholder="至少 6 位" />
+        <button id="registerBtn" class="primary">注册</button>
+      </div>
+
+      <p id="authMsg" class="msg"></p>
+    </section>
+
+    <section class="card detect-card">
+      <h2>文本检测</h2>
+      <div class="control-row">
+        <button id="sampleBtn" class="ghost">加载示例文本</button>
+        <button id="clearBtn" class="ghost">清除</button>
+      </div>
+      <textarea id="inputText" rows="10" placeholder="在这里粘贴或输入待检测文本..."></textarea>
+      <button id="detectBtn" class="primary big">开始检测</button>
+      <p id="detectMsg" class="msg"></p>
+    </section>
+
+    <section class="card result-card">
+      <h2>检测结果</h2>
+      <div id="switchInfo" class="switch-info muted">切换点：暂无</div>
+
+      <h3>单词级高亮</h3>
+      <div id="wordHighlight" class="highlight-box">暂无结果</div>
+
+      <h3>句子级结果</h3>
+      <div id="sentenceList" class="sentence-list"></div>
+    </section>
+
+    <section class="card history-card">
+      <h2>历史检测记录</h2>
+      <button id="refreshHistoryBtn" class="ghost">刷新记录</button>
+      <div id="historyList" class="history-list"></div>
+    </section>
+  </main>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>历史记录 - AI 文本检测系统</title>
+  <link rel="stylesheet" href="/static/styles.css" />
+</head>
+<body>
+  <div class="bg-shape bg-one"></div>
+  <div class="bg-shape bg-two"></div>
+
+  <header class="topbar centered-topbar">
+    <h1>AI 文本检测系统</h1>
+    <div class="user-panel">
+      <span id="currentUser" class="muted"></span>
+      <button id="goDetectBtn" class="ghost">返回文本检测</button>
+      <button id="logoutBtn" class="ghost">退出登录</button>
+    </div>
+  </header>
+
+  <main class="layout-single">
+    <section class="card history-card-full">
+      <div id="historyShell" class="history-shell">
+        <aside id="historySidebar" class="history-sidebar">
+          <div class="history-sidebar-head">
+            <h2>查看历史记录</h2>
+            <button id="clearHistoryBtn" class="ghost">清除历史记录</button>
+          </div>
+          <div id="historyList" class="history-groups"></div>
+        </aside>
+
+        <section class="history-detail">
+          <div class="history-detail-head">
+            <button id="sidebarToggleBtn" class="ghost">收起边栏</button>
+            <h3>具体检测详情</h3>
+            <div class="export-control-wrap export-control-wrap-right">
+              <button id="exportHistoryBtn" class="ghost export-trigger" type="button" disabled>结果导出</button>
+              <div id="exportHistoryMenu" class="export-menu hidden" aria-hidden="true">
+                <div class="export-menu-panel" role="dialog" aria-modal="true" aria-label="历史记录导出格式选择">
+                  <div class="export-menu-title">选择导出格式</div>
+                  <button id="exportHistoryTxtBtn" class="export-menu-item" type="button">导出为 TXT</button>
+                  <button id="exportHistoryJsonBtn" class="export-menu-item" type="button">导出为 JSON</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div id="detailEmpty" class="muted">点击左侧任意历史缩略查看详情</div>
+          <div id="detailPanel" class="hidden">
+            <div id="detailTime" class="switch-info muted">时间：暂无</div>
+            <h3>原始文本</h3>
+            <div id="detailInput" class="highlight-box">暂无结果</div>
+            <h3>单词级高亮</h3>
+            <div id="detailWords" class="highlight-box">暂无结果</div>
+            <h3>句子级结果</h3>
+            <div id="detailSentences" class="sentence-list"></div>
+          </div>
+        </section>
+      </div>
+    </section>
+  </main>
+
+  <script src="/static/common.js?v=20260417-3"></script>
+  <script src="/static/history.js?v=20260417-3"></script>
+</body>
+</html>
