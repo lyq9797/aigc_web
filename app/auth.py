@@ -10,6 +10,9 @@ from fastapi import HTTPException, status
 
 from .config import SECRET_KEY, TOKEN_EXPIRE_HOURS
 
+PASSWORD_HASH_ITERATIONS = 200_000
+MIN_PASSWORD_LENGTH = 6
+
 
 def _b64url_encode(raw: bytes) -> str:
     return base64.urlsafe_b64encode(raw).rstrip(b"=").decode("utf-8")
@@ -20,9 +23,15 @@ def _b64url_decode(raw: str) -> bytes:
     return base64.urlsafe_b64decode(padded.encode("utf-8"))
 
 
+def validate_password_policy(password: str) -> None:
+    if len(password) < MIN_PASSWORD_LENGTH:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="密码长度不能少于 6 位")
+
+
 def hash_password(password: str) -> str:
+    validate_password_policy(password)
     salt = secrets.token_bytes(16)
-    digest = hashlib.pbkdf2_hmac("sha256", password.encode("utf-8"), salt, 200_000)
+    digest = hashlib.pbkdf2_hmac("sha256", password.encode("utf-8"), salt, PASSWORD_HASH_ITERATIONS)
     return f"pbkdf2_sha256${_b64url_encode(salt)}${_b64url_encode(digest)}"
 
 
@@ -33,7 +42,7 @@ def verify_password(password: str, encoded_hash: str) -> bool:
             return False
         salt = _b64url_decode(salt_s)
         expected = _b64url_decode(digest_s)
-        got = hashlib.pbkdf2_hmac("sha256", password.encode("utf-8"), salt, 200_000)
+        got = hashlib.pbkdf2_hmac("sha256", password.encode("utf-8"), salt, PASSWORD_HASH_ITERATIONS)
         return hmac.compare_digest(got, expected)
     except Exception:
         return False
@@ -41,10 +50,12 @@ def verify_password(password: str, encoded_hash: str) -> bool:
 
 def create_token(user_id: int, username: str) -> str:
     header = {"alg": "HS256", "typ": "JWT"}
-    exp = datetime.now(timezone.utc) + timedelta(hours=TOKEN_EXPIRE_HOURS)
+    now = datetime.now(timezone.utc)
+    exp = now + timedelta(hours=TOKEN_EXPIRE_HOURS)
     payload = {
         "sub": user_id,
         "username": username,
+        "iat": int(now.timestamp()),
         "exp": int(exp.timestamp()),
     }
 
@@ -68,10 +79,17 @@ def decode_token(token: str) -> dict[str, Any]:
     if not hmac.compare_digest(expected_sig, got_sig):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token signature")
 
-    payload = json.loads(_b64url_decode(payload_b64).decode("utf-8"))
+    try:
+        payload = json.loads(_b64url_decode(payload_b64).decode("utf-8"))
+    except json.JSONDecodeError as exc:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token payload") from exc
+
     now_ts = int(datetime.now(timezone.utc).timestamp())
     if int(payload.get("exp", 0)) < now_ts:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token expired")
+
+    if payload.get("sub") is None:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token subject missing")
 
     return payload
 
