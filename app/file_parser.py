@@ -4,17 +4,25 @@ import io
 import os
 import tempfile
 from pathlib import Path
+from typing import Iterable
 
 from fastapi import HTTPException, status
 
+SUPPORTED_SUFFIXES = {".txt", ".docx", ".doc"}
+SUPPORTED_ENCODINGS = ("utf-8-sig", "utf-8", "gb18030", "gbk")
+
+
+def _raise_bad_request(detail: str) -> None:
+    raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=detail)
+
 
 def _decode_text_bytes(raw: bytes) -> str:
-    for encoding in ("utf-8-sig", "utf-8", "gb18030", "gbk"):
+    for encoding in SUPPORTED_ENCODINGS:
         try:
             return raw.decode(encoding)
         except UnicodeDecodeError:
             continue
-    raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="TXT 文件编码无法识别，请保存为 UTF-8 或 GBK")
+    _raise_bad_request("TXT 文件编码无法识别，请保存为 UTF-8 或 GBK")
 
 
 def _extract_docx_text(raw: bytes) -> str:
@@ -38,8 +46,6 @@ def _extract_docx_text(raw: bytes) -> str:
 
 
 def _extract_doc_text(raw: bytes) -> str:
-    pythoncom = None
-    word_app = None
     try:
         import pythoncom
         from win32com.client import DispatchEx
@@ -50,6 +56,7 @@ def _extract_doc_text(raw: bytes) -> str:
         ) from exc
 
     temp_path = None
+    word_app = None
     try:
         with tempfile.NamedTemporaryFile(delete=False, suffix=".doc") as temp_file:
             temp_file.write(raw)
@@ -61,14 +68,13 @@ def _extract_doc_text(raw: bytes) -> str:
         word_app.DisplayAlerts = 0
         doc = word_app.Documents.Open(temp_path, ReadOnly=1)
         try:
-            text = doc.Content.Text
+            return doc.Content.Text.strip()
         finally:
             doc.Close(False)
-        return text.strip()
     except HTTPException:
         raise
     except Exception as exc:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f".doc 文件解析失败: {exc}") from exc
+        _raise_bad_request(f".doc 文件解析失败: {exc}")
     finally:
         if word_app is not None:
             try:
@@ -89,14 +95,11 @@ def _extract_doc_text(raw: bytes) -> str:
 
 def extract_text_from_file(filename: str, raw: bytes) -> str:
     suffix = Path(filename).suffix.lower()
+    if suffix not in SUPPORTED_SUFFIXES:
+        _raise_bad_request("仅支持 .txt、.docx、.doc 文件")
+
     if suffix == ".txt":
         return _decode_text_bytes(raw).strip()
     if suffix == ".docx":
         return _extract_docx_text(raw).strip()
-    if suffix == ".doc":
-        return _extract_doc_text(raw).strip()
-
-    raise HTTPException(
-        status_code=status.HTTP_400_BAD_REQUEST,
-        detail="仅支持 .txt、.docx、.doc 文件",
-    )
+    return _extract_doc_text(raw).strip()
