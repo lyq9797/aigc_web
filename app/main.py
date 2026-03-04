@@ -37,6 +37,10 @@ def get_current_user(authorization: str | None = Header(default=None)) -> dict[s
     return {"id": int(user["id"]), "username": str(user["username"])}
 
 
+def get_service() -> DetectionService:
+    return service
+
+
 @app.get("/", response_class=HTMLResponse)
 def home() -> RedirectResponse:
     return RedirectResponse(url="/login", status_code=302)
@@ -85,12 +89,12 @@ def login(body: LoginRequest):
 
 
 @app.post("/api/detect")
-def detect(body: DetectRequest, current_user: dict[str, Any] = Depends(get_current_user)):
+def detect(body: DetectRequest, current_user: dict[str, Any] = Depends(get_current_user), service_obj: DetectionService = Depends(get_service)):
     text = body.text.strip()
     if not text:
         raise HTTPException(status_code=400, detail="Text is empty")
 
-    result = service.detect(text)
+    result = service_obj.detect(text)
     item_id = db.save_detection(user_id=current_user["id"], input_text=text, result=result)
     return {"id": item_id, "result": result}
 
