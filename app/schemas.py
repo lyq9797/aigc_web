@@ -1,27 +1,33 @@
-from pydantic import BaseModel, Field
+from __future__ import annotations
+
+from typing import Any
+
+from .detectors.sentence_level import SentenceLevelDetector
+from .detectors.word_level import WordLevelDetector
 
 
-class RegisterRequest(BaseModel):
-    username: str = Field(min_length=3, max_length=50)
-    password: str = Field(min_length=6, max_length=128)
+class DetectionService:
+    def __init__(self) -> None:
+        self.word_detector = WordLevelDetector()
+        self.sentence_detector = SentenceLevelDetector()
 
+    def detect(self, text: str) -> dict[str, Any]:
+        sent_res = self.sentence_detector.predict(text)
 
-class LoginRequest(BaseModel):
-    username: str
-    password: str
+        if sent_res.model_used == "fallback-no-word-signal":
+            coarse_word = self.word_detector.predict(text)
+            sent_res = self.sentence_detector.predict(text, coarse_word.words)
 
+        word_res = self.word_detector.predict_with_sentence_switches(text, sent_res.sentences)
 
-class AuthResponse(BaseModel):
-    token: str
-    username: str
-
-
-class DetectRequest(BaseModel):
-    text: str = Field(min_length=1)
-
-
-class HistoryItem(BaseModel):
-    id: int
-    input_text: str
-    result: dict
-    created_at: str
+        return {
+            "summary": {
+                "word_model": word_res.model_used,
+                "sentence_model": sent_res.model_used,
+                "switch_word_index": word_res.switch_word_index,
+                "switch_sentence_index": sent_res.switch_sentence_index,
+                "used_fallback": sent_res.model_used == "fallback-no-word-signal",
+            },
+            "sentences": sent_res.sentences,
+            "words": word_res.words,
+        }
