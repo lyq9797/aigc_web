@@ -1,3 +1,6 @@
+# word_model_runtime.py — Version 1
+# 改动：提取魔法数字为常量，补全类型标注，统一命名
+
 from __future__ import annotations
 
 from typing import Any
@@ -8,20 +11,33 @@ import torch.nn as nn
 from torchcrf import CRF
 from transformers import AutoModel
 
+# ---------- 常量定义 ----------
+LABEL_NEGATIVE = 0
+LABEL_POSITIVE = 1
+NUM_BINARY_LABELS = 2
+IGNORE_INDEX = -100
+DEFAULT_DROPOUT = 0.1
+PAD_LABEL = 0
+
 
 class DeBERTaCRFTagger(nn.Module):
-    def __init__(self, model_name: str, num_labels: int, dropout_rate: float = 0.1):
+    def __init__(self, model_name: str, num_labels: int, dropout_rate: float = DEFAULT_DROPOUT):
         super().__init__()
         self.num_labels = num_labels
         self.deberta = AutoModel.from_pretrained(model_name)
         self.dropout = nn.Dropout(dropout_rate)
-        hidden_size = self.deberta.config.hidden_size
+        hidden_size: int = self.deberta.config.hidden_size
         self.classifier = nn.Linear(hidden_size, num_labels)
         nn.init.xavier_uniform_(self.classifier.weight)
         nn.init.constant_(self.classifier.bias, 0)
         self.crf = CRF(num_labels, batch_first=True)
 
-    def forward(self, input_ids: torch.Tensor, attention_mask: torch.Tensor, labels: torch.Tensor | None = None):
+    def forward(
+        self,
+        input_ids: torch.Tensor,
+        attention_mask: torch.Tensor,
+        labels: torch.Tensor | None = None,
+    ) -> torch.Tensor:
         outputs = self.deberta(input_ids, attention_mask=attention_mask)
         sequence_output = self.dropout(outputs.last_hidden_state)
         logits = self.classifier(sequence_output)
@@ -29,21 +45,21 @@ class DeBERTaCRFTagger(nn.Module):
         if labels is not None:
             mask = attention_mask.bool()
             crf_labels = labels.clone()
-            crf_labels[crf_labels == -100] = 0
+            crf_labels[crf_labels == IGNORE_INDEX] = PAD_LABEL
             loss = -self.crf(logits, crf_labels, mask=mask, reduction="mean")
             return loss
 
         mask = attention_mask.bool()
         predictions = self.crf.decode(logits, mask=mask)
-        padded_predictions = []
+        padded_predictions: list[list[int]] = []
         for pred in predictions:
             pad_len = attention_mask.size(1) - len(pred)
-            padded_predictions.append(pred + [0] * pad_len)
+            padded_predictions.append(pred + [PAD_LABEL] * pad_len)
         return torch.tensor(padded_predictions, device=input_ids.device)
 
 
 def decode_window_word_predictions(encoding: Any, pred_ids: list[int]) -> list[int]:
-    attention_mask = encoding["attention_mask"][0].tolist()
+    attention_mask: list[int] = encoding["attention_mask"][0].tolist()
     pred_ids = pred_ids[: len(attention_mask)]
 
     try:
@@ -52,8 +68,8 @@ def decode_window_word_predictions(encoding: Any, pred_ids: list[int]) -> list[i
         word_ids = None
 
     if word_ids is None:
-        special_tokens_mask = encoding["special_tokens_mask"][0].tolist()
-        word_level_preds = []
+        special_tokens_mask: list[int] = encoding["special_tokens_mask"][0].tolist()
+        word_level_preds: list[int] = []
         for i, is_special in enumerate(special_tokens_mask):
             if attention_mask[i] == 1 and not is_special:
                 word_level_preds.append(int(pred_ids[i]))
@@ -70,11 +86,16 @@ def decode_window_word_predictions(encoding: Any, pred_ids: list[int]) -> list[i
     word_level_preds = []
     for wid in sorted(per_word_votes.keys()):
         votes = per_word_votes[wid]
-        word_level_preds.append(1 if votes[1] > votes[0] else 0)
+        word_level_preds.append(LABEL_POSITIVE if votes[LABEL_POSITIVE] > votes[LABEL_NEGATIVE] else LABEL_NEGATIVE)
     return word_level_preds
 
 
-def build_adaptive_windows(doc_len: int, base_window: int = 512, base_stride: int = 256, short_window_cap: int = 256) -> list[tuple[int, int]]:
+def build_adaptive_windows(
+    doc_len: int,
+    base_window: int = 512,
+    base_stride: int = 256,
+    short_window_cap: int = 256,
+) -> list[tuple[int, int]]:
     if doc_len <= 0:
         return [(0, 0)]
 
@@ -112,7 +133,7 @@ def decode_boundary_from_scores(score_sum: np.ndarray) -> int:
     prefix_pos = np.cumsum(score_sum)
     total_pos = prefix_pos[-1]
     objective = prefix_neg + (total_pos - prefix_pos)
-    best_boundary = int(np.argmax(objective))
+    best_boundary: int = int(np.argmax(objective))
     return max(0, min(best_boundary, n - 1))
 
 
@@ -134,7 +155,7 @@ def infer_document_with_sliding_windows(
         short_window_cap=short_window_cap,
     )
 
-    vote_counts = np.zeros((doc_len, 2), dtype=np.int32)
+    vote_counts = np.zeros((doc_len, NUM_BINARY_LABELS), dtype=np.int32)
     score_sum = np.zeros(doc_len, dtype=np.float32)
 
     with torch.no_grad():
@@ -152,7 +173,7 @@ def infer_document_with_sliding_windows(
             input_ids = encoding["input_ids"].to(device)
             attention_mask = encoding["attention_mask"].to(device)
             predictions = model(input_ids, attention_mask)
-            pred_ids = predictions[0].detach().cpu().tolist()
+            pred_ids: list[int] = predictions[0].detach().cpu().tolist()
 
             word_preds = decode_window_word_predictions(encoding, pred_ids)
             for local_idx, pred in enumerate(word_preds):
@@ -160,8 +181,8 @@ def infer_document_with_sliding_windows(
                 if global_idx < doc_len:
                     pred_i = int(pred)
                     vote_counts[global_idx, pred_i] += 1
-                    score_sum[global_idx] += 1.0 if pred_i == 1 else -1.0
+                    score_sum[global_idx] += 1.0 if pred_i == LABEL_POSITIVE else -1.0
 
     boundary = decode_boundary_from_scores(score_sum)
-    pred_word_labels = [0 if i <= boundary else 1 for i in range(doc_len)]
+    pred_word_labels = [LABEL_NEGATIVE if i <= boundary else LABEL_POSITIVE for i in range(doc_len)]
     return pred_word_labels, boundary, vote_counts
