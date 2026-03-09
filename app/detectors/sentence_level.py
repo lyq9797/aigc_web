@@ -1,6 +1,8 @@
+# app/detector/sentence_level.py
 from __future__ import annotations
 
 import json
+import logging
 import subprocess
 import sys
 from dataclasses import dataclass
@@ -8,6 +10,8 @@ from typing import Any
 
 from ..config import SENTENCE_BACKEND_SCRIPT
 from .utils import split_sentences
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -36,9 +40,11 @@ class SentenceLevelDetector:
     def _call_external_backend(self, text: str) -> SentencePredictResult | None:
         script_path = str(SENTENCE_BACKEND_SCRIPT or "").strip()
         if not script_path:
+            logger.info("外部后端脚本路径未配置，跳过外部调用")
             return None
 
-        # External script is expected to support a lightweight single-text mode.
+        logger.info("正在调用外部后端脚本: %s", script_path)
+
         cmd = [
             sys.executable,
             script_path,
@@ -59,6 +65,7 @@ class SentenceLevelDetector:
             )
             lines = [line.strip() for line in completed.stdout.splitlines() if line.strip()]
             if not lines:
+                logger.warning("外部后端未返回有效输出")
                 return None
             payload = json.loads(lines[-1])
             rows_raw = payload.get("sentences", [])
@@ -76,14 +83,26 @@ class SentenceLevelDetector:
                 )
 
             if not rows:
+                logger.warning("外部后端返回的句子列表为空")
                 return None
 
+            logger.info("外部后端成功返回 %d 个句子结果", len(rows))
             return SentencePredictResult(
                 sentences=rows,
                 switch_sentence_index=int(payload.get("switch_sentence_index", self._compute_switch_idx(rows))),
                 model_used="work1-test-single",
             )
-        except Exception:
+        except subprocess.TimeoutExpired:
+            logger.error("外部后端调用超时（45秒）")
+            return None
+        except subprocess.CalledProcessError as e:
+            logger.error("外部后端执行失败，返回码: %d, stderr: %s", e.returncode, e.stderr)
+            return None
+        except json.JSONDecodeError:
+            logger.error("外部后端返回的JSON解析失败")
+            return None
+        except Exception as e:
+            logger.error("外部后端调用发生未知异常: %s", e)
             return None
 
     def _aggregate_from_words(self, text: str, words: list[dict[str, Any]]) -> SentencePredictResult:
@@ -129,6 +148,7 @@ class SentenceLevelDetector:
         )
 
     def _fallback_without_words(self, text: str) -> SentencePredictResult:
+        logger.info("使用无词信号的兜底策略")
         sents = split_sentences(text)
         rows = [
             {
@@ -147,11 +167,15 @@ class SentenceLevelDetector:
         )
 
     def predict(self, text: str, words: list[dict[str, Any]] | None = None) -> SentencePredictResult:
+        logger.info("开始句子级别检测，文本长度: %d", len(text))
+
         external = self._call_external_backend(text)
         if external is not None:
+            logger.info("使用外部后端结果，模型: %s", external.model_used)
             return external
 
         if words is not None:
+            logger.info("使用词级信号聚合策略，词数: %d", len(words))
             return self._aggregate_from_words(text, words)
 
         return self._fallback_without_words(text)
