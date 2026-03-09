@@ -51,6 +51,11 @@ class WordLevelDetector:
             logger.warning("Word-level model not loaded, fallback mode enabled: %s", exc)
 
     def _fallback_predict(self, text: str) -> WordPredictResult:
+        # V1: 增加输入校验
+        if not isinstance(text, str):
+            raise TypeError(f"Expected str, got {type(text).__name__}")
+        text = text.strip()
+
         tokens = tokenize_with_spans(text)
         if not tokens:
             return WordPredictResult(words=[], switch_word_index=0, model_used="fallback-heuristic")
@@ -79,6 +84,11 @@ class WordLevelDetector:
         return WordPredictResult(words=words, switch_word_index=split_idx, model_used="fallback-heuristic")
 
     def predict(self, text: str) -> WordPredictResult:
+        # V1: 增加输入校验
+        if not isinstance(text, str):
+            raise TypeError(f"Expected str, got {type(text).__name__}")
+        text = text.strip()
+
         if not self.ready:
             return self._fallback_predict(text)
 
@@ -124,7 +134,13 @@ class WordLevelDetector:
             if not sent:
                 continue
             start = text.find(sent, cursor)
+            # V1: 修复 cursor 回退问题 —— 如果找不到则尝试从头搜索
             if start < 0:
+                start = text.find(sent)
+            if start < 0:
+                start = cursor
+            # V1: 确保 start 不会回退到 cursor 之前
+            if start < cursor:
                 start = cursor
             end = start + len(sent)
             cursor = end
@@ -138,6 +154,7 @@ class WordLevelDetector:
         for idx in range(1, len(labels)):
             if labels[idx] != labels[idx - 1]:
                 return idx - 1
+        # V1: 全部标签相同时返回 0（表示没有切换点）
         return 0
 
     def _call_external_boundary_backend(self, text: str) -> int | None:
@@ -176,6 +193,13 @@ class WordLevelDetector:
             return None
 
     def predict_with_sentence_switches(self, text: str, sentence_rows: list[dict[str, Any]]) -> WordPredictResult:
+        # V1: 增加输入校验
+        if not isinstance(text, str):
+            raise TypeError(f"Expected str, got {type(text).__name__}")
+        if not isinstance(sentence_rows, list):
+            raise TypeError(f"Expected list for sentence_rows, got {type(sentence_rows).__name__}")
+
+        text = text.strip()
         tokens = tokenize_with_spans(text)
         if not tokens:
             return WordPredictResult(words=[], switch_word_index=0, model_used="switch-aware-empty")
@@ -190,7 +214,6 @@ class WordLevelDetector:
         token_labels = [0 for _ in tokens]
         token_conf = [0.65 for _ in tokens]
 
-        # Step 1: initialize token labels by sentence labels.
         sentence_token_indices: list[list[int]] = []
         for start, end, sent_label in spans:
             idxs = [
@@ -204,7 +227,6 @@ class WordLevelDetector:
                 token_labels[i] = label_id
                 token_conf[i] = 0.7
 
-        # Step 2~4: iterate over all sentence switch points and refine with local word boundary detector.
         for i in range(len(spans) - 1):
             left_label = spans[i][2]
             right_label = spans[i + 1][2]
