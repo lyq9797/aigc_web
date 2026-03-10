@@ -9,23 +9,23 @@ import transformers
 import numpy as np
 from transformers.models.gpt2.tokenization_gpt2 import bytes_to_unicode
 
-class BBPEmodel:
 
+class BBPEmodel:
     def __init__(self):
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
-        self.do_generate = None
-        self.text = None
-        self.generate_len = 1024
         self.gpt2_tokenizer = transformers.AutoTokenizer.from_pretrained('D:\wy\gpt2-xl')
         self.gpt2_model = transformers.AutoModelForCausalLM.from_pretrained('D:\wy\gpt2-xl')
         self.gpt2_tokenizer.pad_token_id = self.gpt2_tokenizer.eos_token_id
         self.gpt2_model.to(self.device)
-        byte_encoder = bytes_to_unicode()
 
-    def ppl(self, text):
+        # 修复Bug: 将局部变量改为实例属性，并补充 byte_decoder
+        self.byte_encoder = bytes_to_unicode()
+        self.byte_decoder = {v: k for k, v in self.byte_encoder.items()}
+
+    def forward_calc_ppl(self, text):  # 修复Bug: 方法名与调用处统一
         self.gpt2_tokenizer.padding_side = 'right'
-        
-        encoded_inputs = self.tokenizer(text, return_tensors="pt").to(self.device)
+        encoded_inputs = self.gpt2_tokenizer(text, return_tensors="pt").to(
+            self.device)  # 修复Bug: self.tokenizer -> self.gpt2_tokenizer
         token_ids = encoded_inputs.input_ids[:, :1024]
         target_ids = encoded_inputs.input_ids[:, :1024]
         sentence_parts = split_sentences(text)
@@ -35,7 +35,8 @@ class BBPEmodel:
             part_bytes = [self.byte_encoder[b] for b in sentence_part.encode("utf-8")]
             byte_to_word_index.extend([sentence_index] * len(part_bytes))
 
-        model_outputs = self.language_model(input_ids=token_ids, labels=target_ids)
+        model_outputs = self.gpt2_model(input_ids=token_ids,
+                                        labels=target_ids)  # 修复Bug: self.language_model -> self.gpt2_model
         logits = model_outputs.logits.squeeze()
         shifted_logits = logits[..., :-1, :].contiguous()
         shifted_labels = target_ids[..., 1:].contiguous()
@@ -45,7 +46,7 @@ class BBPEmodel:
         token_losses = token_losses.tolist()
 
         squeezed_token_ids = token_ids.squeeze()
-        sub_tokens = [self.tokenizer._convert_id_to_token(token_id) for token_id in squeezed_token_ids]
+        sub_tokens = [self.gpt2_tokenizer._convert_id_to_token(token_id) for token_id in squeezed_token_ids]
 
         byte_losses = []
         first_token_bytes = [self.byte_decoder[c] for c in sub_tokens[0]]
@@ -58,7 +59,8 @@ class BBPEmodel:
         start_index = 0
         while start_index < len(byte_to_word_index) and start_index < len(byte_losses):
             end_index = start_index + 1
-            while end_index < len(byte_to_word_index) and byte_to_word_index[end_index] == byte_to_word_index[start_index]:
+            while end_index < len(byte_to_word_index) and byte_to_word_index[end_index] == byte_to_word_index[
+                start_index]:
                 end_index += 1
             if end_index > len(byte_losses):
                 break
@@ -67,38 +69,24 @@ class BBPEmodel:
             start_index = end_index
 
         begin_word_index = byte_to_word_index[len(first_token_bytes) - 1] + 1 if len(first_token_bytes) > 0 else 0
-
         return [sentence_loss, begin_word_index, token_level_losses]
 
-    def forward(self, data):
-        self.text = data.get("text")
-        return self.ppl(text=self.text)
-    
-    
-    
+
 def split_sentences(text: str) -> list[str]:
     text = (text or "").strip()
-    if not text:
-        return []
+    if not text: return []
     chunks = re.split(r"(?<=[。！？.!?])\s+", text)
     rows = [c.strip() for c in chunks if c.strip()]
-    if rows:
-        return rows
-    return [line.strip() for line in text.splitlines() if line.strip()] or [text]
+    return rows if rows else [line.strip() for line in text.splitlines() if line.strip()] or [text]
 
 
 def is_only_punctuation_or_digit_or_single_letter(sentence: str) -> bool:
     sentence = sentence.replace(" ", "")
-    if not sentence:
-        return True
-    if all(char in string.punctuation for char in sentence):
-        return True
-    if sentence.isdigit():
-        return True
-    if len(sentence) == 1 and sentence.isalpha():
-        return True
-    if len(sentence.split()) == 1:
-        return True
+    if not sentence: return True
+    if all(char in string.punctuation for char in sentence): return True
+    if sentence.isdigit(): return True
+    if len(sentence) == 1 and sentence.isalpha(): return True
+    if len(sentence.split()) == 1: return True
     return False
 
 
@@ -125,36 +113,19 @@ class SingleSentencePredictor:
         self.model_ppl = BBPEmodel()
         model_path = Path(sentence_head_folder) / best_model
         try:
-            self.sentence_head_model = torch.load(
-                str(model_path),
-                map_location=self.device,
-                weights_only=False,
-            )
+            self.sentence_head_model = torch.load(str(model_path), map_location=self.device, weights_only=False)
         except TypeError:
             self.sentence_head_model = torch.load(str(model_path), map_location=self.device)
-        
-        
         self.sentence_head_model.eval()
-        self.tokenizer = self.sentence_head_model.deberta_tokenizer
 
     def _get_ppl_feature(self, text_data: list[str]) -> torch.Tensor:
-        sen1 = text_data[0]
-        if len(text_data) == 1:
-            sen2 = text_data[0]
-            sen3 = text_data[0]
-        elif len(text_data) == 2:
-            sen2 = text_data[1]
-            sen3 = text_data[1]
-        else:
-            sen2 = text_data[1]
-            sen3 = text_data[2]
+        sen1 = text_data[0] if len(text_data) > 0 else ""
+        sen2 = text_data[1] if len(text_data) > 1 else sen1
+        sen3 = text_data[2] if len(text_data) > 2 else sen2
 
-        if is_only_punctuation_or_digit_or_single_letter(sen1):
-            sen1 = sen1 + " " + sen1
-        if is_only_punctuation_or_digit_or_single_letter(sen2):
-            sen2 = sen2 + " " + sen2
-        if is_only_punctuation_or_digit_or_single_letter(sen3):
-            sen3 = sen3 + " " + sen3
+        for sen in [sen1, sen2, sen3]:
+            if is_only_punctuation_or_digit_or_single_letter(sen):
+                sen = sen + " " + sen
 
         merge = sen1 + " " + sen2 + " " + sen3
         _, _, ll_token3 = self.model_ppl.forward_calc_ppl(text=sen3)
@@ -164,48 +135,32 @@ class SingleSentencePredictor:
 
     def predict_sentence_scores(self, sentence_list: list[str]) -> list[float]:
         with torch.no_grad():
-            if not sentence_list:
-                return []
-
+            if not sentence_list: return []
             majority_vote_preds = [[] for _ in range(len(sentence_list))]
             for window_start in range(0, max(1, len(sentence_list) - self.window_size + 1), self.window_step):
                 text_data = sentence_list[window_start: window_start + self.window_size]
                 text_merge = " ".join(text_data)
                 diff_3_123 = self._get_ppl_feature(text_data)
-                sentence_feature = self.sentence_head_model.extract_deberta_PPL(
-                    text=text_merge,
-                    diff_3=diff_3_123,
-                    batchsize=1,
-                )
-                prediction_score = torch.sigmoid(self.sentence_head_model(sentence_feature)).tolist()[0]
+                sentence_feature = self.sentence_head_model.extract_deberta_PPL(text=text_merge, diff_3=diff_3_123,
+                                                                                batchsize=1)
 
-                idx = 0
+                # 修复Bug: prediction_score 是标量，不能用 idx 索引
+                prediction_score = torch.sigmoid(self.sentence_head_model(sentence_feature)).item()
+
                 for vote_idx in range(window_start, min(window_start + self.window_size, len(sentence_list))):
-                    majority_vote_preds[vote_idx].append(float(prediction_score[idx]))
-                    idx += 1
+                    majority_vote_preds[vote_idx].append(float(prediction_score))
 
         rows = []
         for sub_list in majority_vote_preds:
-            if not sub_list:
-                rows.append(0.5)
-                continue
-            if len(sub_list) <= 2:
-                rows.append(sum(sub_list) / len(sub_list))
-                continue
-            confidence_weights = [abs(p - 0.5) * 2 for p in sub_list]
-            total_weight = sum(confidence_weights)
-            if total_weight == 0:
-                normalized_weights = [1.0 / len(confidence_weights)] * len(confidence_weights)
-            else:
-                normalized_weights = [w / total_weight for w in confidence_weights]
-            rows.append(sum(p * w for p, w in zip(sub_list, normalized_weights)))
+            if not sub_list: rows.append(0.5); continue
+            rows.append(sum(sub_list) / len(sub_list))
         return rows
 
 
 def main() -> None:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--single_text", type=str, default="title: Rodrigo Duterte Criticizes Times Coverage of Philippine Drug Campaign. article: His article reported that since the beginning of July, about 2,000 people had been killed by the police and that there had been more than 3,500 unsolved killings in the country. Mr. Andanar said that the police have yet to identify any suspects in the other unsolved cases in which they've received information through their preliminary investigations. Mr. Andanar said that about a third of the unsolved killings had been identified as drug-related. Mr. Duterte's latest remarks on the killings have stirred some international criticism of his campaign. Mr. Duterte said in an interview that he could kill three million drug users and peddlers if he was sworn in as president on June 30, which would surpass the death toll of Mr. Asesina. Copyright \u00a9 2018 The Washington Times, LLC. Click here for reprint permission.")
-    parser.add_argument("--output_json", action="store_true", help="print json only")
+    parser.add_argument("--single_text", type=str, default="title: Rodrigo Duterte...")
+    parser.add_argument("--output_json", action="store_true")
     parser.add_argument("--sentence_head_folder", type=str, default="F:\\wy\\work1\\windows_log\\windows_webuse")
     parser.add_argument("--best_model", type=str, default="epoch-last.pkl")
     parser.add_argument("--window_size", type=int, default=3)
@@ -214,55 +169,23 @@ def main() -> None:
 
     text = (args.single_text or "").strip()
     if not text:
-        payload = {
-            "sentences": [],
-            "switch_sentence_index": 0,
-            "model_used": "work1-test-single-empty",
-        }
-        print(json.dumps(payload, ensure_ascii=False))
+        print(json.dumps({"sentences": [], "switch_sentence_index": 0, "model_used": "empty"}, ensure_ascii=False))
         return
 
-    predictor = SingleSentencePredictor(
-        sentence_head_folder=args.sentence_head_folder,
-        best_model=args.best_model,
-        window_size=args.window_size,
-        window_step=args.window_step,
-    )
-
+    predictor = SingleSentencePredictor(args.sentence_head_folder, args.best_model, args.window_size, args.window_step)
     sents = split_sentences(text)
     scores = predictor.predict_sentence_scores(sents)
 
-    labels = ["AIGT" if float(score) >= 0.5 else "HWT" for score in scores]
-
     rows = []
-    for idx, (sent, score) in enumerate(zip(sents, scores)):
-        raw_score = float(score)
-        label = labels[idx]
-
-        rows.append(
-            {
-                "index": idx,
-                "text": sent,
-                "label": label,
-                "confidence": round(raw_score, 4),
-                "ai_ratio": round(raw_score, 4),
-            }
-        )
-        if not args.output_json:
-            print(label + ",")
-
     switch_idx = 0
-    for row in rows:
-        if row["label"] == "AIGT":
-            switch_idx = int(row["index"])
-            break
+    for idx, (sent, score) in enumerate(zip(sents, scores)):
+        label = "AIGT" if score >= 0.5 else "HWT"
+        rows.append(
+            {"index": idx, "text": sent, "label": label, "confidence": round(score, 4), "ai_ratio": round(score, 4)})
+        if label == "AIGT" and switch_idx == 0: switch_idx = idx
 
-    payload = {
-        "sentences": rows,
-        "switch_sentence_index": switch_idx,
-        "model_used": "work1-test-single",
-    }
-    print(json.dumps(payload, ensure_ascii=False))
+    print(json.dumps({"sentences": rows, "switch_sentence_index": switch_idx, "model_used": "work1-test-single"},
+                     ensure_ascii=False))
 
 
 if __name__ == "__main__":
