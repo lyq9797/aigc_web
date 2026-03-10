@@ -9,6 +9,12 @@ import torch.nn as nn
 from torchcrf import CRF
 from transformers import AutoModel, AutoTokenizer
 
+# 提取常量
+NUM_LABELS = 2
+DEFAULT_MAX_LEN = 512
+BASE_WINDOW = 512
+BASE_STRIDE = 384
+SHORT_WINDOW_CAP = 256
 
 def set_seed(seed: int) -> None:
     random.seed(seed)
@@ -16,9 +22,8 @@ def set_seed(seed: int) -> None:
     torch.manual_seed(seed)
     torch.cuda.manual_seed_all(seed)
 
-
 class DeBERTaCRFTagger(nn.Module):
-    def __init__(self, model_name: str, num_labels: int, dropout_rate: float = 0.1):
+    def __init__(self, model_name: str, num_labels: int = NUM_LABELS, dropout_rate: float = 0.1):
         super().__init__()
         self.num_labels = num_labels
         self.deberta = AutoModel.from_pretrained(model_name)
@@ -48,7 +53,6 @@ class DeBERTaCRFTagger(nn.Module):
             pad_len = attention_mask.size(1) - len(pred)
             padded_predictions.append(pred + [0] * pad_len)
         return torch.tensor(padded_predictions, device=input_ids.device)
-
 
 def decode_window_word_predictions(encoding, pred_ids):
     attention_mask = encoding["attention_mask"][0].tolist()
@@ -81,8 +85,7 @@ def decode_window_word_predictions(encoding, pred_ids):
         word_level_preds.append(1 if votes[1] > votes[0] else 0)
     return word_level_preds
 
-
-def build_adaptive_windows(doc_len, base_window=512, base_stride=384, short_window_cap=256):
+def build_adaptive_windows(doc_len, base_window=BASE_WINDOW, base_stride=BASE_STRIDE, short_window_cap=SHORT_WINDOW_CAP):
     if doc_len <= 0:
         return [(0, 0)]
 
@@ -110,7 +113,6 @@ def build_adaptive_windows(doc_len, base_window=512, base_stride=384, short_wind
 
     return [(s, s + win_size) for s in starts]
 
-
 def decode_boundary_from_scores(score_sum):
     n = len(score_sum)
     if n <= 0:
@@ -122,11 +124,10 @@ def decode_boundary_from_scores(score_sum):
     best_boundary = int(np.argmax(objective))
     return max(0, min(best_boundary, n - 1))
 
-
 def infer_document_with_sliding_windows(model, words, tokenizer, max_len, device):
     doc_len = len(words)
     windows = build_adaptive_windows(doc_len)
-    vote_counts = np.zeros((doc_len, 2), dtype=np.int32)
+    vote_counts = np.zeros((doc_len, NUM_LABELS), dtype=np.int32)
     score_sum = np.zeros(doc_len, dtype=np.float32)
 
     with torch.no_grad():
@@ -158,14 +159,13 @@ def infer_document_with_sliding_windows(model, words, tokenizer, max_len, device
     pred_word_labels = [0 if i <= boundary else 1 for i in range(doc_len)]
     return pred_word_labels, boundary, vote_counts
 
-
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--single_text", type=str, default="")
     parser.add_argument("--output_json", action="store_true")
     parser.add_argument("--model_name", type=str, default="microsoft/deberta-v3-base")
     parser.add_argument("--best_model_path", type=str, default=os.path.join(os.path.dirname(__file__), "deberta_CRF(new)_best.pt"))
-    parser.add_argument("--max_len", type=int, default=512)
+    parser.add_argument("--max_len", type=int, default=DEFAULT_MAX_LEN)
     parser.add_argument("--seed", type=int, default=42)
     args = parser.parse_args()
 
@@ -177,7 +177,7 @@ def main() -> None:
     set_seed(args.seed)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     tokenizer = AutoTokenizer.from_pretrained(args.model_name)
-    model = DeBERTaCRFTagger(args.model_name, 2).to(device)
+    model = DeBERTaCRFTagger(args.model_name, NUM_LABELS).to(device)
 
     ckpt = torch.load(args.best_model_path, map_location=device, weights_only=False)
     state = ckpt.get("model_state_dict", ckpt)
@@ -190,11 +190,7 @@ def main() -> None:
         return
 
     pred_word_labels, boundary, _ = infer_document_with_sliding_windows(
-        model,
-        words,
-        tokenizer,
-        args.max_len,
-        device,
+        model, words, tokenizer, args.max_len, device,
     )
 
     payload = {
@@ -203,7 +199,6 @@ def main() -> None:
         "model_used": "work2-deberta-crf-single",
     }
     print(json.dumps(payload, ensure_ascii=False))
-
 
 if __name__ == "__main__":
     main()
