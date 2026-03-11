@@ -12,6 +12,8 @@ from .config import SECRET_KEY, TOKEN_EXPIRE_HOURS
 
 PASSWORD_HASH_ITERATIONS = 200_000
 MIN_PASSWORD_LENGTH = 6
+JWT_ALGORITHM = "HS256"
+JWT_HEADER = {"alg": JWT_ALGORITHM, "typ": "JWT"}
 
 
 def _b64url_encode(raw: bytes) -> str:
@@ -49,7 +51,6 @@ def verify_password(password: str, encoded_hash: str) -> bool:
 
 
 def create_token(user_id: int, username: str) -> str:
-    header = {"alg": "HS256", "typ": "JWT"}
     now = datetime.now(timezone.utc)
     exp = now + timedelta(hours=TOKEN_EXPIRE_HOURS)
     payload = {
@@ -59,7 +60,7 @@ def create_token(user_id: int, username: str) -> str:
         "exp": int(exp.timestamp()),
     }
 
-    header_b64 = _b64url_encode(json.dumps(header, separators=(",", ":")).encode("utf-8"))
+    header_b64 = _b64url_encode(json.dumps(JWT_HEADER, separators=(",", ":")).encode("utf-8"))
     payload_b64 = _b64url_encode(json.dumps(payload, separators=(",", ":")).encode("utf-8"))
     signing_input = f"{header_b64}.{payload_b64}".encode("utf-8")
     signature = hmac.new(SECRET_KEY.encode("utf-8"), signing_input, hashlib.sha256).digest()
@@ -80,9 +81,13 @@ def decode_token(token: str) -> dict[str, Any]:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token signature")
 
     try:
+        header = json.loads(_b64url_decode(header_b64).decode("utf-8"))
         payload = json.loads(_b64url_decode(payload_b64).decode("utf-8"))
     except json.JSONDecodeError as exc:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token payload") from exc
+
+    if header.get("alg") != JWT_ALGORITHM:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Unexpected token algorithm")
 
     now_ts = int(datetime.now(timezone.utc).timestamp())
     if int(payload.get("exp", 0)) < now_ts:
