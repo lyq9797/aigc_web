@@ -39,9 +39,9 @@ def _extract_docx_text(raw: bytes) -> str:
     table_lines: list[str] = []
     for table in document.tables:
         for row in table.rows:
-            cells = [cell.text.strip() for cell in row.cells if cell.text.strip()]
-            if cells:
-                table_lines.append("\t".join(cells))
+            row_texts = [cell.text.strip() for cell in row.cells if cell.text.strip()]
+            if row_texts:
+                table_lines.append("\t".join(row_texts))
     return "\n".join(table_lines)
 
 
