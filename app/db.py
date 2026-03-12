@@ -15,14 +15,26 @@ def sqlite_connection() -> Iterator[sqlite3.Connection]:
     conn.row_factory = sqlite3.Row
     try:
         yield conn
+        conn.commit()
     finally:
         conn.close()
 
 
+def _query_one(conn: sqlite3.Connection, sql: str, params: tuple[Any, ...]) -> Optional[sqlite3.Row]:
+    cur = conn.cursor()
+    cur.execute(sql, params)
+    return cur.fetchone()
+
+
+def _query_all(conn: sqlite3.Connection, sql: str, params: tuple[Any, ...]) -> list[sqlite3.Row]:
+    cur = conn.cursor()
+    cur.execute(sql, params)
+    return cur.fetchall()
+
+
 def init_db() -> None:
     with sqlite_connection() as conn:
-        cur = conn.cursor()
-        cur.execute(
+        conn.execute(
             """
             CREATE TABLE IF NOT EXISTS users (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -32,7 +44,7 @@ def init_db() -> None:
             )
             """
         )
-        cur.execute(
+        conn.execute(
             """
             CREATE TABLE IF NOT EXISTS detections (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -44,7 +56,6 @@ def init_db() -> None:
             )
             """
         )
-        conn.commit()
 
 
 def create_user(username: str, password_hash: str) -> int:
@@ -55,22 +66,17 @@ def create_user(username: str, password_hash: str) -> int:
             "INSERT INTO users(username, password_hash, created_at) VALUES (?, ?, ?)",
             (username, password_hash, now),
         )
-        conn.commit()
         return int(cur.lastrowid)
 
 
 def get_user_by_username(username: str) -> Optional[sqlite3.Row]:
     with sqlite_connection() as conn:
-        cur = conn.cursor()
-        cur.execute("SELECT * FROM users WHERE username = ?", (username,))
-        return cur.fetchone()
+        return _query_one(conn, "SELECT * FROM users WHERE username = ?", (username,))
 
 
 def get_user_by_id(user_id: int) -> Optional[sqlite3.Row]:
     with sqlite_connection() as conn:
-        cur = conn.cursor()
-        cur.execute("SELECT * FROM users WHERE id = ?", (user_id,))
-        return cur.fetchone()
+        return _query_one(conn, "SELECT * FROM users WHERE id = ?", (user_id,))
 
 
 def save_detection(user_id: int, input_text: str, result: dict[str, Any]) -> int:
@@ -81,14 +87,13 @@ def save_detection(user_id: int, input_text: str, result: dict[str, Any]) -> int
             "INSERT INTO detections(user_id, input_text, result_json, created_at) VALUES (?, ?, ?, ?)",
             (user_id, input_text, json.dumps(result, ensure_ascii=False), now),
         )
-        conn.commit()
         return int(cur.lastrowid)
 
 
 def list_detections(user_id: int, limit: int = 50) -> list[dict[str, Any]]:
     with sqlite_connection() as conn:
-        cur = conn.cursor()
-        cur.execute(
+        rows = _query_all(
+            conn,
             """
             SELECT id, input_text, result_json, created_at
             FROM detections
@@ -98,7 +103,6 @@ def list_detections(user_id: int, limit: int = 50) -> list[dict[str, Any]]:
             """,
             (user_id, limit),
         )
-        rows = cur.fetchall()
 
     return [
         {
@@ -115,6 +119,4 @@ def clear_detections(user_id: int) -> int:
     with sqlite_connection() as conn:
         cur = conn.cursor()
         cur.execute("DELETE FROM detections WHERE user_id = ?", (user_id,))
-        count = cur.rowcount
-        conn.commit()
-        return int(count)
+        return int(cur.rowcount)
