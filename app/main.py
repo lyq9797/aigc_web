@@ -4,9 +4,10 @@ from pathlib import Path
 from typing import Any
 
 from fastapi import Depends, FastAPI, File, Header, HTTPException, Request, UploadFile, status
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
+from fastapi.exceptions import RequestValidationError
 
 from . import db
 from .auth import create_token, decode_token, hash_password, parse_bearer_token, verify_password
@@ -26,6 +27,16 @@ service = DetectionService()
 @app.on_event("startup")
 def startup_event() -> None:
     db.init_db()
+
+
+@app.exception_handler(HTTPException)
+def http_exception_handler(request, exc: HTTPException):
+    return JSONResponse(status_code=exc.status_code, content={"detail": exc.detail})
+
+
+@app.exception_handler(RequestValidationError)
+def validation_exception_handler(request, exc: RequestValidationError):
+    return JSONResponse(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, content={"detail": exc.errors()})
 
 
 def get_current_user(authorization: str | None = Header(default=None)) -> dict[str, Any]:
