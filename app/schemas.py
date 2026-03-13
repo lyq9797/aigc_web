@@ -1,33 +1,33 @@
-from __future__ import annotations
-
-from typing import Any
-
-from .detectors.sentence_level import SentenceLevelDetector
-from .detectors.word_level import WordLevelDetector
+from pydantic import BaseModel, Field
 
 
-class DetectionService:
-    def __init__(self) -> None:
-        self.word_detector = WordLevelDetector()
-        self.sentence_detector = SentenceLevelDetector()
+class BaseSchema(BaseModel):
+    class Config:
+        anystr_strip_whitespace = True
+        orm_mode = True
 
-    def detect(self, text: str) -> dict[str, Any]:
-        sent_res = self.sentence_detector.predict(text)
 
-        if sent_res.model_used == "fallback-no-word-signal":
-            coarse_word = self.word_detector.predict(text)
-            sent_res = self.sentence_detector.predict(text, coarse_word.words)
+class RegisterRequest(BaseSchema):
+    username: str = Field(..., min_length=3, max_length=50, description="用户名，3-50 字符")
+    password: str = Field(..., min_length=6, max_length=128, description="密码，6-128 字符")
 
-        word_res = self.word_detector.predict_with_sentence_switches(text, sent_res.sentences)
 
-        return {
-            "summary": {
-                "word_model": word_res.model_used,
-                "sentence_model": sent_res.model_used,
-                "switch_word_index": word_res.switch_word_index,
-                "switch_sentence_index": sent_res.switch_sentence_index,
-                "used_fallback": sent_res.model_used == "fallback-no-word-signal",
-            },
-            "sentences": sent_res.sentences,
-            "words": word_res.words,
-        }
+class LoginRequest(BaseSchema):
+    username: str = Field(..., description="用户名")
+    password: str = Field(..., description="密码")
+
+
+class AuthResponse(BaseSchema):
+    token: str = Field(..., description="JWT 访问令牌")
+    username: str = Field(..., description="登录用户名")
+
+
+class DetectRequest(BaseSchema):
+    text: str = Field(..., min_length=1, description="待检测文本")
+
+
+class HistoryItem(BaseSchema):
+    id: int
+    input_text: str
+    result: dict
+    created_at: str
