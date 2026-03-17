@@ -5,6 +5,7 @@ import json
 import logging
 import subprocess
 import sys
+import time
 from dataclasses import dataclass
 from typing import Any
 
@@ -29,13 +30,60 @@ class SentenceLevelDetector:
         - Primary external backend is F:\\wy\\work1_single\\test_single_text.py.
         - If external backend is unavailable, fallback uses sentence-wise aggregation
             from word-level signals.
+        - External backend calls include automatic retry (up to 2 retries).
     """
+
+    # 外部后端重试配置
+    MAX_RETRIES = 2
+    RETRY_DELAY = 2.0  # 秒
 
     def _compute_switch_idx(self, sentence_rows: list[dict[str, Any]]) -> int:
         for row in sentence_rows:
             if row.get("label") == "AIGT":
                 return int(row.get("index", 0))
         return 0
+
+    def _run_external_once(self, cmd: list[str]) -> SentencePredictResult | None:
+        """执行一次外部后端调用，成功返回结果，失败返回 None。"""
+        completed = subprocess.run(
+            cmd,
+            check=True,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="ignore",
+            timeout=45,
+        )
+        lines = [line.strip() for line in completed.stdout.splitlines() if line.strip()]
+        if not lines:
+            logger.warning("外部后端未返回有效输出")
+            return None
+
+        payload = json.loads(lines[-1])
+        rows_raw = payload.get("sentences", [])
+        rows: list[dict[str, Any]] = []
+        for idx, item in enumerate(rows_raw):
+            label = str(item.get("label", "HWT")).upper()
+            rows.append(
+                {
+                    "index": idx,
+                    "text": str(item.get("text", "")),
+                    "label": "AIGT" if label == "AIGT" else "HWT",
+                    "confidence": round(float(item.get("confidence", 0.5)), 4),
+                    "ai_ratio": round(float(item.get("ai_ratio", 1.0 if label == "AIGT" else 0.0)), 4),
+                }
+            )
+
+        if not rows:
+            logger.warning("外部后端返回的句子列表为空")
+            return None
+
+        logger.info("外部后端成功返回 %d 个句子结果", len(rows))
+        return SentencePredictResult(
+            sentences=rows,
+            switch_sentence_index=int(payload.get("switch_sentence_index", self._compute_switch_idx(rows))),
+            model_used="work1-test-single",
+        )
 
     def _call_external_backend(self, text: str) -> SentencePredictResult | None:
         script_path = str(SENTENCE_BACKEND_SCRIPT or "").strip()
@@ -53,57 +101,31 @@ class SentenceLevelDetector:
             "--output_json",
         ]
 
-        try:
-            completed = subprocess.run(
-                cmd,
-                check=True,
-                capture_output=True,
-                text=True,
-                encoding="utf-8",
-                errors="ignore",
-                timeout=45,
-            )
-            lines = [line.strip() for line in completed.stdout.splitlines() if line.strip()]
-            if not lines:
-                logger.warning("外部后端未返回有效输出")
-                return None
-            payload = json.loads(lines[-1])
-            rows_raw = payload.get("sentences", [])
-            rows: list[dict[str, Any]] = []
-            for idx, item in enumerate(rows_raw):
-                label = str(item.get("label", "HWT")).upper()
-                rows.append(
-                    {
-                        "index": idx,
-                        "text": str(item.get("text", "")),
-                        "label": "AIGT" if label == "AIGT" else "HWT",
-                        "confidence": round(float(item.get("confidence", 0.5)), 4),
-                        "ai_ratio": round(float(item.get("ai_ratio", 1.0 if label == "AIGT" else 0.0)), 4),
-                    }
+        # 重试循环：最多尝试 1 + MAX_RETRIES 次
+        for attempt in range(1 + self.MAX_RETRIES):
+            try:
+                result = self._run_external_once(cmd)
+                if result is not None:
+                    return result
+            except subprocess.TimeoutExpired:
+                logger.error("外部后端调用超时（45秒），第 %d/%d 次尝试", attempt + 1, 1 + self.MAX_RETRIES)
+            except subprocess.CalledProcessError as e:
+                logger.error(
+                    "外部后端执行失败，返回码: %d, stderr: %s，第 %d/%d 次尝试",
+                    e.returncode, e.stderr, attempt + 1, 1 + self.MAX_RETRIES,
                 )
+            except json.JSONDecodeError:
+                logger.error("外部后端返回的JSON解析失败，第 %d/%d 次尝试", attempt + 1, 1 + self.MAX_RETRIES)
+            except Exception as e:
+                logger.error("外部后端调用发生未知异常: %s，第 %d/%d 次尝试", e, attempt + 1, 1 + self.MAX_RETRIES)
 
-            if not rows:
-                logger.warning("外部后端返回的句子列表为空")
-                return None
+            # 如果还有重试机会，等待一段时间后重试
+            if attempt < self.MAX_RETRIES:
+                logger.info("等待 %.1f 秒后重试...", self.RETRY_DELAY)
+                time.sleep(self.RETRY_DELAY)
 
-            logger.info("外部后端成功返回 %d 个句子结果", len(rows))
-            return SentencePredictResult(
-                sentences=rows,
-                switch_sentence_index=int(payload.get("switch_sentence_index", self._compute_switch_idx(rows))),
-                model_used="work1-test-single",
-            )
-        except subprocess.TimeoutExpired:
-            logger.error("外部后端调用超时（45秒）")
-            return None
-        except subprocess.CalledProcessError as e:
-            logger.error("外部后端执行失败，返回码: %d, stderr: %s", e.returncode, e.stderr)
-            return None
-        except json.JSONDecodeError:
-            logger.error("外部后端返回的JSON解析失败")
-            return None
-        except Exception as e:
-            logger.error("外部后端调用发生未知异常: %s", e)
-            return None
+        logger.error("外部后端调用在 %d 次尝试后仍然失败", 1 + self.MAX_RETRIES)
+        return None
 
     def _aggregate_from_words(self, text: str, words: list[dict[str, Any]]) -> SentencePredictResult:
         sents = split_sentences(text)
