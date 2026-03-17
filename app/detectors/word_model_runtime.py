@@ -1,8 +1,9 @@
-# word_model_runtime.py — Version 1
-# 改动：提取魔法数字为常量，补全类型标注，统一命名
+# word_model_runtime.py — Version 2
+# 改动：增加 logging、输入校验、具体异常捕获
 
 from __future__ import annotations
 
+import logging
 from typing import Any
 
 import numpy as np
@@ -10,6 +11,8 @@ import torch
 import torch.nn as nn
 from torchcrf import CRF
 from transformers import AutoModel
+
+logger = logging.getLogger(__name__)
 
 # ---------- 常量定义 ----------
 LABEL_NEGATIVE = 0
@@ -23,6 +26,11 @@ PAD_LABEL = 0
 class DeBERTaCRFTagger(nn.Module):
     def __init__(self, model_name: str, num_labels: int, dropout_rate: float = DEFAULT_DROPOUT):
         super().__init__()
+        if num_labels <= 0:
+            raise ValueError(f"num_labels must be positive, got {num_labels}")
+        if not 0.0 <= dropout_rate < 1.0:
+            raise ValueError(f"dropout_rate must be in [0, 1), got {dropout_rate}")
+
         self.num_labels = num_labels
         self.deberta = AutoModel.from_pretrained(model_name)
         self.dropout = nn.Dropout(dropout_rate)
@@ -31,6 +39,8 @@ class DeBERTaCRFTagger(nn.Module):
         nn.init.xavier_uniform_(self.classifier.weight)
         nn.init.constant_(self.classifier.bias, 0)
         self.crf = CRF(num_labels, batch_first=True)
+        logger.info("DeBERTaCRFTagger initialized: model=%s, labels=%d, dropout=%.2f",
+                     model_name, num_labels, dropout_rate)
 
     def forward(
         self,
@@ -59,13 +69,18 @@ class DeBERTaCRFTagger(nn.Module):
 
 
 def decode_window_word_predictions(encoding: Any, pred_ids: list[int]) -> list[int]:
+    if not pred_ids:
+        logger.warning("decode_window_word_predictions received empty pred_ids")
+        return []
+
     attention_mask: list[int] = encoding["attention_mask"][0].tolist()
     pred_ids = pred_ids[: len(attention_mask)]
 
+    word_ids = None
     try:
         word_ids = encoding.word_ids(batch_index=0)
-    except Exception:
-        word_ids = None
+    except (AttributeError, TypeError, IndexError) as exc:
+        logger.debug("word_ids() unavailable, falling back to special_tokens_mask: %s", exc)
 
     if word_ids is None:
         special_tokens_mask: list[int] = encoding["special_tokens_mask"][0].tolist()
@@ -81,7 +96,10 @@ def decode_window_word_predictions(encoding: Any, pred_ids: list[int]) -> list[i
             continue
         per_word_votes.setdefault(wid, [0, 0])
         label = int(pred_ids[i])
-        per_word_votes[wid][label] += 1
+        if 0 <= label < NUM_BINARY_LABELS:
+            per_word_votes[wid][label] += 1
+        else:
+            logger.warning("Unexpected label %d at token index %d, skipping", label, i)
 
     word_level_preds = []
     for wid in sorted(per_word_votes.keys()):
@@ -96,7 +114,15 @@ def build_adaptive_windows(
     base_stride: int = 256,
     short_window_cap: int = 256,
 ) -> list[tuple[int, int]]:
-    if doc_len <= 0:
+    if doc_len < 0:
+        raise ValueError(f"doc_len must be non-negative, got {doc_len}")
+    if base_window <= 0 or base_stride <= 0:
+        raise ValueError("base_window and base_stride must be positive")
+    if base_stride >= base_window:
+        logger.warning("base_stride (%d) >= base_window (%d), windows may not cover full document",
+                        base_stride, base_window)
+
+    if doc_len == 0:
         return [(0, 0)]
 
     if doc_len > base_window:
@@ -147,6 +173,12 @@ def infer_document_with_sliding_windows(
     base_stride: int = 256,
     short_window_cap: int = 256,
 ) -> tuple[list[int], int, np.ndarray]:
+    if not words:
+        logger.warning("infer_document_with_sliding_windows received empty word list")
+        return [], 0, np.zeros(0, dtype=np.int32)
+    if max_len <= 0:
+        raise ValueError(f"max_len must be positive, got {max_len}")
+
     doc_len = len(words)
     windows = build_adaptive_windows(
         doc_len,
@@ -154,12 +186,13 @@ def infer_document_with_sliding_windows(
         base_stride=base_stride,
         short_window_cap=short_window_cap,
     )
+    logger.info("Inference: doc_len=%d, num_windows=%d", doc_len, len(windows))
 
     vote_counts = np.zeros((doc_len, NUM_BINARY_LABELS), dtype=np.int32)
     score_sum = np.zeros(doc_len, dtype=np.float32)
 
     with torch.no_grad():
-        for start, end in windows:
+        for win_idx, (start, end) in enumerate(windows):
             window_words = words[start:end]
             encoding = tokenizer(
                 window_words,
@@ -183,6 +216,10 @@ def infer_document_with_sliding_windows(
                     vote_counts[global_idx, pred_i] += 1
                     score_sum[global_idx] += 1.0 if pred_i == LABEL_POSITIVE else -1.0
 
+            logger.debug("Window %d [%d:%d] processed, %d word-level predictions",
+                          win_idx, start, end, len(word_preds))
+
     boundary = decode_boundary_from_scores(score_sum)
     pred_word_labels = [LABEL_NEGATIVE if i <= boundary else LABEL_POSITIVE for i in range(doc_len)]
+    logger.info("Inference complete: boundary=%d, doc_len=%d", boundary, doc_len)
     return pred_word_labels, boundary, vote_counts
