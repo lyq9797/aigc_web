@@ -23,12 +23,29 @@ class WordPredictResult:
 
 
 class WordLevelDetector:
+    # V2: 提取模型推理相关的魔法数字为类常量
+    BASE_WINDOW: int = 512
+    BASE_STRIDE: int = 384
+    SHORT_WINDOW_CAP: int = 256
+    NUM_LABELS: int = 2
+
+    # V2: 提取启发式/fallback 相关的魔法数字
+    FALLBACK_BASE_CONFIDENCE: float = 0.55
+    FALLBACK_MAX_CONFIDENCE_BOOST: float = 0.4
+    FALLBACK_CONFIDENCE_STEP: float = 0.03
+    DEFAULT_TOKEN_CONFIDENCE: float = 0.65
+    SENTENCE_TOKEN_CONFIDENCE: float = 0.7
+    SWITCH_REFINED_CONFIDENCE: float = 0.88
+
+    # V2: 外部后端调用超时
+    BACKEND_TIMEOUT_SECONDS: int = 45
+
     def __init__(self) -> None:
         self.model = None
         self.tokenizer = None
         self.device = None
         self.ready = False
-        self.max_len = 512
+        self.max_len = self.BASE_WINDOW
 
         try:
             import torch
@@ -40,18 +57,22 @@ class WordLevelDetector:
             self._infer_fn = infer_document_with_sliding_windows
             self.tokenizer = AutoTokenizer.from_pretrained(WORD_MODEL_NAME)
             self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-            self.model = DeBERTaCRFTagger(WORD_MODEL_NAME, 2).to(self.device)
+            self.model = DeBERTaCRFTagger(WORD_MODEL_NAME, self.NUM_LABELS).to(self.device)
             ckpt = torch.load(WORD_MODEL_PATH, map_location=self.device, weights_only=False)
             state = ckpt.get("model_state_dict", ckpt)
             self.model.load_state_dict(state)
             self.model.eval()
             self.ready = True
-            logger.info("Word model loaded from %s", WORD_MODEL_PATH)
+            logger.info("Word model loaded successfully from %s on %s", WORD_MODEL_PATH, self.device)
+        except FileNotFoundError:
+            logger.warning("Model file not found: %s. Fallback mode enabled.", WORD_MODEL_PATH)
+        except ImportError as exc:
+            logger.warning("Required dependency missing: %s. Fallback mode enabled.", exc)
         except Exception as exc:
-            logger.warning("Word-level model not loaded, fallback mode enabled: %s", exc)
+            # V2: 记录完整 traceback 方便调试
+            logger.warning("Word-level model not loaded, fallback mode enabled: %s", exc, exc_info=True)
 
     def _fallback_predict(self, text: str) -> WordPredictResult:
-        # V1: 增加输入校验
         if not isinstance(text, str):
             raise TypeError(f"Expected str, got {type(text).__name__}")
         text = text.strip()
@@ -71,7 +92,11 @@ class WordLevelDetector:
         words = []
         for i, item in enumerate(tokens):
             is_ai = i > split_idx
-            confidence = 0.55 + min(0.4, abs(i - split_idx) * 0.03)
+            # V2: 使用类常量替代魔法数字
+            confidence = self.FALLBACK_BASE_CONFIDENCE + min(
+                self.FALLBACK_MAX_CONFIDENCE_BOOST,
+                abs(i - split_idx) * self.FALLBACK_CONFIDENCE_STEP,
+            )
             words.append(
                 {
                     **item,
@@ -84,7 +109,6 @@ class WordLevelDetector:
         return WordPredictResult(words=words, switch_word_index=split_idx, model_used="fallback-heuristic")
 
     def predict(self, text: str) -> WordPredictResult:
-        # V1: 增加输入校验
         if not isinstance(text, str):
             raise TypeError(f"Expected str, got {type(text).__name__}")
         text = text.strip()
@@ -97,15 +121,16 @@ class WordLevelDetector:
         if not words:
             return WordPredictResult(words=[], switch_word_index=0, model_used="deberta-crf")
 
+        # V2: 使用类常量
         pred_labels, boundary, vote_counts = self._infer_fn(
             self.model,
             words,
             self.tokenizer,
             self.max_len,
             self.device,
-            base_window=512,
-            base_stride=384,
-            short_window_cap=256,
+            base_window=self.BASE_WINDOW,
+            base_stride=self.BASE_STRIDE,
+            short_window_cap=self.SHORT_WINDOW_CAP,
         )
 
         rows = []
@@ -134,12 +159,10 @@ class WordLevelDetector:
             if not sent:
                 continue
             start = text.find(sent, cursor)
-            # V1: 修复 cursor 回退问题 —— 如果找不到则尝试从头搜索
             if start < 0:
                 start = text.find(sent)
             if start < 0:
                 start = cursor
-            # V1: 确保 start 不会回退到 cursor 之前
             if start < cursor:
                 start = cursor
             end = start + len(sent)
@@ -154,7 +177,6 @@ class WordLevelDetector:
         for idx in range(1, len(labels)):
             if labels[idx] != labels[idx - 1]:
                 return idx - 1
-        # V1: 全部标签相同时返回 0（表示没有切换点）
         return 0
 
     def _call_external_boundary_backend(self, text: str) -> int | None:
@@ -184,16 +206,29 @@ class WordLevelDetector:
                 text=True,
                 encoding="utf-8",
                 errors="ignore",
-                timeout=45,
+                timeout=self.BACKEND_TIMEOUT_SECONDS,
             )
             payload = json.loads(completed.stdout.strip())
             boundary_idx = int(payload.get("boundary_idx", 0))
+            logger.debug("External backend returned boundary_idx=%d", boundary_idx)
             return boundary_idx
-        except Exception:
+        except subprocess.TimeoutExpired:
+            # V2: 细粒度异常 —— 超时
+            logger.warning("External boundary backend timed out after %ds", self.BACKEND_TIMEOUT_SECONDS)
+            return None
+        except subprocess.CalledProcessError as exc:
+            # V2: 细粒度异常 —— 进程返回非零
+            logger.warning("External boundary backend failed (exit=%s): %s", exc.returncode, exc.stderr[:200] if exc.stderr else "")
+            return None
+        except (json.JSONDecodeError, ValueError, KeyError) as exc:
+            # V2: 细粒度异常 —— 解析失败
+            logger.warning("Failed to parse external backend output: %s", exc)
+            return None
+        except Exception as exc:
+            logger.warning("Unexpected error calling external backend: %s", exc)
             return None
 
     def predict_with_sentence_switches(self, text: str, sentence_rows: list[dict[str, Any]]) -> WordPredictResult:
-        # V1: 增加输入校验
         if not isinstance(text, str):
             raise TypeError(f"Expected str, got {type(text).__name__}")
         if not isinstance(sentence_rows, list):
@@ -211,8 +246,9 @@ class WordLevelDetector:
         if not spans:
             return self.predict(text)
 
+        # V2: 使用类常量
         token_labels = [0 for _ in tokens]
-        token_conf = [0.65 for _ in tokens]
+        token_conf = [self.DEFAULT_TOKEN_CONFIDENCE for _ in tokens]
 
         sentence_token_indices: list[list[int]] = []
         for start, end, sent_label in spans:
@@ -225,7 +261,7 @@ class WordLevelDetector:
             label_id = 1 if sent_label == "AIGT" else 0
             for i in idxs:
                 token_labels[i] = label_id
-                token_conf[i] = 0.7
+                token_conf[i] = self.SENTENCE_TOKEN_CONFIDENCE
 
         for i in range(len(spans) - 1):
             left_label = spans[i][2]
@@ -259,7 +295,8 @@ class WordLevelDetector:
                     token_labels[gi] = left_id
                 else:
                     token_labels[gi] = right_id
-                token_conf[gi] = 0.88
+                # V2: 使用类常量
+                token_conf[gi] = self.SWITCH_REFINED_CONFIDENCE
 
         rows: list[dict[str, Any]] = []
         for i, tok in enumerate(tokens):
