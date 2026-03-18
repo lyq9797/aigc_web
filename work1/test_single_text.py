@@ -10,66 +10,60 @@ import numpy as np
 from transformers.models.gpt2.tokenization_gpt2 import bytes_to_unicode
 
 
-class BBPEmodel:
-    def __init__(self):
-        self.device = "cuda" if torch.cuda.is_available() else "cpu"
-        self.gpt2_tokenizer = transformers.AutoTokenizer.from_pretrained('D:\wy\gpt2-xl')
-        self.gpt2_model = transformers.AutoModelForCausalLM.from_pretrained('D:\wy\gpt2-xl')
-        self.gpt2_tokenizer.pad_token_id = self.gpt2_tokenizer.eos_token_id
-        self.gpt2_model.to(self.device)
+def get_device():
+    return torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-        # 修复Bug: 将局部变量改为实例属性，并补充 byte_decoder
+
+class GPT2PerplexityCalculator:
+    def __init__(self, model_path='D:\wy\gpt2-xl'):
+        self.device = get_device()
+        self.tokenizer = transformers.AutoTokenizer.from_pretrained(model_path)
+        self.model = transformers.AutoModelForCausalLM.from_pretrained(model_path)
+        self.tokenizer.pad_token_id = self.tokenizer.eos_token_id
+        self.model.to(self.device)
+
         self.byte_encoder = bytes_to_unicode()
         self.byte_decoder = {v: k for k, v in self.byte_encoder.items()}
 
-    def forward_calc_ppl(self, text):  # 修复Bug: 方法名与调用处统一
-        self.gpt2_tokenizer.padding_side = 'right'
-        encoded_inputs = self.gpt2_tokenizer(text, return_tensors="pt").to(
-            self.device)  # 修复Bug: self.tokenizer -> self.gpt2_tokenizer
-        token_ids = encoded_inputs.input_ids[:, :1024]
-        target_ids = encoded_inputs.input_ids[:, :1024]
+    def calculate_perplexity(self, text):
+        self.tokenizer.padding_side = 'right'
+        encoded_inputs = self.tokenizer(text, return_tensors="pt", truncation=True, max_length=1024).to(self.device)
+        token_ids = encoded_inputs.input_ids
+        target_ids = encoded_inputs.input_ids.clone()
+
         sentence_parts = split_sentences(text)
-
         byte_to_word_index = []
-        for sentence_index, sentence_part in enumerate(sentence_parts):
-            part_bytes = [self.byte_encoder[b] for b in sentence_part.encode("utf-8")]
-            byte_to_word_index.extend([sentence_index] * len(part_bytes))
+        for s_idx, s_part in enumerate(sentence_parts):
+            part_bytes = [self.byte_encoder[b] for b in s_part.encode("utf-8")]
+            byte_to_word_index.extend([s_idx] * len(part_bytes))
 
-        model_outputs = self.gpt2_model(input_ids=token_ids,
-                                        labels=target_ids)  # 修复Bug: self.language_model -> self.gpt2_model
-        logits = model_outputs.logits.squeeze()
-        shifted_logits = logits[..., :-1, :].contiguous()
-        shifted_labels = target_ids[..., 1:].contiguous()
-        loss_function = torch.nn.CrossEntropyLoss(reduction="none")
-        token_losses = loss_function(shifted_logits, shifted_labels.view(-1))
+        outputs = self.model(input_ids=token_ids, labels=target_ids)
+        logits = outputs.logits.squeeze()
+        loss_fn = torch.nn.CrossEntropyLoss(reduction="none")
+        token_losses = loss_fn(logits[..., :-1, :].contiguous().view(-1, logits.size(-1)),
+                               target_ids[..., 1:].contiguous().view(-1))
+
         sentence_loss = token_losses.mean().item()
-        token_losses = token_losses.tolist()
+        token_losses_list = token_losses.tolist()
 
-        squeezed_token_ids = token_ids.squeeze()
-        sub_tokens = [self.gpt2_tokenizer._convert_id_to_token(token_id) for token_id in squeezed_token_ids]
-
-        byte_losses = []
-        first_token_bytes = [self.byte_decoder[c] for c in sub_tokens[0]]
-        byte_losses.extend([0] * len(first_token_bytes))
-        for token_index, sub_token in enumerate(sub_tokens[1:]):
-            sub_token_bytes = [self.byte_decoder[c] for c in sub_token]
-            byte_losses.extend([token_losses[token_index]] * len(sub_token_bytes))
+        sub_tokens = [self.tokenizer._convert_id_to_token(tid) for tid in token_ids.squeeze()]
+        byte_losses = [0] * len([self.byte_decoder[c] for c in sub_tokens[0]])
+        for t_idx, sub_token in enumerate(sub_tokens[1:]):
+            byte_losses.extend([token_losses_list[t_idx]] * len([self.byte_decoder[c] for c in sub_token]))
 
         token_level_losses = []
-        start_index = 0
-        while start_index < len(byte_to_word_index) and start_index < len(byte_losses):
-            end_index = start_index + 1
-            while end_index < len(byte_to_word_index) and byte_to_word_index[end_index] == byte_to_word_index[
-                start_index]:
-                end_index += 1
-            if end_index > len(byte_losses):
-                break
-            token_byte_losses = byte_losses[start_index:end_index]
-            token_level_losses.append(np.mean(token_byte_losses))
-            start_index = end_index
+        start = 0
+        while start < len(byte_to_word_index) and start < len(byte_losses):
+            end = start + 1
+            while end < len(byte_to_word_index) and byte_to_word_index[end] == byte_to_word_index[start]:
+                end += 1
+            if end > len(byte_losses): break
+            token_level_losses.append(np.mean(byte_losses[start:end]))
+            start = end
 
-        begin_word_index = byte_to_word_index[len(first_token_bytes) - 1] + 1 if len(first_token_bytes) > 0 else 0
-        return [sentence_loss, begin_word_index, token_level_losses]
+        first_token_bytes = [self.byte_decoder[c] for c in sub_tokens[0]]
+        begin_word_idx = byte_to_word_index[len(first_token_bytes) - 1] + 1 if first_token_bytes else 0
+        return sentence_loss, begin_word_idx, token_level_losses
 
 
 def split_sentences(text: str) -> list[str]:
@@ -80,84 +74,72 @@ def split_sentences(text: str) -> list[str]:
     return rows if rows else [line.strip() for line in text.splitlines() if line.strip()] or [text]
 
 
-def is_only_punctuation_or_digit_or_single_letter(sentence: str) -> bool:
+def is_trivial_sentence(sentence: str) -> bool:
     sentence = sentence.replace(" ", "")
     if not sentence: return True
     if all(char in string.punctuation for char in sentence): return True
-    if sentence.isdigit(): return True
-    if len(sentence) == 1 and sentence.isalpha(): return True
-    if len(sentence.split()) == 1: return True
-    return False
+    if sentence.isdigit() or (len(sentence) == 1 and sentence.isalpha()): return True
+    return len(sentence.split()) == 1
 
 
-def pad_tokens(tokens_list: list[float], length: int = 512) -> list[float]:
-    if len(tokens_list) < length:
-        tokens_list = tokens_list + ([0] * (length - len(tokens_list)))
-    elif len(tokens_list) > length:
-        tokens_list = tokens_list[:length]
-    return tokens_list
+def pad_list(input_list: list, target_len: int = 512, pad_val=0.0) -> list:
+    if len(input_list) < target_len:
+        return input_list + [pad_val] * (target_len - len(input_list))
+    return input_list[:target_len]
 
 
-def get_difference(tokens_list_1: list[float], tokens_list_2: list[float]) -> list[float]:
-    if len(tokens_list_1) < len(tokens_list_2):
-        return [0.0 for _ in tokens_list_2]
-    tail = tokens_list_1[-len(tokens_list_2):]
-    return [abs(a - b) for a, b in zip(tail, tokens_list_2)]
+def calc_tail_difference(list1: list, list2: list) -> list:
+    if len(list1) < len(list2): return [0.0] * len(list2)
+    return [abs(a - b) for a, b in zip(list1[-len(list2):], list2)]
 
 
 class SingleSentencePredictor:
-    def __init__(self, sentence_head_folder: str, best_model: str, window_size: int, window_step: int) -> None:
-        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        self.window_size = window_size
-        self.window_step = window_step
-        self.model_ppl = BBPEmodel()
-        model_path = Path(sentence_head_folder) / best_model
+    def __init__(self, head_folder: str, model_name: str, win_size: int, win_step: int):
+        self.device = get_device()
+        self.window_size = win_size
+        self.window_step = win_step
+        self.ppl_calculator = GPT2PerplexityCalculator()
+
+        model_path = Path(head_folder) / model_name
         try:
-            self.sentence_head_model = torch.load(str(model_path), map_location=self.device, weights_only=False)
+            self.head_model = torch.load(str(model_path), map_location=self.device, weights_only=False)
         except TypeError:
-            self.sentence_head_model = torch.load(str(model_path), map_location=self.device)
-        self.sentence_head_model.eval()
+            self.head_model = torch.load(str(model_path), map_location=self.device)
+        self.head_model.eval()
 
-    def _get_ppl_feature(self, text_data: list[str]) -> torch.Tensor:
-        sen1 = text_data[0] if len(text_data) > 0 else ""
-        sen2 = text_data[1] if len(text_data) > 1 else sen1
-        sen3 = text_data[2] if len(text_data) > 2 else sen2
+    def _extract_ppl_features(self, sentences: list[str]) -> torch.Tensor:
+        sen1 = sentences[0] if len(sentences) > 0 else ""
+        sen2 = sentences[1] if len(sentences) > 1 else sen1
+        sen3 = sentences[2] if len(sentences) > 2 else sen2
 
-        for sen in [sen1, sen2, sen3]:
-            if is_only_punctuation_or_digit_or_single_letter(sen):
-                sen = sen + " " + sen
+        sen1 = sen1 + " " + sen1 if is_trivial_sentence(sen1) else sen1
+        sen2 = sen2 + " " + sen2 if is_trivial_sentence(sen2) else sen2
+        sen3 = sen3 + " " + sen3 if is_trivial_sentence(sen3) else sen3
 
-        merge = sen1 + " " + sen2 + " " + sen3
-        _, _, ll_token3 = self.model_ppl.forward_calc_ppl(text=sen3)
-        _, _, ll_token123 = self.model_ppl.forward_calc_ppl(text=merge)
-        diff = get_difference(ll_token123, ll_token3)
-        return torch.tensor(pad_tokens(diff))
+        _, _, loss_3 = self.ppl_calculator.calculate_perplexity(sen3)
+        _, _, loss_123 = self.ppl_calculator.calculate_perplexity(f"{sen1} {sen2} {sen3}")
 
-    def predict_sentence_scores(self, sentence_list: list[str]) -> list[float]:
+        diff = calc_tail_difference(loss_123, loss_3)
+        return torch.tensor(pad_list(diff))
+
+    def predict_scores(self, sentences: list[str]) -> list[float]:
+        if not sentences: return []
+
+        votes = [[] for _ in range(len(sentences))]
         with torch.no_grad():
-            if not sentence_list: return []
-            majority_vote_preds = [[] for _ in range(len(sentence_list))]
-            for window_start in range(0, max(1, len(sentence_list) - self.window_size + 1), self.window_step):
-                text_data = sentence_list[window_start: window_start + self.window_size]
-                text_merge = " ".join(text_data)
-                diff_3_123 = self._get_ppl_feature(text_data)
-                sentence_feature = self.sentence_head_model.extract_deberta_PPL(text=text_merge, diff_3=diff_3_123,
-                                                                                batchsize=1)
+            for start in range(0, max(1, len(sentences) - self.window_size + 1), self.window_step):
+                window_sents = sentences[start: start + self.window_size]
+                features = self._extract_ppl_features(window_sents)
+                deberta_feat = self.head_model.extract_deberta_PPL(" ".join(window_sents), features, 1)
+                score = torch.sigmoid(self.head_model(deberta_feat)).item()
 
-                # 修复Bug: prediction_score 是标量，不能用 idx 索引
-                prediction_score = torch.sigmoid(self.sentence_head_model(sentence_feature)).item()
+                for i in range(start, min(start + self.window_size, len(sentences))):
+                    votes[i].append(score)
 
-                for vote_idx in range(window_start, min(window_start + self.window_size, len(sentence_list))):
-                    majority_vote_preds[vote_idx].append(float(prediction_score))
-
-        rows = []
-        for sub_list in majority_vote_preds:
-            if not sub_list: rows.append(0.5); continue
-            rows.append(sum(sub_list) / len(sub_list))
-        return rows
+        return [sum(v) / len(v) if v else 0.5 for v in votes]
 
 
-def main() -> None:
+def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--single_text", type=str, default="title: Rodrigo Duterte...")
     parser.add_argument("--output_json", action="store_true")
@@ -169,22 +151,21 @@ def main() -> None:
 
     text = (args.single_text or "").strip()
     if not text:
-        print(json.dumps({"sentences": [], "switch_sentence_index": 0, "model_used": "empty"}, ensure_ascii=False))
+        print(json.dumps({"sentences": [], "switch_sentence_index": 0, "model_used": "empty"}))
         return
 
     predictor = SingleSentencePredictor(args.sentence_head_folder, args.best_model, args.window_size, args.window_step)
     sents = split_sentences(text)
-    scores = predictor.predict_sentence_scores(sents)
+    scores = predictor.predict_scores(sents)
 
-    rows = []
-    switch_idx = 0
+    rows, switch_idx = [], 0
     for idx, (sent, score) in enumerate(zip(sents, scores)):
         label = "AIGT" if score >= 0.5 else "HWT"
         rows.append(
             {"index": idx, "text": sent, "label": label, "confidence": round(score, 4), "ai_ratio": round(score, 4)})
         if label == "AIGT" and switch_idx == 0: switch_idx = idx
 
-    print(json.dumps({"sentences": rows, "switch_sentence_index": switch_idx, "model_used": "work1-test-single"},
+    print(json.dumps({"sentences": rows, "switch_sentence_index": switch_idx, "model_used": "v2-clean"},
                      ensure_ascii=False))
 
 
