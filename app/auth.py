@@ -16,6 +16,10 @@ JWT_ALGORITHM = "HS256"
 JWT_HEADER = {"alg": JWT_ALGORITHM, "typ": "JWT"}
 
 
+class AuthError(HTTPException):
+    pass
+
+
 def _b64url_encode(raw: bytes) -> str:
     return base64.urlsafe_b64encode(raw).rstrip(b"=").decode("utf-8")
 
@@ -25,9 +29,13 @@ def _b64url_decode(raw: str) -> bytes:
     return base64.urlsafe_b64decode(padded.encode("utf-8"))
 
 
+def raise_auth_error(detail: str, status_code: int = status.HTTP_401_UNAUTHORIZED) -> None:
+    raise AuthError(status_code=status_code, detail=detail)
+
+
 def validate_password_policy(password: str) -> None:
     if len(password) < MIN_PASSWORD_LENGTH:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="密码长度不能少于 6 位")
+        raise_auth_error("密码长度不能少于 6 位", status.HTTP_400_BAD_REQUEST)
 
 
 def hash_password(password: str) -> str:
@@ -72,36 +80,36 @@ def decode_token(token: str) -> dict[str, Any]:
     try:
         header_b64, payload_b64, signature_b64 = token.split(".")
     except ValueError as exc:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token format") from exc
+        raise_auth_error("Invalid token format") from exc
 
     signing_input = f"{header_b64}.{payload_b64}".encode("utf-8")
     expected_sig = hmac.new(SECRET_KEY.encode("utf-8"), signing_input, hashlib.sha256).digest()
     got_sig = _b64url_decode(signature_b64)
     if not hmac.compare_digest(expected_sig, got_sig):
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token signature")
+        raise_auth_error("Invalid token signature")
 
     try:
         header = json.loads(_b64url_decode(header_b64).decode("utf-8"))
         payload = json.loads(_b64url_decode(payload_b64).decode("utf-8"))
     except json.JSONDecodeError as exc:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token payload") from exc
+        raise_auth_error("Invalid token payload") from exc
 
     if header.get("alg") != JWT_ALGORITHM:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Unexpected token algorithm")
+        raise_auth_error("Unexpected token algorithm")
 
     now_ts = int(datetime.now(timezone.utc).timestamp())
     if int(payload.get("exp", 0)) < now_ts:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token expired")
+        raise_auth_error("Token expired")
 
     if payload.get("sub") is None:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token subject missing")
+        raise_auth_error("Token subject missing")
 
     return payload
 
 
 def parse_bearer_token(auth_header: Optional[str]) -> str:
     if not auth_header:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Missing Authorization header")
+        raise_auth_error("Missing Authorization header")
     if not auth_header.startswith("Bearer "):
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Expected Bearer token")
+        raise_auth_error("Expected Bearer token")
     return auth_header[7:].strip()
