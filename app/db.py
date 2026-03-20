@@ -16,20 +16,25 @@ def sqlite_connection() -> Iterator[sqlite3.Connection]:
     try:
         yield conn
         conn.commit()
+    except sqlite3.DatabaseError:
+        conn.rollback()
+        raise
     finally:
         conn.close()
 
 
-def _query_one(conn: sqlite3.Connection, sql: str, params: tuple[Any, ...]) -> Optional[sqlite3.Row]:
+def _execute(conn: sqlite3.Connection, sql: str, params: tuple[Any, ...]) -> sqlite3.Cursor:
     cur = conn.cursor()
     cur.execute(sql, params)
-    return cur.fetchone()
+    return cur
 
 
-def _query_all(conn: sqlite3.Connection, sql: str, params: tuple[Any, ...]) -> list[sqlite3.Row]:
-    cur = conn.cursor()
-    cur.execute(sql, params)
-    return cur.fetchall()
+def _fetch_one(conn: sqlite3.Connection, sql: str, params: tuple[Any, ...]) -> Optional[sqlite3.Row]:
+    return _execute(conn, sql, params).fetchone()
+
+
+def _fetch_all(conn: sqlite3.Connection, sql: str, params: tuple[Any, ...]) -> list[sqlite3.Row]:
+    return _execute(conn, sql, params).fetchall()
 
 
 def init_db() -> None:
@@ -61,8 +66,8 @@ def init_db() -> None:
 def create_user(username: str, password_hash: str) -> int:
     now = datetime.now().isoformat()
     with sqlite_connection() as conn:
-        cur = conn.cursor()
-        cur.execute(
+        cur = _execute(
+            conn,
             "INSERT INTO users(username, password_hash, created_at) VALUES (?, ?, ?)",
             (username, password_hash, now),
         )
@@ -71,19 +76,19 @@ def create_user(username: str, password_hash: str) -> int:
 
 def get_user_by_username(username: str) -> Optional[sqlite3.Row]:
     with sqlite_connection() as conn:
-        return _query_one(conn, "SELECT * FROM users WHERE username = ?", (username,))
+        return _fetch_one(conn, "SELECT * FROM users WHERE username = ?", (username,))
 
 
 def get_user_by_id(user_id: int) -> Optional[sqlite3.Row]:
     with sqlite_connection() as conn:
-        return _query_one(conn, "SELECT * FROM users WHERE id = ?", (user_id,))
+        return _fetch_one(conn, "SELECT * FROM users WHERE id = ?", (user_id,))
 
 
 def save_detection(user_id: int, input_text: str, result: dict[str, Any]) -> int:
     now = datetime.now().isoformat()
     with sqlite_connection() as conn:
-        cur = conn.cursor()
-        cur.execute(
+        cur = _execute(
+            conn,
             "INSERT INTO detections(user_id, input_text, result_json, created_at) VALUES (?, ?, ?, ?)",
             (user_id, input_text, json.dumps(result, ensure_ascii=False), now),
         )
@@ -92,7 +97,7 @@ def save_detection(user_id: int, input_text: str, result: dict[str, Any]) -> int
 
 def list_detections(user_id: int, limit: int = 50) -> list[dict[str, Any]]:
     with sqlite_connection() as conn:
-        rows = _query_all(
+        rows = _fetch_all(
             conn,
             """
             SELECT id, input_text, result_json, created_at
@@ -117,6 +122,5 @@ def list_detections(user_id: int, limit: int = 50) -> list[dict[str, Any]]:
 
 def clear_detections(user_id: int) -> int:
     with sqlite_connection() as conn:
-        cur = conn.cursor()
-        cur.execute("DELETE FROM detections WHERE user_id = ?", (user_id,))
+        cur = _execute(conn, "DELETE FROM detections WHERE user_id = ?", (user_id,))
         return int(cur.rowcount)
