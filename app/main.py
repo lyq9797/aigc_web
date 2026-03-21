@@ -24,6 +24,10 @@ app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static")), name="stat
 service = DetectionService()
 
 
+def render_page(template_name: str, request: Request) -> HTMLResponse:
+    return templates.TemplateResponse(template_name, {"request": request})
+
+
 @app.on_event("startup")
 def startup_event() -> None:
     db.init_db()
@@ -58,23 +62,23 @@ def home() -> RedirectResponse:
 
 
 @app.get("/login", response_class=HTMLResponse)
-def login_page(request: Request):
-    return templates.TemplateResponse("login.html", {"request": request})
+def login_page(request: Request) -> HTMLResponse:
+    return render_page("login.html", request)
 
 
 @app.get("/register", response_class=HTMLResponse)
-def register_page(request: Request):
-    return templates.TemplateResponse("register.html", {"request": request})
+def register_page(request: Request) -> HTMLResponse:
+    return render_page("register.html", request)
 
 
 @app.get("/detect", response_class=HTMLResponse)
-def detect_page(request: Request):
-    return templates.TemplateResponse("detect.html", {"request": request})
+def detect_page(request: Request) -> HTMLResponse:
+    return render_page("detect.html", request)
 
 
 @app.get("/history", response_class=HTMLResponse)
-def history_page(request: Request):
-    return templates.TemplateResponse("history.html", {"request": request})
+def history_page(request: Request) -> HTMLResponse:
+    return render_page("history.html", request)
 
 
 @app.post("/api/register", response_model=AuthResponse)
