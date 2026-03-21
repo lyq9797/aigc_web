@@ -4,12 +4,12 @@ import io
 import os
 import tempfile
 from pathlib import Path
-from typing import Iterable
 
 from fastapi import HTTPException, status
 
 SUPPORTED_SUFFIXES = {".txt", ".docx", ".doc"}
 SUPPORTED_ENCODINGS = ("utf-8-sig", "utf-8", "gb18030", "gbk")
+MAX_FILE_SIZE = 10 * 1024 * 1024
 
 
 def _raise_bad_request(detail: str) -> None:
@@ -94,6 +94,9 @@ def _extract_doc_text(raw: bytes) -> str:
 
 
 def extract_text_from_file(filename: str, raw: bytes) -> str:
+    if len(raw) > MAX_FILE_SIZE:
+        _raise_bad_request("文件过大，无法处理。请上传小于 10MB 的文件")
+
     suffix = Path(filename).suffix.lower()
     if suffix not in SUPPORTED_SUFFIXES:
         _raise_bad_request("仅支持 .txt、.docx、.doc 文件")
