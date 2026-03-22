@@ -5,6 +5,7 @@ class BaseSchema(BaseModel):
     class Config:
         anystr_strip_whitespace = True
         orm_mode = True
+        extra = "forbid"
 
 
 class RegisterRequest(BaseSchema):
