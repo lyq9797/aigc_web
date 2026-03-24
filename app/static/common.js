@@ -6,8 +6,12 @@ const Auth = {
     return localStorage.getItem('aigc_user') || '';
   },
   set(token, username) {
-    localStorage.setItem('aigc_token', token);
-    localStorage.setItem('aigc_user', username);
+    if (token) {
+      localStorage.setItem('aigc_token', token);
+    }
+    if (username) {
+      localStorage.setItem('aigc_user', username);
+    }
   },
   clear() {
     localStorage.removeItem('aigc_token');
@@ -16,7 +20,7 @@ const Auth = {
 };
 
 function escapeHtml(s) {
-  return String(s)
+  return String(s || '')
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
@@ -41,14 +45,14 @@ async function api(path, method = 'GET', body = null, needAuth = false) {
     requestBody = JSON.stringify(body);
   }
 
-  const resp = await fetch(path, {
+  const response = await fetch(path, {
     method,
     headers,
     body: requestBody,
   });
 
-  const data = await resp.json().catch(() => ({}));
-  if (!resp.ok) {
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) {
     const error = new Error(data.detail || '请求失败');
     error.detail = data.detail;
     throw error;
@@ -65,9 +69,8 @@ function requireLogin() {
 }
 
 function mountUserInfo(elUser, onLogout) {
-  if (elUser) {
-    elUser.textContent = `当前用户: ${Auth.username || '未知用户'}`;
-  }
+  if (!elUser) return;
+  elUser.textContent = `当前用户: ${Auth.username || '未知用户'}`;
   if (typeof onLogout === 'function') {
     onLogout();
   }
