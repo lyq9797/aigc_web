@@ -1,9 +1,10 @@
-# word_model_runtime.py — Version 2
-# 改动：增加 logging、输入校验、具体异常捕获
+# word_model_runtime.py — Version 3
+# 改动：引入 InferenceConfig dataclass，拆分推理循环为子函数
 
 from __future__ import annotations
 
 import logging
+from dataclasses import dataclass, field
 from typing import Any
 
 import numpy as np
@@ -21,6 +22,16 @@ NUM_BINARY_LABELS = 2
 IGNORE_INDEX = -100
 DEFAULT_DROPOUT = 0.1
 PAD_LABEL = 0
+
+
+@dataclass
+class InferenceConfig:
+    """滑动窗口推理的配置参数。"""
+    max_len: int = 512
+    base_window: int = 512
+    base_stride: int = 256
+    short_window_cap: int = 256
+    device: str = "cpu"
 
 
 class DeBERTaCRFTagger(nn.Module):
@@ -69,6 +80,7 @@ class DeBERTaCRFTagger(nn.Module):
 
 
 def decode_window_word_predictions(encoding: Any, pred_ids: list[int]) -> list[int]:
+    """将子词级别的预测聚合为词级别的预测。"""
     if not pred_ids:
         logger.warning("decode_window_word_predictions received empty pred_ids")
         return []
@@ -114,6 +126,7 @@ def build_adaptive_windows(
     base_stride: int = 256,
     short_window_cap: int = 256,
 ) -> list[tuple[int, int]]:
+    """根据文档长度自适应生成滑动窗口列表。"""
     if doc_len < 0:
         raise ValueError(f"doc_len must be non-negative, got {doc_len}")
     if base_window <= 0 or base_stride <= 0:
@@ -151,6 +164,7 @@ def build_adaptive_windows(
 
 
 def decode_boundary_from_scores(score_sum: np.ndarray) -> int:
+    """通过前缀和方式寻找最优分割边界点。"""
     n = len(score_sum)
     if n <= 0:
         return 0
@@ -163,6 +177,46 @@ def decode_boundary_from_scores(score_sum: np.ndarray) -> int:
     return max(0, min(best_boundary, n - 1))
 
 
+def _run_single_window(
+    model: DeBERTaCRFTagger,
+    tokenizer: Any,
+    window_words: list[str],
+    max_len: int,
+    device: Any,
+) -> tuple[Any, list[int]]:
+    """对单个窗口执行 tokenizer + 模型推理，返回 encoding 和预测 ID 列表。"""
+    encoding = tokenizer(
+        window_words,
+        is_split_into_words=True,
+        max_length=max_len,
+        padding="max_length",
+        truncation=True,
+        return_tensors="pt",
+        return_special_tokens_mask=True,
+    )
+    input_ids = encoding["input_ids"].to(device)
+    attention_mask = encoding["attention_mask"].to(device)
+    predictions = model(input_ids, attention_mask)
+    pred_ids: list[int] = predictions[0].detach().cpu().tolist()
+    return encoding, pred_ids
+
+
+def _aggregate_votes(
+    word_preds: list[int],
+    window_start: int,
+    doc_len: int,
+    vote_counts: np.ndarray,
+    score_sum: np.ndarray,
+) -> None:
+    """将单个窗口的词级别预测结果累加到全局投票计数和分数中。"""
+    for local_idx, pred in enumerate(word_preds):
+        global_idx = window_start + local_idx
+        if global_idx < doc_len:
+            pred_i = int(pred)
+            vote_counts[global_idx, pred_i] += 1
+            score_sum[global_idx] += 1.0 if pred_i == LABEL_POSITIVE else -1.0
+
+
 def infer_document_with_sliding_windows(
     model: DeBERTaCRFTagger,
     words: list[str],
@@ -173,6 +227,7 @@ def infer_document_with_sliding_windows(
     base_stride: int = 256,
     short_window_cap: int = 256,
 ) -> tuple[list[int], int, np.ndarray]:
+    """使用滑动窗口策略对整篇文档进行推理，返回词标签、边界和投票统计。"""
     if not words:
         logger.warning("infer_document_with_sliding_windows received empty word list")
         return [], 0, np.zeros(0, dtype=np.int32)
@@ -194,28 +249,11 @@ def infer_document_with_sliding_windows(
     with torch.no_grad():
         for win_idx, (start, end) in enumerate(windows):
             window_words = words[start:end]
-            encoding = tokenizer(
-                window_words,
-                is_split_into_words=True,
-                max_length=max_len,
-                padding="max_length",
-                truncation=True,
-                return_tensors="pt",
-                return_special_tokens_mask=True,
+            encoding, pred_ids = _run_single_window(
+                model, tokenizer, window_words, max_len, device,
             )
-            input_ids = encoding["input_ids"].to(device)
-            attention_mask = encoding["attention_mask"].to(device)
-            predictions = model(input_ids, attention_mask)
-            pred_ids: list[int] = predictions[0].detach().cpu().tolist()
-
             word_preds = decode_window_word_predictions(encoding, pred_ids)
-            for local_idx, pred in enumerate(word_preds):
-                global_idx = start + local_idx
-                if global_idx < doc_len:
-                    pred_i = int(pred)
-                    vote_counts[global_idx, pred_i] += 1
-                    score_sum[global_idx] += 1.0 if pred_i == LABEL_POSITIVE else -1.0
-
+            _aggregate_votes(word_preds, start, doc_len, vote_counts, score_sum)
             logger.debug("Window %d [%d:%d] processed, %d word-level predictions",
                           win_idx, start, end, len(word_preds))
 
