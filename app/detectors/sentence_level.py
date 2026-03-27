@@ -101,7 +101,6 @@ class SentenceLevelDetector:
             "--output_json",
         ]
 
-        # 重试循环：最多尝试 1 + MAX_RETRIES 次
         for attempt in range(1 + self.MAX_RETRIES):
             try:
                 result = self._run_external_once(cmd)
@@ -119,7 +118,6 @@ class SentenceLevelDetector:
             except Exception as e:
                 logger.error("外部后端调用发生未知异常: %s，第 %d/%d 次尝试", e, attempt + 1, 1 + self.MAX_RETRIES)
 
-            # 如果还有重试机会，等待一段时间后重试
             if attempt < self.MAX_RETRIES:
                 logger.info("等待 %.1f 秒后重试...", self.RETRY_DELAY)
                 time.sleep(self.RETRY_DELAY)
@@ -127,20 +125,41 @@ class SentenceLevelDetector:
         logger.error("外部后端调用在 %d 次尝试后仍然失败", 1 + self.MAX_RETRIES)
         return None
 
+    def _build_sentence_offsets(self, text: str, sents: list[str]) -> list[tuple[int, int]]:
+        """
+        根据分句结果计算每个句子在原文中的 (start, end) 偏移量。
+        通过逐个字符累计偏移，避免 text.find 在重复子串时定位不准。
+        """
+        offsets: list[tuple[int, int]] = []
+        cursor = 0
+        for sent in sents:
+            # 从当前光标位置开始查找，确保不会匹配到前面的重复子串
+            pos = text.find(sent, cursor)
+            if pos < 0:
+                # 如果找不到，就用当前光标位置作为近似
+                pos = cursor
+            offsets.append((pos, pos + len(sent)))
+            cursor = pos + len(sent)
+        return offsets
+
     def _aggregate_from_words(self, text: str, words: list[dict[str, Any]]) -> SentencePredictResult:
+        # 处理空文本
+        if not text or not text.strip():
+            logger.info("输入文本为空，返回空结果")
+            return SentencePredictResult(sentences=[], switch_sentence_index=0, model_used="aggregated-word-signal")
+
         sents = split_sentences(text)
         if not sents:
             return SentencePredictResult(sentences=[], switch_sentence_index=0, model_used="aggregated-word-signal")
 
-        cursor = 0
+        # 预先计算所有句子的偏移量
+        offsets = self._build_sentence_offsets(text, sents)
+
         sentence_rows: list[dict[str, Any]] = []
         for idx, sent in enumerate(sents):
-            start = text.find(sent, cursor)
-            if start < 0:
-                start = cursor
-            end = start + len(sent)
-            cursor = end
+            start, end = offsets[idx]
 
+            # 找出落在当前句子范围内的词
             within = [w for w in words if w["start"] >= start and w["end"] <= end]
             if not within:
                 ai_ratio = 0.0
