@@ -23,13 +23,11 @@ class WordPredictResult:
 
 
 class WordLevelDetector:
-    # V2: 提取模型推理相关的魔法数字为类常量
     BASE_WINDOW: int = 512
     BASE_STRIDE: int = 384
     SHORT_WINDOW_CAP: int = 256
     NUM_LABELS: int = 2
 
-    # V2: 提取启发式/fallback 相关的魔法数字
     FALLBACK_BASE_CONFIDENCE: float = 0.55
     FALLBACK_MAX_CONFIDENCE_BOOST: float = 0.4
     FALLBACK_CONFIDENCE_STEP: float = 0.03
@@ -37,8 +35,10 @@ class WordLevelDetector:
     SENTENCE_TOKEN_CONFIDENCE: float = 0.7
     SWITCH_REFINED_CONFIDENCE: float = 0.88
 
-    # V2: 外部后端调用超时
     BACKEND_TIMEOUT_SECONDS: int = 45
+
+    # V3: 启发式最短词数阈值
+    HEURISTIC_MIN_TOKENS_FOR_CONV: int = 4
 
     def __init__(self) -> None:
         self.model = None
@@ -69,8 +69,44 @@ class WordLevelDetector:
         except ImportError as exc:
             logger.warning("Required dependency missing: %s. Fallback mode enabled.", exc)
         except Exception as exc:
-            # V2: 记录完整 traceback 方便调试
             logger.warning("Word-level model not loaded, fallback mode enabled: %s", exc, exc_info=True)
+
+    # ---- V3: 新增辅助方法 ----
+
+    def _heuristic_split_index(self, tokens: list[dict[str, Any]]) -> int:
+        """V3: 基于词长梯度计算启发式切换点。"""
+        n = len(tokens)
+        if n <= 1:
+            return 0
+
+        # V3: 词数太少时卷积无意义，用简单中位数
+        if n < self.HEURISTIC_MIN_TOKENS_FOR_CONV:
+            return n // 2
+
+        lengths = np.array([len(t["token"]) for t in tokens], dtype=np.float32)
+        smooth = np.convolve(lengths, np.ones(3) / 3.0, mode="same")
+        grad = np.abs(np.diff(smooth, prepend=smooth[0]))
+        return int(np.argmax(grad))
+
+    def _build_word_row(
+        self, token_item: dict[str, Any], label_id: int, confidence: float
+    ) -> dict[str, Any]:
+        """V3: 统一构造单条 word 结果字典，消除重复代码。"""
+        return {
+            **token_item,
+            "label": "AIGT" if label_id == 1 else "HWT",
+            "label_id": label_id,
+            "confidence": round(float(confidence), 4),
+        }
+
+    def _compute_fallback_confidence(self, token_index: int, split_index: int) -> float:
+        """V3: 计算 fallback 模式下某个 token 的置信度。"""
+        return self.FALLBACK_BASE_CONFIDENCE + min(
+            self.FALLBACK_MAX_CONFIDENCE_BOOST,
+            abs(token_index - split_index) * self.FALLBACK_CONFIDENCE_STEP,
+        )
+
+    # ---- 主要方法 ----
 
     def _fallback_predict(self, text: str) -> WordPredictResult:
         if not isinstance(text, str):
@@ -81,30 +117,15 @@ class WordLevelDetector:
         if not tokens:
             return WordPredictResult(words=[], switch_word_index=0, model_used="fallback-heuristic")
 
-        lengths = np.array([len(t["token"]) for t in tokens], dtype=np.float32)
-        if len(lengths) > 1:
-            smooth = np.convolve(lengths, np.ones(3) / 3.0, mode="same")
-            grad = np.abs(np.diff(smooth, prepend=smooth[0]))
-            split_idx = int(np.argmax(grad))
-        else:
-            split_idx = 0
+        # V3: 使用抽取出来的启发式方法
+        split_idx = self._heuristic_split_index(tokens)
 
         words = []
         for i, item in enumerate(tokens):
             is_ai = i > split_idx
-            # V2: 使用类常量替代魔法数字
-            confidence = self.FALLBACK_BASE_CONFIDENCE + min(
-                self.FALLBACK_MAX_CONFIDENCE_BOOST,
-                abs(i - split_idx) * self.FALLBACK_CONFIDENCE_STEP,
-            )
-            words.append(
-                {
-                    **item,
-                    "label": "AIGT" if is_ai else "HWT",
-                    "label_id": 1 if is_ai else 0,
-                    "confidence": round(float(confidence), 4),
-                }
-            )
+            label_id = 1 if is_ai else 0
+            confidence = self._compute_fallback_confidence(i, split_idx)
+            words.append(self._build_word_row(item, label_id, confidence))
 
         return WordPredictResult(words=words, switch_word_index=split_idx, model_used="fallback-heuristic")
 
@@ -121,7 +142,6 @@ class WordLevelDetector:
         if not words:
             return WordPredictResult(words=[], switch_word_index=0, model_used="deberta-crf")
 
-        # V2: 使用类常量
         pred_labels, boundary, vote_counts = self._infer_fn(
             self.model,
             words,
@@ -140,14 +160,8 @@ class WordLevelDetector:
             total = max(1, vote0 + vote1)
             conf = max(vote0, vote1) / total
             label_id = int(pred_labels[i]) if i < len(pred_labels) else 0
-            rows.append(
-                {
-                    **token_item,
-                    "label": "AIGT" if label_id == 1 else "HWT",
-                    "label_id": label_id,
-                    "confidence": round(float(conf), 4),
-                }
-            )
+            # V3: 使用统一构建方法
+            rows.append(self._build_word_row(token_item, label_id, conf))
 
         return WordPredictResult(words=rows, switch_word_index=int(boundary), model_used="deberta-crf")
 
@@ -213,15 +227,12 @@ class WordLevelDetector:
             logger.debug("External backend returned boundary_idx=%d", boundary_idx)
             return boundary_idx
         except subprocess.TimeoutExpired:
-            # V2: 细粒度异常 —— 超时
             logger.warning("External boundary backend timed out after %ds", self.BACKEND_TIMEOUT_SECONDS)
             return None
         except subprocess.CalledProcessError as exc:
-            # V2: 细粒度异常 —— 进程返回非零
             logger.warning("External boundary backend failed (exit=%s): %s", exc.returncode, exc.stderr[:200] if exc.stderr else "")
             return None
         except (json.JSONDecodeError, ValueError, KeyError) as exc:
-            # V2: 细粒度异常 —— 解析失败
             logger.warning("Failed to parse external backend output: %s", exc)
             return None
         except Exception as exc:
@@ -246,7 +257,6 @@ class WordLevelDetector:
         if not spans:
             return self.predict(text)
 
-        # V2: 使用类常量
         token_labels = [0 for _ in tokens]
         token_conf = [self.DEFAULT_TOKEN_CONFIDENCE for _ in tokens]
 
@@ -295,20 +305,13 @@ class WordLevelDetector:
                     token_labels[gi] = left_id
                 else:
                     token_labels[gi] = right_id
-                # V2: 使用类常量
                 token_conf[gi] = self.SWITCH_REFINED_CONFIDENCE
 
+        # V3: 使用 _build_word_row
         rows: list[dict[str, Any]] = []
         for i, tok in enumerate(tokens):
             lid = int(token_labels[i])
-            rows.append(
-                {
-                    **tok,
-                    "label": "AIGT" if lid == 1 else "HWT",
-                    "label_id": lid,
-                    "confidence": round(float(token_conf[i]), 4),
-                }
-            )
+            rows.append(self._build_word_row(tok, lid, token_conf[i]))
 
         switch_idx = self._compute_first_switch_word_index(token_labels)
         return WordPredictResult(
