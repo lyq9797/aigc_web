@@ -17,11 +17,7 @@ BASE_WINDOW = 512
 BASE_STRIDE = 384
 SHORT_WINDOW_CAP = 256
 
-# 配置基础日志
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(levelname)s - %(message)s"
-)
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
 
 
@@ -127,14 +123,20 @@ def build_adaptive_windows(doc_len, base_window=BASE_WINDOW, base_stride=BASE_ST
     return [(s, s + win_size) for s in starts]
 
 
-def decode_boundary_from_scores(score_sum):
-    n = len(score_sum)
+def decode_boundary_from_scores(prob_array):
+    """基于累积概率寻找最佳分割边界"""
+    n = len(prob_array)
     if n <= 0:
         return 0
-    prefix_neg = np.cumsum(-score_sum)
-    prefix_pos = np.cumsum(score_sum)
-    total_pos = prefix_pos[-1]
-    objective = prefix_neg + (total_pos - prefix_pos)
+
+    # 计算前缀和，寻找使得前半部分为0，后半部分为1的期望最大化的点
+    cumsum = np.cumsum(prob_array)
+    total_sum = cumsum[-1]
+
+    # objective: 最小化前半部分的1的数量 + 后半部分的0的数量
+    # 即最小化: cumsum[i] + ((n - i) - (total_sum - cumsum[i]))
+    # 化简后等价于最大化: 2 * cumsum[i] - i
+    objective = 2 * cumsum - np.arange(n)
     best_boundary = int(np.argmax(objective))
     return max(0, min(best_boundary, n - 1))
 
@@ -144,8 +146,9 @@ def infer_document_with_sliding_windows(model, words, tokenizer, max_len, device
     windows = build_adaptive_windows(doc_len)
     logger.info(f"Document length: {doc_len}, Number of windows: {len(windows)}")
 
-    vote_counts = np.zeros((doc_len, NUM_LABELS), dtype=np.int32)
-    score_sum = np.zeros(doc_len, dtype=np.float32)
+    # 记录每个词被预测为1的次数和总覆盖次数
+    pred_1_counts = np.zeros(doc_len, dtype=np.float32)
+    coverage_counts = np.zeros(doc_len, dtype=np.float32)
 
     with torch.no_grad():
         for start, end in windows:
@@ -174,13 +177,18 @@ def infer_document_with_sliding_windows(model, words, tokenizer, max_len, device
             for local_idx, pred in enumerate(word_preds):
                 global_idx = start + local_idx
                 if global_idx < doc_len:
-                    pred_i = int(pred)
-                    vote_counts[global_idx, pred_i] += 1
-                    score_sum[global_idx] += 1.0 if pred_i == 1 else -1.0
+                    coverage_counts[global_idx] += 1.0
+                    if int(pred) == 1:
+                        pred_1_counts[global_idx] += 1.0
 
-    boundary = decode_boundary_from_scores(score_sum)
+    # 计算每个词属于类别1的概率
+    # 避免除以0
+    safe_coverage = np.where(coverage_counts == 0, 1, coverage_counts)
+    prob_array = pred_1_counts / safe_coverage
+
+    boundary = decode_boundary_from_scores(prob_array)
     pred_word_labels = [0 if i <= boundary else 1 for i in range(doc_len)]
-    return pred_word_labels, boundary, vote_counts
+    return pred_word_labels, boundary, prob_array
 
 
 def main() -> None:
