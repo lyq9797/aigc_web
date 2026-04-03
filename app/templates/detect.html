@@ -4,26 +4,26 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>文本检测 - AI 文本检测系统</title>
-  <link rel="stylesheet" href="/static/styles.css?v=20260420-1" />
+  <link rel="stylesheet" href="/static/styles.css?v=20260420-2" />
 </head>
 <body>
   <div class="bg-shape bg-one"></div>
   <div class="bg-shape bg-two"></div>
 
-  <header class="topbar centered-topbar">
+  <header class="topbar centered-topbar" role="banner">
     <h1>AI 文本检测系统</h1>
-    <div class="user-panel">
-      <span id="currentUser" class="muted"></span>
-      <button id="goHistoryBtn" class="ghost">查看历史记录</button>
-      <button id="logoutBtn" class="ghost">退出登录</button>
-    </div>
+    <nav class="user-panel" aria-label="用户操作">
+      <span id="currentUser" class="muted" aria-live="polite"></span>
+      <button id="goHistoryBtn" class="ghost" type="button">查看历史记录</button>
+      <button id="logoutBtn" class="ghost" type="button">退出登录</button>
+    </nav>
   </header>
 
-  <main class="layout-single">
-    <section class="card detect-card-full">
+  <main class="layout-single" role="main">
+    <section class="card detect-card-full" aria-labelledby="detectTitle">
       <div class="control-row">
-        <button id="sampleBtn" class="ghost">加载示例文本</button>
-        <button id="clearBtn" class="ghost">清除内容</button>
+        <button id="sampleBtn" class="ghost" type="button">加载示例文本</button>
+        <button id="clearBtn" class="ghost" type="button">清除内容</button>
         <div class="export-control-wrap">
           <button id="exportDetectBtn" class="ghost export-trigger" type="button" disabled>结果导出</button>
           <div id="exportDetectMenu" class="export-menu hidden" aria-hidden="true">
@@ -36,20 +36,21 @@
         </div>
       </div>
 
+      <h2 id="detectTitle" class="muted">请输入要检测的文本或上传文件</h2>
       <textarea id="inputText" rows="10" placeholder="在这里粘贴或输入待检测文本..."></textarea>
 
       <div class="file-row">
-        <input id="fileInput" class="hidden-file-input" type="file" accept=".txt,.docx,.doc" />
+        <input id="fileInput" class="hidden-file-input" type="file" accept=".txt,.docx,.doc" aria-label="上传检测文件" />
         <button id="fileSelectBtn" class="ghost" type="button">选择文件</button>
         <span id="selectedFileName" class="selected-file-name" aria-live="polite"></span>
       </div>
-      <div id="fileInfo" class="file-info muted">支持 .txt、.doc、.docx文件</div>
+      <div id="fileInfo" class="file-info muted">支持 .txt、.doc、.docx 文件</div>
 
-      <button id="detectBtn" class="primary big detect-action-btn">开始检测</button>
-      <p id="detectMsg" class="msg"></p>
+      <button id="detectBtn" class="primary big detect-action-btn" type="button">开始检测</button>
+      <p id="detectMsg" class="msg" aria-live="polite"></p>
 
       <h3>单词级高亮</h3>
-      <div id="wordHighlight" class="highlight-box highlight-box-with-legend">
+      <div id="wordHighlight" class="highlight-box highlight-box-with-legend" aria-live="polite">
         <div class="word-legend legend-floating" aria-label="单词级标签图例">
           <span class="legend-item legend-human">HWT（人类）</span>
           <span class="legend-item legend-ai">AIGT（AI）</span>
@@ -58,12 +59,12 @@
       </div>
 
       <h3>句子级结果</h3>
-      <p class="sentence-help-text">置信度是模型对【文本是 AI 生成还是人类撰写】的概率判断与可信程度。越接近 1表示模型越确定这段文本由 AI 生成，越接近 0表示模型越确定这段文本由人类书写，落在 0.5 左右表明模型难以明确区分</p>
+      <p class="sentence-help-text">置信度表明模型对文本来源判断的确定程度，越接近 1 表示更像 AI，越接近 0 表示更像人类。</p>
       <div id="sentenceList" class="sentence-list"></div>
     </section>
   </main>
 
-  <script src="/static/common.js?v=20260417-3"></script>
-  <script src="/static/detect.js?v=20260420-1"></script>
+  <script src="/static/common.js?v=20260417-4"></script>
+  <script src="/static/detect.js?v=20260420-2"></script>
 </body>
 </html>
