@@ -37,6 +37,8 @@ class Settings:
     def validate(self) -> None:
         if self.secret_key == "change-this-in-production":
             raise ValueError("请在生产环境中设置 AIGC_WEB_SECRET")
+        if self.token_expire_hours <= 0:
+            raise ValueError("AIGC_TOKEN_EXPIRE_HOURS 必须为正整数")
 
 
 settings = Settings()
