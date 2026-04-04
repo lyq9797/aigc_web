@@ -1,6 +1,7 @@
 import json
 import sqlite3
 from contextlib import contextmanager
+from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Iterator, Optional
@@ -8,10 +9,15 @@ from typing import Any, Iterator, Optional
 from .config import DB_PATH
 
 
+@dataclass(frozen=True)
+class DatabaseConfig:
+    path: Path = Path(DB_PATH)
+
+
 @contextmanager
-def sqlite_connection() -> Iterator[sqlite3.Connection]:
-    Path(DB_PATH).parent.mkdir(parents=True, exist_ok=True)
-    conn = sqlite3.connect(DB_PATH)
+def sqlite_connection(config: DatabaseConfig = DatabaseConfig()) -> Iterator[sqlite3.Connection]:
+    config.path.parent.mkdir(parents=True, exist_ok=True)
+    conn = sqlite3.connect(config.path)
     conn.row_factory = sqlite3.Row
     try:
         yield conn
@@ -37,8 +43,8 @@ def _fetch_all(conn: sqlite3.Connection, sql: str, params: tuple[Any, ...]) -> l
     return _execute(conn, sql, params).fetchall()
 
 
-def init_db() -> None:
-    with sqlite_connection() as conn:
+def init_db(config: DatabaseConfig = DatabaseConfig()) -> None:
+    with sqlite_connection(config) as conn:
         conn.execute(
             """
             CREATE TABLE IF NOT EXISTS users (
@@ -63,9 +69,9 @@ def init_db() -> None:
         )
 
 
-def create_user(username: str, password_hash: str) -> int:
+def create_user(username: str, password_hash: str, config: DatabaseConfig = DatabaseConfig()) -> int:
     now = datetime.now().isoformat()
-    with sqlite_connection() as conn:
+    with sqlite_connection(config) as conn:
         cur = _execute(
             conn,
             "INSERT INTO users(username, password_hash, created_at) VALUES (?, ?, ?)",
@@ -74,19 +80,19 @@ def create_user(username: str, password_hash: str) -> int:
         return int(cur.lastrowid)
 
 
-def get_user_by_username(username: str) -> Optional[sqlite3.Row]:
-    with sqlite_connection() as conn:
+def get_user_by_username(username: str, config: DatabaseConfig = DatabaseConfig()) -> Optional[sqlite3.Row]:
+    with sqlite_connection(config) as conn:
         return _fetch_one(conn, "SELECT * FROM users WHERE username = ?", (username,))
 
 
-def get_user_by_id(user_id: int) -> Optional[sqlite3.Row]:
-    with sqlite_connection() as conn:
+def get_user_by_id(user_id: int, config: DatabaseConfig = DatabaseConfig()) -> Optional[sqlite3.Row]:
+    with sqlite_connection(config) as conn:
         return _fetch_one(conn, "SELECT * FROM users WHERE id = ?", (user_id,))
 
 
-def save_detection(user_id: int, input_text: str, result: dict[str, Any]) -> int:
+def save_detection(user_id: int, input_text: str, result: dict[str, Any], config: DatabaseConfig = DatabaseConfig()) -> int:
     now = datetime.now().isoformat()
-    with sqlite_connection() as conn:
+    with sqlite_connection(config) as conn:
         cur = _execute(
             conn,
             "INSERT INTO detections(user_id, input_text, result_json, created_at) VALUES (?, ?, ?, ?)",
@@ -95,8 +101,8 @@ def save_detection(user_id: int, input_text: str, result: dict[str, Any]) -> int
         return int(cur.lastrowid)
 
 
-def list_detections(user_id: int, limit: int = 50) -> list[dict[str, Any]]:
-    with sqlite_connection() as conn:
+def list_detections(user_id: int, limit: int = 50, config: DatabaseConfig = DatabaseConfig()) -> list[dict[str, Any]]:
+    with sqlite_connection(config) as conn:
         rows = _fetch_all(
             conn,
             """
@@ -120,7 +126,7 @@ def list_detections(user_id: int, limit: int = 50) -> list[dict[str, Any]]:
     ]
 
 
-def clear_detections(user_id: int) -> int:
-    with sqlite_connection() as conn:
+def clear_detections(user_id: int, config: DatabaseConfig = DatabaseConfig()) -> int:
+    with sqlite_connection(config) as conn:
         cur = _execute(conn, "DELETE FROM detections WHERE user_id = ?", (user_id,))
         return int(cur.rowcount)
