@@ -6,6 +6,12 @@ class BaseSchema(BaseModel):
         anystr_strip_whitespace = True
         orm_mode = True
         extra = "forbid"
+        schema_extra = {
+            "example": {
+                "username": "student01",
+                "password": "secure_password123",
+            }
+        }
 
 
 class RegisterRequest(BaseSchema):
