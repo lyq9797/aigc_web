@@ -83,14 +83,12 @@ def history_page(request: Request) -> HTMLResponse:
 
 @app.post("/api/register", response_model=AuthResponse)
 def register(body: RegisterRequest):
-    exists = db.get_user_by_username(body.username)
-    if exists:
+    if db.get_user_by_username(body.username):
         raise HTTPException(status_code=400, detail="Username already exists")
 
     hashed = hash_password(body.password)
     user_id = db.create_user(body.username, hashed)
-    token = create_token(user_id=user_id, username=body.username)
-    return AuthResponse(token=token, username=body.username)
+    return AuthResponse(token=create_token(user_id=user_id, username=body.username), username=body.username)
 
 
 @app.post("/api/login", response_model=AuthResponse)
@@ -99,8 +97,7 @@ def login(body: LoginRequest):
     if not row or not verify_password(body.password, row["password_hash"]):
         raise HTTPException(status_code=401, detail="Invalid username or password")
 
-    token = create_token(user_id=int(row["id"]), username=str(row["username"]))
-    return AuthResponse(token=token, username=str(row["username"]))
+    return AuthResponse(token=create_token(user_id=int(row["id"]), username=str(row["username"])), username=str(row["username"]))
 
 
 @app.post("/api/detect")
