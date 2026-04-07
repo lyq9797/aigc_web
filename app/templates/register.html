@@ -4,39 +4,39 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>注册 - AI 文本检测系统</title>
-  <link rel="stylesheet" href="/static/styles.css" />
+  <link rel="stylesheet" href="/static/styles.css?v=20260420-2" />
 </head>
 <body>
   <div class="bg-shape bg-one"></div>
   <div class="bg-shape bg-two"></div>
 
-  <main class="auth-wrap">
-    <section class="card auth-box">
-      <h1 class="auth-title">用户注册</h1>
+  <main class="auth-wrap" role="main">
+    <section class="card auth-box" aria-labelledby="registerTitle">
+      <h1 id="registerTitle" class="auth-title">用户注册</h1>
       <p class="muted auth-subtitle">注册成功后返回登录页面</p>
 
-      <label>用户名</label>
-      <input id="username" type="text" placeholder="3-50 字符" />
+      <label for="username">用户名</label>
+      <input id="username" name="username" type="text" autocomplete="username" placeholder="3-50 字符" />
 
-      <label>密码</label>
+      <label for="password">密码</label>
       <div class="password-input-wrap">
-        <input id="password" type="password" placeholder="至少 6 位" />
+        <input id="password" name="password" type="password" autocomplete="new-password" placeholder="至少 6 位" />
         <button id="togglePasswordBtn" type="button" class="password-eye" aria-label="显示或隐藏密码" title="显示/隐藏密码"></button>
       </div>
 
-      <label>确认密码</label>
+      <label for="passwordConfirm">确认密码</label>
       <div class="password-input-wrap">
-        <input id="passwordConfirm" type="password" placeholder="请再次输入密码" />
+        <input id="passwordConfirm" name="passwordConfirm" type="password" placeholder="请再次输入密码" />
         <button id="togglePasswordConfirmBtn" type="button" class="password-eye" aria-label="显示或隐藏确认密码" title="显示/隐藏确认密码"></button>
       </div>
 
-      <button id="registerBtn" class="primary big">注册</button>
-      <button id="goLoginBtn" class="ghost big">已有账号？去登录</button>
-      <p id="msg" class="msg"></p>
+      <button id="registerBtn" class="primary big" type="button">注册</button>
+      <button id="goLoginBtn" class="ghost big" type="button">已有账号？去登录</button>
+      <p id="msg" class="msg" aria-live="polite"></p>
     </section>
   </main>
 
-  <script src="/static/common.js?v=20260416-4"></script>
-  <script src="/static/register.js?v=20260416-4"></script>
+  <script src="/static/common.js?v=20260417-4"></script>
+  <script src="/static/register.js?v=20260417-4"></script>
 </body>
 </html>
