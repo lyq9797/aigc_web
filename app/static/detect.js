@@ -21,49 +21,33 @@ let currentDetectResult = null;
 let currentDetectTime = null;
 let currentExportFormat = 'txt';
 
-function formatExportDateTime(date) {
-  const value = date instanceof Date ? date : new Date();
-  const y = value.getFullYear();
-  const m = String(value.getMonth() + 1).padStart(2, '0');
-  const d = String(value.getDate()).padStart(2, '0');
-  const h = String(value.getHours()).padStart(2, '0');
-  const min = String(value.getMinutes()).padStart(2, '0');
-  const s = String(value.getSeconds()).padStart(2, '0');
-  return `${y}-${m}-${d} ${h}:${min}:${s}`;
-}
-
 function formatExportFileTime(date) {
   const value = date instanceof Date ? date : new Date();
-  const y = value.getFullYear();
-  const m = String(value.getMonth() + 1).padStart(2, '0');
-  const d = String(value.getDate()).padStart(2, '0');
-  const h = String(value.getHours()).padStart(2, '0');
-  const min = String(value.getMinutes()).padStart(2, '0');
-  const s = String(value.getSeconds()).padStart(2, '0');
-  return `${y}${m}${d}_${h}${min}${s}`;
+  const pad = (v) => String(v).padStart(2, '0');
+  return `${value.getFullYear()}${pad(value.getMonth() + 1)}${pad(value.getDate())}_${pad(value.getHours())}${pad(value.getMinutes())}${pad(value.getSeconds())}`;
 }
 
-function downloadTextFile(filename, content, mimeType) {
-  const blob = new Blob([content], { type: mimeType });
+function downloadFile(name, data, mimeType) {
+  const blob = new Blob([data], { type: mimeType });
   const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = filename;
-  document.body.appendChild(link);
-  link.click();
-  link.remove();
+  const anchor = document.createElement('a');
+  anchor.href = url;
+  anchor.download = name;
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
   URL.revokeObjectURL(url);
 }
 
-function updateExportState() {
+function updateExportButtonState() {
   if (exportDetectBtn) {
     exportDetectBtn.disabled = !currentDetectResult;
   }
 }
 
-function renderWordHighlight(words) {
+function renderWords(words) {
   if (!wordHighlightContent) return;
-  if (!words || !words.length) {
+  if (!Array.isArray(words) || words.length === 0) {
     wordHighlightContent.textContent = '暂无结果';
     return;
   }
@@ -72,90 +56,104 @@ function renderWordHighlight(words) {
     .join(' ');
 }
 
-function renderSentences(sentences) {
+function renderSentenceList(sentences) {
   if (!sentenceList) return;
-  if (!sentences || !sentences.length) {
+  if (!Array.isArray(sentences) || sentences.length === 0) {
     sentenceList.innerHTML = '<div class="muted">暂无结果</div>';
     return;
   }
   sentenceList.innerHTML = sentences
-    .map((sentence) => {
-      const cls = sentence.label === 'AIGT' ? 'aigt' : 'hwt';
-      return `<div class="sentence-item ${cls}"><div><strong>句子 ${sentence.index + 1}</strong> | ${sentence.label}</div><div>${escapeHtml(sentence.text)}</div></div>`;
-    })
+    .map((sentence) => `
+      <div class="sentence-item ${sentence.label === 'AIGT' ? 'aigt' : 'hwt'}">
+        <div><strong>句子 ${sentence.index + 1}</strong> | ${escapeHtml(sentence.label)}</div>
+        <div>${escapeHtml(sentence.text)}</div>
+      </div>
+    `)
     .join('');
 }
 
-async function doDetect() {
+async function detectText() {
   try {
     detectMsg.style.color = '#5f6c75';
-    detectMsg.textContent = '检测中，请稍候...';
+    detectMsg.textContent = '检测中...';
     const text = inputText.value.trim();
+    if (!text) {
+      throw new Error('请输入文本内容');
+    }
     const res = await api('/api/detect', 'POST', { text }, true);
     currentDetectResult = res.result;
     currentDetectTime = new Date();
-    renderWordHighlight(currentDetectResult.words || []);
-    renderSentences(currentDetectResult.sentences || []);
+    renderWords(currentDetectResult.words || []);
+    renderSentenceList(currentDetectResult.sentences || []);
     detectMsg.style.color = '#0a7f6f';
     detectMsg.textContent = '检测完成';
-    updateExportState();
+    updateExportButtonState();
   } catch (err) {
     detectMsg.style.color = '#b13f00';
     detectMsg.textContent = err.message;
   }
 }
 
-function openDetectExportMenu() {
-  if (!exportDetectMenu || exportDetectBtn.disabled) {
-    return;
-  }
+function closeExportMenu() {
+  if (!exportDetectMenu) return;
+  exportDetectMenu.classList.add('hidden');
+}
+
+function openExportMenu() {
+  if (!exportDetectMenu || !exportDetectBtn || exportDetectBtn.disabled) return;
   exportDetectMenu.classList.toggle('hidden');
 }
 
-function chooseDetectExportFormat(format) {
-  currentExportFormat = format;
-  exportDetectMenu?.classList.add('hidden');
-  exportDetectResult();
-}
-
-function exportDetectResult() {
+function exportResult(format) {
   if (!currentDetectResult) {
     detectMsg.style.color = '#b13f00';
     detectMsg.textContent = '请先完成检测后再导出';
     return;
   }
-  const filenameBase = `detect_result_${formatExportFileTime(currentDetectTime)}`;
+  currentExportFormat = format;
+  closeExportMenu();
+  const fileTime = formatExportFileTime(currentDetectTime || new Date());
+  const fileNameBase = `detect_result_${fileTime}`;
   const payload = {
     type: 'detect',
     exported_at: new Date().toISOString(),
-    exported_at_local: formatExportDateTime(new Date()),
     input_text: inputText.value,
     result: currentDetectResult,
   };
-  if (currentExportFormat === 'json') {
-    downloadTextFile(`${filenameBase}.json`, `${JSON.stringify(payload, null, 2)}\n`, 'application/json;charset=utf-8');
+
+  if (format === 'json') {
+    downloadFile(`${fileNameBase}.json`, `${JSON.stringify(payload, null, 2)}\n`, 'application/json;charset=utf-8');
     return;
   }
-  const prettyText = [
+
+  const wordLines = Array.isArray(currentDetectResult.words)
+    ? currentDetectResult.words.map((word, index) => `${index + 1}. ${word.token}\t${word.label || (word.label_id === 1 ? 'AIGT' : 'HWT')}`)
+    : ['暂无结果'];
+  const sentenceLines = Array.isArray(currentDetectResult.sentences)
+    ? currentDetectResult.sentences.map((sentence, index) => `${index + 1}. ${sentence.label}\t${sentence.confidence ?? '-'}\t${sentence.text}`)
+    : ['暂无结果'];
+
+  const content = [
     'AI 文本检测结果',
-    `导出时间：${payload.exported_at_local}`,
+    `导出时间：${formatExportDateTime(currentDetectTime || new Date())}`,
     '',
     '原始文本',
-    payload.input_text || '暂无内容',
+    inputText.value || '暂无内容',
     '',
     '单词级结果',
     '序号\t单词\t标签',
-    ...Array.isArray(currentDetectResult.words) ? currentDetectResult.words.map((word, index) => `${index + 1}. ${word.token}\t${word.label || (word.label_id === 1 ? 'AIGT' : 'HWT')}`) : ['暂无结果'],
+    ...wordLines,
     '',
     '句子级结果',
     '序号\t标签\t置信度\t文本',
-    ...Array.isArray(currentDetectResult.sentences) ? currentDetectResult.sentences.map((sentence, index) => `${index + 1}. ${sentence.label}\t${sentence.confidence ?? '-'}\t${sentence.text}`) : ['暂无结果'],
+    ...sentenceLines,
   ].join('\n');
-  downloadTextFile(`${filenameBase}.txt`, prettyText, 'text/plain;charset=utf-8');
+
+  downloadFile(`${fileNameBase}.txt`, content, 'text/plain;charset=utf-8');
 }
 
-fileSelectBtn.addEventListener('click', () => fileInput.click());
-fileInput.addEventListener('change', async () => {
+fileSelectBtn?.addEventListener('click', () => fileInput.click());
+fileInput?.addEventListener('change', async () => {
   const file = fileInput.files && fileInput.files[0];
   if (!file) return;
   selectedFileName.textContent = file.name;
@@ -172,24 +170,30 @@ fileInput.addEventListener('change', async () => {
     detectMsg.style.color = '#0a7f6f';
     detectMsg.textContent = '文件内容已载入，可直接开始检测';
   } catch (err) {
-    const errMsg = err && err.message ? err.message : '文件读取失败';
     detectMsg.style.color = '#b13f00';
-    detectMsg.textContent = errMsg;
+    detectMsg.textContent = err.message || '文件读取失败';
     selectedFileName.textContent = '';
     selectedFileName.classList.remove('visible');
     fileInfo.textContent = '支持 .txt、.doc、.docx 文件';
   }
 });
 
-detectBtn?.addEventListener('click', doDetect);
-exportDetectBtn?.addEventListener('click', openDetectExportMenu);
-exportDetectTxtBtn?.addEventListener('click', () => chooseDetectExportFormat('txt'));
-exportDetectJsonBtn?.addEventListener('click', () => chooseDetectExportFormat('json'));
+detectBtn?.addEventListener('click', detectText);
+exportDetectBtn?.addEventListener('click', openExportMenu);
+exportDetectTxtBtn?.addEventListener('click', () => exportResult('txt'));
+exportDetectJsonBtn?.addEventListener('click', () => exportResult('json'));
 
 document.addEventListener('click', (event) => {
   if (!exportDetectMenu || !exportDetectBtn) return;
   if (exportDetectMenu.classList.contains('hidden')) return;
-  if (event.target !== exportDetectMenu && !exportDetectMenu.contains(event.target) && event.target !== exportDetectBtn) {
-    exportDetectMenu.classList.add('hidden');
+  const target = event.target;
+  if (target !== exportDetectMenu && !exportDetectMenu.contains(target) && target !== exportDetectBtn) {
+    closeExportMenu();
+  }
+});
+
+document.addEventListener('keydown', (event) => {
+  if (event.key === 'Escape') {
+    closeExportMenu();
   }
 });
