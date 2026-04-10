@@ -36,8 +36,6 @@ class WordLevelDetector:
     SWITCH_REFINED_CONFIDENCE: float = 0.88
 
     BACKEND_TIMEOUT_SECONDS: int = 45
-
-    # V3: 启发式最短词数阈值
     HEURISTIC_MIN_TOKENS_FOR_CONV: int = 4
 
     def __init__(self) -> None:
@@ -71,15 +69,13 @@ class WordLevelDetector:
         except Exception as exc:
             logger.warning("Word-level model not loaded, fallback mode enabled: %s", exc, exc_info=True)
 
-    # ---- V3: 新增辅助方法 ----
+    # ---- 辅助方法 ----
 
     def _heuristic_split_index(self, tokens: list[dict[str, Any]]) -> int:
-        """V3: 基于词长梯度计算启发式切换点。"""
+        """基于词长梯度计算启发式切换点。"""
         n = len(tokens)
         if n <= 1:
             return 0
-
-        # V3: 词数太少时卷积无意义，用简单中位数
         if n < self.HEURISTIC_MIN_TOKENS_FOR_CONV:
             return n // 2
 
@@ -91,7 +87,7 @@ class WordLevelDetector:
     def _build_word_row(
         self, token_item: dict[str, Any], label_id: int, confidence: float
     ) -> dict[str, Any]:
-        """V3: 统一构造单条 word 结果字典，消除重复代码。"""
+        """统一构造单条 word 结果字典。"""
         return {
             **token_item,
             "label": "AIGT" if label_id == 1 else "HWT",
@@ -100,13 +96,18 @@ class WordLevelDetector:
         }
 
     def _compute_fallback_confidence(self, token_index: int, split_index: int) -> float:
-        """V3: 计算 fallback 模式下某个 token 的置信度。"""
+        """计算 fallback 模式下某个 token 的置信度。"""
         return self.FALLBACK_BASE_CONFIDENCE + min(
             self.FALLBACK_MAX_CONFIDENCE_BOOST,
             abs(token_index - split_index) * self.FALLBACK_CONFIDENCE_STEP,
         )
 
-    # ---- 主要方法 ----
+    @staticmethod
+    def _label_to_id(label: str) -> int:
+        """V4: 将标签字符串映射为整数 ID。"""
+        return 1 if label.upper() == "AIGT" else 0
+
+    # ---- 核心推理 ----
 
     def _fallback_predict(self, text: str) -> WordPredictResult:
         if not isinstance(text, str):
@@ -117,7 +118,6 @@ class WordLevelDetector:
         if not tokens:
             return WordPredictResult(words=[], switch_word_index=0, model_used="fallback-heuristic")
 
-        # V3: 使用抽取出来的启发式方法
         split_idx = self._heuristic_split_index(tokens)
 
         words = []
@@ -160,10 +160,11 @@ class WordLevelDetector:
             total = max(1, vote0 + vote1)
             conf = max(vote0, vote1) / total
             label_id = int(pred_labels[i]) if i < len(pred_labels) else 0
-            # V3: 使用统一构建方法
             rows.append(self._build_word_row(token_item, label_id, conf))
 
         return WordPredictResult(words=rows, switch_word_index=int(boundary), model_used="deberta-crf")
+
+    # ---- 句子感知推理 ----
 
     def _sentence_spans(self, text: str, sentence_rows: list[dict[str, Any]]) -> list[tuple[int, int, str]]:
         spans: list[tuple[int, int, str]] = []
@@ -181,7 +182,8 @@ class WordLevelDetector:
                 start = cursor
             end = start + len(sent)
             cursor = end
-            label = "AIGT" if str(row.get("label", "")).upper() == "AIGT" else "HWT"
+            # V4: 使用静态方法
+            label = "AIGT" if self._label_to_id(str(row.get("label", ""))) == 1 else "HWT"
             spans.append((start, end, label))
         return spans
 
@@ -239,28 +241,17 @@ class WordLevelDetector:
             logger.warning("Unexpected error calling external backend: %s", exc)
             return None
 
-    def predict_with_sentence_switches(self, text: str, sentence_rows: list[dict[str, Any]]) -> WordPredictResult:
-        if not isinstance(text, str):
-            raise TypeError(f"Expected str, got {type(text).__name__}")
-        if not isinstance(sentence_rows, list):
-            raise TypeError(f"Expected list for sentence_rows, got {type(sentence_rows).__name__}")
-
-        text = text.strip()
-        tokens = tokenize_with_spans(text)
-        if not tokens:
-            return WordPredictResult(words=[], switch_word_index=0, model_used="switch-aware-empty")
-
-        if not sentence_rows:
-            return self.predict(text)
-
-        spans = self._sentence_spans(text, sentence_rows)
-        if not spans:
-            return self.predict(text)
-
+    # V4: 抽取 —— 根据句子标签初始化 token 级别的标签和置信度
+    def _init_token_labels_from_sentences(
+        self,
+        tokens: list[dict[str, Any]],
+        spans: list[tuple[int, int, str]],
+    ) -> tuple[list[int], list[float], list[list[int]]]:
+        """根据句子级标签，初始化每个 token 的 label、confidence 及句子→token 索引映射。"""
         token_labels = [0 for _ in tokens]
         token_conf = [self.DEFAULT_TOKEN_CONFIDENCE for _ in tokens]
-
         sentence_token_indices: list[list[int]] = []
+
         for start, end, sent_label in spans:
             idxs = [
                 i
@@ -268,11 +259,34 @@ class WordLevelDetector:
                 if tok["start"] >= start and tok["end"] <= end
             ]
             sentence_token_indices.append(idxs)
-            label_id = 1 if sent_label == "AIGT" else 0
+            label_id = self._label_to_id(sent_label)
             for i in idxs:
                 token_labels[i] = label_id
                 token_conf[i] = self.SENTENCE_TOKEN_CONFIDENCE
 
+        return token_labels, token_conf, sentence_token_indices
+
+    # V4: 抽取 —— 解析相邻两句之间的局部切换边界
+    def _resolve_local_boundary(
+        self, local_text: str, combined_idxs: list[int]
+    ) -> int:
+        """调用外部后端或自身模型，获取局部文本的切换边界并 clamp 到合法范围。"""
+        local_boundary = self._call_external_boundary_backend(local_text)
+        if local_boundary is None:
+            local_res = self.predict(local_text)
+            local_boundary = int(local_res.switch_word_index)
+        return max(0, min(local_boundary, len(combined_idxs) - 1))
+
+    # V4: 抽取 —— 在句子切换点处精化 token 标签
+    def _refine_boundaries_at_switches(
+        self,
+        text: str,
+        spans: list[tuple[int, int, str]],
+        sentence_token_indices: list[list[int]],
+        token_labels: list[int],
+        token_conf: list[float],
+    ) -> None:
+        """遍历相邻句子，在标签不同的切换点处调用局部检测器精化边界。原地修改 token_labels 和 token_conf。"""
         for i in range(len(spans) - 1):
             left_label = spans[i][2]
             right_label = spans[i + 1][2]
@@ -291,15 +305,12 @@ class WordLevelDetector:
             if not local_text:
                 continue
 
-            local_boundary = self._call_external_boundary_backend(local_text)
-            if local_boundary is None:
-                local_res = self.predict(local_text)
-                local_boundary = int(local_res.switch_word_index)
-            local_boundary = max(0, min(local_boundary, len(combined_idxs) - 1))
+            # V4: 使用抽取出的方法
+            local_boundary = self._resolve_local_boundary(local_text, combined_idxs)
             boundary_global = combined_idxs[local_boundary]
 
-            left_id = 1 if left_label == "AIGT" else 0
-            right_id = 1 if right_label == "AIGT" else 0
+            left_id = self._label_to_id(left_label)
+            right_id = self._label_to_id(right_label)
             for gi in combined_idxs:
                 if gi <= boundary_global:
                     token_labels[gi] = left_id
@@ -307,7 +318,32 @@ class WordLevelDetector:
                     token_labels[gi] = right_id
                 token_conf[gi] = self.SWITCH_REFINED_CONFIDENCE
 
-        # V3: 使用 _build_word_row
+    def predict_with_sentence_switches(self, text: str, sentence_rows: list[dict[str, Any]]) -> WordPredictResult:
+        if not isinstance(text, str):
+            raise TypeError(f"Expected str, got {type(text).__name__}")
+        if not isinstance(sentence_rows, list):
+            raise TypeError(f"Expected list for sentence_rows, got {type(sentence_rows).__name__}")
+
+        text = text.strip()
+        tokens = tokenize_with_spans(text)
+        if not tokens:
+            return WordPredictResult(words=[], switch_word_index=0, model_used="switch-aware-empty")
+
+        if not sentence_rows:
+            return self.predict(text)
+
+        spans = self._sentence_spans(text, sentence_rows)
+        if not spans:
+            return self.predict(text)
+
+        # V4: 拆分为两步
+        token_labels, token_conf, sentence_token_indices = self._init_token_labels_from_sentences(
+            tokens, spans
+        )
+        self._refine_boundaries_at_switches(
+            text, spans, sentence_token_indices, token_labels, token_conf
+        )
+
         rows: list[dict[str, Any]] = []
         for i, tok in enumerate(tokens):
             lid = int(token_labels[i])
