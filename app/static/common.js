@@ -6,12 +6,8 @@ const Auth = {
     return localStorage.getItem('aigc_user') || '';
   },
   set(token, username) {
-    if (token) {
-      localStorage.setItem('aigc_token', token);
-    }
-    if (username) {
-      localStorage.setItem('aigc_user', username);
-    }
+    if (token) localStorage.setItem('aigc_token', token);
+    if (username) localStorage.setItem('aigc_user', username);
   },
   clear() {
     localStorage.removeItem('aigc_token');
@@ -19,8 +15,8 @@ const Auth = {
   },
 };
 
-function escapeHtml(s) {
-  return String(s || '')
+function escapeHtml(value) {
+  return String(value || '')
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
@@ -28,7 +24,7 @@ function escapeHtml(s) {
     .replace(/'/g, '&#39;');
 }
 
-async function api(path, method = 'GET', body = null, needAuth = false) {
+function buildHeaders(needAuth) {
   const headers = {};
   if (needAuth) {
     if (!Auth.token) {
@@ -36,8 +32,13 @@ async function api(path, method = 'GET', body = null, needAuth = false) {
     }
     headers.Authorization = `Bearer ${Auth.token}`;
   }
+  return headers;
+}
 
+async function api(path, method = 'GET', body = null, needAuth = false) {
+  const headers = buildHeaders(needAuth);
   let requestBody = null;
+
   if (body instanceof FormData) {
     requestBody = body;
   } else if (body !== null && body !== undefined) {
@@ -51,13 +52,13 @@ async function api(path, method = 'GET', body = null, needAuth = false) {
     body: requestBody,
   });
 
-  const data = await response.json().catch(() => ({}));
+  const payload = await response.json().catch(() => ({}));
   if (!response.ok) {
-    const error = new Error(data.detail || '请求失败');
-    error.detail = data.detail;
+    const error = new Error(payload.detail || '请求失败');
+    error.detail = payload.detail;
     throw error;
   }
-  return data;
+  return payload;
 }
 
 function requireLogin() {
