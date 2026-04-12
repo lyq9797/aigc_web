@@ -9,20 +9,30 @@ if (Auth.token) {
   window.location.href = '/detect';
 }
 
-function setRegisterMessage(text, isError = false) {
-  regMsgEl.style.color = isError ? '#b13f00' : '#0a7f6f';
+function setRegisterStatus(text, level = 'normal') {
+  const color = level === 'error' ? '#b13f00' : level === 'success' ? '#0a7f6f' : '#5f6c75';
+  regMsgEl.style.color = color;
   regMsgEl.textContent = text;
 }
 
-function validateRegisterInput() {
+function validateRegisterForm() {
   const username = regUsernameEl.value.trim();
   const password = regPasswordEl.value;
   const confirm = regConfirmEl.value;
-  if (!username || !password || !confirm) {
-    throw new Error('请填写完整的注册信息');
+  if (!username) {
+    regUsernameEl.focus();
+    throw new Error('请输入用户名');
+  }
+  if (!password) {
+    regPasswordEl.focus();
+    throw new Error('请输入密码');
+  }
+  if (!confirm) {
+    regConfirmEl.focus();
+    throw new Error('请确认密码');
   }
   if (password !== confirm) {
-    throw new Error('两次密码输入不一致');
+    throw new Error('两次密码不一致');
   }
   if (password.length < 6) {
     throw new Error('密码长度至少 6 位');
@@ -32,19 +42,26 @@ function validateRegisterInput() {
 
 async function doRegister() {
   try {
-    setRegisterMessage('注册中...');
-    const { username, password } = validateRegisterInput();
+    setRegisterStatus('注册中...');
+    const { username, password } = validateRegisterForm();
     await api('/api/register', 'POST', { username, password }, false);
-    setRegisterMessage('注册成功，3 秒后跳转到登录页...');
+    setRegisterStatus('注册成功，3 秒后跳转到登录页...', 'success');
     setTimeout(() => {
       window.location.href = '/login';
     }, 3000);
   } catch (err) {
-    setRegisterMessage(err.message, true);
+    setRegisterStatus(err.message, 'error');
   }
 }
 
 registerBtn.addEventListener('click', doRegister);
 goLoginBtn.addEventListener('click', () => {
   window.location.href = '/login';
+});
+
+document.addEventListener('keydown', (event) => {
+  if (event.key === 'Enter' && (document.activeElement === regPasswordEl || document.activeElement === regConfirmEl || document.activeElement === regUsernameEl)) {
+    event.preventDefault();
+    doRegister();
+  }
 });
