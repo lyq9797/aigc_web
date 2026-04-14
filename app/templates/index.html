@@ -4,7 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>首页 - AI 文本检测系统</title>
-  <link rel="stylesheet" href="/static/styles.css?v=20260420-2" />
+  <link rel="preload" href="/static/styles.css?v=20260420-3" as="style" />
+  <link rel="stylesheet" href="/static/styles.css?v=20260420-3" />
 </head>
 <body>
   <div class="bg-shape bg-one"></div>
@@ -13,19 +14,19 @@
   <main class="home-wrap" role="main">
     <section class="card home-card" aria-labelledby="homeTitle">
       <h1 id="homeTitle">欢迎使用 AI 文本检测系统</h1>
-      <p>基于多模型融合的文本检测与高亮分析，支持单词级和句子级检测结果展示。</p>
+      <p>集成登录、注册、检测与历史查看功能，简单、高效、可信赖。</p>
       <div class="home-actions">
         <button id="loginBtn" class="primary" type="button">登录</button>
         <button id="registerBtn" class="ghost" type="button">注册</button>
       </div>
-      <div class="home-links">
+      <div class="home-links" aria-label="首页快速链接">
         <button id="goDetectBtn" class="ghost" type="button">直接检测</button>
         <button id="viewHistoryBtn" class="ghost" type="button">历史记录</button>
       </div>
     </section>
   </main>
 
-  <script src="/static/common.js?v=20260417-4"></script>
-  <script src="/static/app.js?v=20260417-4"></script>
+  <script src="/static/common.js?v=20260417-5"></script>
+  <script src="/static/app.js?v=20260417-5"></script>
 </body>
 </html>
