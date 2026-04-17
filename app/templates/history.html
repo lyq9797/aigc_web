@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>历史记录 - AI 文本检测系统</title>
-  <link rel="stylesheet" href="/static/styles.css?v=20260420-2" />
+  <link rel="stylesheet" href="/static/styles.css?v=20260420-3" />
 </head>
 <body>
   <div class="bg-shape bg-one"></div>
@@ -21,7 +21,7 @@
 
   <main class="layout-single" role="main">
     <section class="card history-card-full" aria-labelledby="historyTitle">
-      <h2 id="historyTitle" class="visually-hidden">历史记录页面</h2>
+      <h2 id="historyTitle">历史记录页面</h2>
       <div id="historyShell" class="history-shell">
         <aside id="historySidebar" class="history-sidebar" aria-label="历史检测列表">
           <div class="history-sidebar-head">
@@ -36,8 +36,8 @@
             <button id="sidebarToggleBtn" class="ghost" type="button" aria-expanded="true">收起边栏</button>
             <h3>具体检测详情</h3>
             <div class="export-control-wrap export-control-wrap-right">
-              <button id="exportHistoryBtn" class="ghost export-trigger" type="button" disabled>结果导出</button>
-              <div id="exportHistoryMenu" class="export-menu hidden" aria-hidden="true">
+              <button id="exportHistoryBtn" class="ghost export-trigger" type="button" disabled aria-haspopup="true" aria-expanded="false">结果导出</button>
+              <div id="exportHistoryMenu" class="export-menu hidden" aria-hidden="true" aria-label="历史记录导出格式选择">
                 <div class="export-menu-panel" role="dialog" aria-modal="true" aria-label="历史记录导出格式选择">
                   <div class="export-menu-title">选择导出格式</div>
                   <button id="exportHistoryTxtBtn" class="export-menu-item" type="button">导出为 TXT</button>
@@ -62,7 +62,7 @@
     </section>
   </main>
 
-  <script src="/static/common.js?v=20260417-4"></script>
-  <script src="/static/history.js?v=20260417-4"></script>
+  <script src="/static/common.js?v=20260417-5"></script>
+  <script src="/static/history.js?v=20260417-5"></script>
 </body>
 </html>
