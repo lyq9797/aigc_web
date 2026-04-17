@@ -4,12 +4,13 @@ import logging
 import os
 import random
 import sys
+from typing import List, Tuple, Dict, Any
 
 import numpy as np
 import torch
 import torch.nn as nn
 from torchcrf import CRF
-from transformers import AutoModel, AutoTokenizer
+from transformers import AutoModel, AutoTokenizer, BatchEncoding
 
 NUM_LABELS = 2
 DEFAULT_MAX_LEN = 512
@@ -61,134 +62,133 @@ class DeBERTaCRFTagger(nn.Module):
         return torch.tensor(padded_predictions, device=input_ids.device)
 
 
-def decode_window_word_predictions(encoding, pred_ids):
-    attention_mask = encoding["attention_mask"][0].tolist()
-    pred_ids = pred_ids[: len(attention_mask)]
+class InferenceEngine:
+    def __init__(self, model: nn.Module, tokenizer: AutoTokenizer, device: torch.device,
+                 max_len: int = DEFAULT_MAX_LEN):
+        self.model = model
+        self.tokenizer = tokenizer
+        self.device = device
+        self.max_len = max_len
 
-    try:
-        word_ids = encoding.word_ids(batch_index=0)
-    except Exception:
-        word_ids = None
+    def _decode_window_word_predictions(self, encoding: BatchEncoding, pred_ids: List[int]) -> List[int]:
+        attention_mask = encoding["attention_mask"][0].tolist()
+        pred_ids = pred_ids[: len(attention_mask)]
 
-    if word_ids is None:
-        special_tokens_mask = encoding["special_tokens_mask"][0].tolist()
+        try:
+            word_ids = encoding.word_ids(batch_index=0)
+        except Exception:
+            word_ids = None
+
+        if word_ids is None:
+            special_tokens_mask = encoding["special_tokens_mask"][0].tolist()
+            word_level_preds = []
+            for i, is_special in enumerate(special_tokens_mask):
+                if attention_mask[i] == 1 and not is_special:
+                    word_level_preds.append(int(pred_ids[i]))
+            return word_level_preds
+
+        per_word_votes = {}
+        for i, wid in enumerate(word_ids):
+            if wid is None or attention_mask[i] == 0:
+                continue
+            per_word_votes.setdefault(wid, [0, 0])
+            label = int(pred_ids[i])
+            per_word_votes[wid][label] += 1
+
         word_level_preds = []
-        for i, is_special in enumerate(special_tokens_mask):
-            if attention_mask[i] == 1 and not is_special:
-                word_level_preds.append(int(pred_ids[i]))
+        for wid in sorted(per_word_votes.keys()):
+            votes = per_word_votes[wid]
+            word_level_preds.append(1 if votes[1] > votes[0] else 0)
         return word_level_preds
 
-    per_word_votes = {}
-    for i, wid in enumerate(word_ids):
-        if wid is None or attention_mask[i] == 0:
-            continue
-        per_word_votes.setdefault(wid, [0, 0])
-        label = int(pred_ids[i])
-        per_word_votes[wid][label] += 1
+    def _build_adaptive_windows(self, doc_len: int) -> List[Tuple[int, int]]:
+        if doc_len <= 0:
+            return [(0, 0)]
 
-    word_level_preds = []
-    for wid in sorted(per_word_votes.keys()):
-        votes = per_word_votes[wid]
-        word_level_preds.append(1 if votes[1] > votes[0] else 0)
-    return word_level_preds
+        if doc_len > BASE_WINDOW:
+            win_size = BASE_WINDOW
+            stride = BASE_STRIDE
+        else:
+            win_size = min(SHORT_WINDOW_CAP, doc_len)
+            if win_size >= doc_len and doc_len > 2:
+                win_size = max(2, int(np.ceil(doc_len * 0.75)))
+            stride = max(1, win_size // 2)
 
+        if win_size >= doc_len:
+            return [(0, doc_len)]
 
-def build_adaptive_windows(doc_len, base_window=BASE_WINDOW, base_stride=BASE_STRIDE,
-                           short_window_cap=SHORT_WINDOW_CAP):
-    if doc_len <= 0:
-        return [(0, 0)]
+        starts = list(range(0, doc_len - win_size + 1, stride))
+        last_start = doc_len - win_size
+        if starts[-1] != last_start:
+            starts.append(last_start)
 
-    if doc_len > base_window:
-        win_size = base_window
-        stride = base_stride
-    else:
-        win_size = min(short_window_cap, doc_len)
-        if win_size >= doc_len and doc_len > 2:
-            win_size = max(2, int(np.ceil(doc_len * 0.75)))
-        stride = max(1, win_size // 2)
+        if len(starts) < 2 and doc_len > win_size:
+            mid_start = (doc_len - win_size) // 2
+            starts.append(mid_start)
+            starts = sorted(set(starts))
 
-    if win_size >= doc_len:
-        return [(0, doc_len)]
+        return [(s, s + win_size) for s in starts]
 
-    starts = list(range(0, doc_len - win_size + 1, stride))
-    last_start = doc_len - win_size
-    if starts[-1] != last_start:
-        starts.append(last_start)
+    def _decode_boundary_from_scores(self, prob_array: np.ndarray) -> int:
+        n = len(prob_array)
+        if n <= 0:
+            return 0
+        cumsum = np.cumsum(prob_array)
+        objective = 2 * cumsum - np.arange(n)
+        best_boundary = int(np.argmax(objective))
+        return max(0, min(best_boundary, n - 1))
 
-    if len(starts) < 2 and doc_len > win_size:
-        mid_start = (doc_len - win_size) // 2
-        starts.append(mid_start)
-        starts = sorted(set(starts))
+    def predict(self, words: List[str]) -> Dict[str, Any]:
+        doc_len = len(words)
+        windows = self._build_adaptive_windows(doc_len)
+        logger.info(f"Document length: {doc_len}, Number of windows: {len(windows)}")
 
-    return [(s, s + win_size) for s in starts]
+        pred_1_counts = np.zeros(doc_len, dtype=np.float32)
+        coverage_counts = np.zeros(doc_len, dtype=np.float32)
 
+        self.model.eval()
+        with torch.no_grad():
+            for start, end in windows:
+                window_words = words[start:end]
+                encoding = self.tokenizer(
+                    window_words,
+                    is_split_into_words=True,
+                    max_length=self.max_len,
+                    padding="max_length",
+                    truncation=True,
+                    return_tensors="pt",
+                    return_special_tokens_mask=True,
+                )
+                input_ids = encoding["input_ids"].to(self.device)
+                attention_mask = encoding["attention_mask"].to(self.device)
 
-def decode_boundary_from_scores(prob_array):
-    """基于累积概率寻找最佳分割边界"""
-    n = len(prob_array)
-    if n <= 0:
-        return 0
+                try:
+                    predictions = self.model(input_ids, attention_mask)
+                except Exception as e:
+                    logger.error(f"Model inference failed for window [{start}:{end}]: {e}")
+                    continue
 
-    # 计算前缀和，寻找使得前半部分为0，后半部分为1的期望最大化的点
-    cumsum = np.cumsum(prob_array)
-    total_sum = cumsum[-1]
+                pred_ids = predictions[0].detach().cpu().tolist()
+                word_preds = self._decode_window_word_predictions(encoding, pred_ids)
 
-    # objective: 最小化前半部分的1的数量 + 后半部分的0的数量
-    # 即最小化: cumsum[i] + ((n - i) - (total_sum - cumsum[i]))
-    # 化简后等价于最大化: 2 * cumsum[i] - i
-    objective = 2 * cumsum - np.arange(n)
-    best_boundary = int(np.argmax(objective))
-    return max(0, min(best_boundary, n - 1))
+                for local_idx, pred in enumerate(word_preds):
+                    global_idx = start + local_idx
+                    if global_idx < doc_len:
+                        coverage_counts[global_idx] += 1.0
+                        if int(pred) == 1:
+                            pred_1_counts[global_idx] += 1.0
 
+        safe_coverage = np.where(coverage_counts == 0, 1, coverage_counts)
+        prob_array = pred_1_counts / safe_coverage
 
-def infer_document_with_sliding_windows(model, words, tokenizer, max_len, device):
-    doc_len = len(words)
-    windows = build_adaptive_windows(doc_len)
-    logger.info(f"Document length: {doc_len}, Number of windows: {len(windows)}")
+        boundary = self._decode_boundary_from_scores(prob_array)
+        pred_word_labels = [0 if i <= boundary else 1 for i in range(doc_len)]
 
-    # 记录每个词被预测为1的次数和总覆盖次数
-    pred_1_counts = np.zeros(doc_len, dtype=np.float32)
-    coverage_counts = np.zeros(doc_len, dtype=np.float32)
-
-    with torch.no_grad():
-        for start, end in windows:
-            window_words = words[start:end]
-            encoding = tokenizer(
-                window_words,
-                is_split_into_words=True,
-                max_length=max_len,
-                padding="max_length",
-                truncation=True,
-                return_tensors="pt",
-                return_special_tokens_mask=True,
-            )
-            input_ids = encoding["input_ids"].to(device)
-            attention_mask = encoding["attention_mask"].to(device)
-
-            try:
-                predictions = model(input_ids, attention_mask)
-            except Exception as e:
-                logger.error(f"Model inference failed for window [{start}:{end}]: {e}")
-                continue
-
-            pred_ids = predictions[0].detach().cpu().tolist()
-            word_preds = decode_window_word_predictions(encoding, pred_ids)
-
-            for local_idx, pred in enumerate(word_preds):
-                global_idx = start + local_idx
-                if global_idx < doc_len:
-                    coverage_counts[global_idx] += 1.0
-                    if int(pred) == 1:
-                        pred_1_counts[global_idx] += 1.0
-
-    # 计算每个词属于类别1的概率
-    # 避免除以0
-    safe_coverage = np.where(coverage_counts == 0, 1, coverage_counts)
-    prob_array = pred_1_counts / safe_coverage
-
-    boundary = decode_boundary_from_scores(prob_array)
-    pred_word_labels = [0 if i <= boundary else 1 for i in range(doc_len)]
-    return pred_word_labels, boundary, prob_array
+        return {
+            "boundary_idx": int(boundary),
+            "word_labels": [int(x) for x in pred_word_labels],
+            "model_used": "work2-deberta-crf-single"
+        }
 
 
 def main() -> None:
@@ -221,7 +221,6 @@ def main() -> None:
         ckpt = torch.load(args.best_model_path, map_location=device, weights_only=False)
         state = ckpt.get("model_state_dict", ckpt)
         model.load_state_dict(state)
-        model.eval()
     except Exception as e:
         logger.error(f"Failed to load model: {e}")
         sys.exit(1)
@@ -232,16 +231,10 @@ def main() -> None:
             json.dumps({"boundary_idx": 0, "word_labels": [], "model_used": "work2-single-empty"}, ensure_ascii=False))
         return
 
-    pred_word_labels, boundary, _ = infer_document_with_sliding_windows(
-        model, words, tokenizer, args.max_len, device,
-    )
+    engine = InferenceEngine(model, tokenizer, device, args.max_len)
+    result = engine.predict(words)
 
-    payload = {
-        "boundary_idx": int(boundary),
-        "word_labels": [int(x) for x in pred_word_labels],
-        "model_used": "work2-deberta-crf-single",
-    }
-    print(json.dumps(payload, ensure_ascii=False))
+    print(json.dumps(result, ensure_ascii=False))
 
 
 if __name__ == "__main__":
