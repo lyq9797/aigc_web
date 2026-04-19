@@ -2,9 +2,12 @@ from __future__ import annotations
 
 import json
 import logging
+import os
 import subprocess
 import sys
+import time
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Any
 
 import numpy as np
@@ -38,6 +41,10 @@ class WordLevelDetector:
     BACKEND_TIMEOUT_SECONDS: int = 45
     HEURISTIC_MIN_TOKENS_FOR_CONV: int = 4
 
+    # V5: 模型加载重试配置
+    MAX_LOAD_RETRIES: int = 2
+    LOAD_RETRY_DELAY_SECONDS: float = 1.0
+
     def __init__(self) -> None:
         self.model = None
         self.tokenizer = None
@@ -45,29 +52,85 @@ class WordLevelDetector:
         self.ready = False
         self.max_len = self.BASE_WINDOW
 
+        # V5: 提前检查模型文件路径
+        self._load_model_with_retry()
+
+    # V5: 抽取模型加载逻辑，支持重试
+    def _load_model_with_retry(self) -> None:
+        """尝试加载模型，失败后重试，最终仍失败则进入 fallback 模式。"""
+        model_path = str(WORD_MODEL_PATH)
+        if not os.path.isfile(model_path):
+            logger.warning(
+                "Model file does not exist: %s. Entering fallback mode directly.",
+                model_path,
+            )
+            return
+
+        last_exc: Exception | None = None
+        for attempt in range(1, self.MAX_LOAD_RETRIES + 2):  # +2 因为 range 从 1 开始，总共 MAX_LOAD_RETRIES+1 次
+            try:
+                self._do_load_model()
+                return
+            except Exception as exc:
+                last_exc = exc
+                logger.warning(
+                    "Model load attempt %d/%d failed: %s",
+                    attempt,
+                    self.MAX_LOAD_RETRIES + 1,
+                    exc,
+                )
+                if attempt <= self.MAX_LOAD_RETRIES:
+                    time.sleep(self.LOAD_RETRY_DELAY_SECONDS)
+
+        logger.warning(
+            "All %d model load attempts exhausted. Fallback mode enabled. Last error: %s",
+            self.MAX_LOAD_RETRIES + 1,
+            last_exc,
+            exc_info=True,
+        )
+
+    def _do_load_model(self) -> None:
+        """V5: 实际执行模型加载的原子操作。"""
+        import torch
+        from transformers import AutoTokenizer
+
+        from .word_model_runtime import DeBERTaCRFTagger, infer_document_with_sliding_windows
+
+        self._torch = torch
+        self._infer_fn = infer_document_with_sliding_windows
+        self.tokenizer = AutoTokenizer.from_pretrained(WORD_MODEL_NAME)
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self.model = DeBERTaCRFTagger(WORD_MODEL_NAME, self.NUM_LABELS).to(self.device)
+        ckpt = torch.load(WORD_MODEL_PATH, map_location=self.device, weights_only=False)
+        state = ckpt.get("model_state_dict", ckpt)
+        self.model.load_state_dict(state)
+        self.model.eval()
+        self.ready = True
+        logger.info("Word model loaded successfully from %s on %s", WORD_MODEL_PATH, self.device)
+
+    # V5: 资源管理
+    def close(self) -> None:
+        """释放模型资源，清空 GPU 缓存。"""
+        if self.model is not None:
+            del self.model
+            self.model = None
+        if self.tokenizer is not None:
+            del self.tokenizer
+            self.tokenizer = None
+        self.ready = False
         try:
             import torch
-            from transformers import AutoTokenizer
+            if torch.cuda.is_available():
+                torch.cuda.empty_cache()
+        except ImportError:
+            pass
+        logger.info("WordLevelDetector resources released.")
 
-            from .word_model_runtime import DeBERTaCRFTagger, infer_document_with_sliding_windows
+    def __enter__(self) -> "WordLevelDetector":
+        return self
 
-            self._torch = torch
-            self._infer_fn = infer_document_with_sliding_windows
-            self.tokenizer = AutoTokenizer.from_pretrained(WORD_MODEL_NAME)
-            self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-            self.model = DeBERTaCRFTagger(WORD_MODEL_NAME, self.NUM_LABELS).to(self.device)
-            ckpt = torch.load(WORD_MODEL_PATH, map_location=self.device, weights_only=False)
-            state = ckpt.get("model_state_dict", ckpt)
-            self.model.load_state_dict(state)
-            self.model.eval()
-            self.ready = True
-            logger.info("Word model loaded successfully from %s on %s", WORD_MODEL_PATH, self.device)
-        except FileNotFoundError:
-            logger.warning("Model file not found: %s. Fallback mode enabled.", WORD_MODEL_PATH)
-        except ImportError as exc:
-            logger.warning("Required dependency missing: %s. Fallback mode enabled.", exc)
-        except Exception as exc:
-            logger.warning("Word-level model not loaded, fallback mode enabled: %s", exc, exc_info=True)
+    def __exit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
+        self.close()
 
     # ---- 辅助方法 ----
 
@@ -104,7 +167,7 @@ class WordLevelDetector:
 
     @staticmethod
     def _label_to_id(label: str) -> int:
-        """V4: 将标签字符串映射为整数 ID。"""
+        """将标签字符串映射为整数 ID。"""
         return 1 if label.upper() == "AIGT" else 0
 
     # ---- 核心推理 ----
@@ -142,6 +205,8 @@ class WordLevelDetector:
         if not words:
             return WordPredictResult(words=[], switch_word_index=0, model_used="deberta-crf")
 
+        # V5: 增加推理耗时统计
+        t0 = time.monotonic()
         pred_labels, boundary, vote_counts = self._infer_fn(
             self.model,
             words,
@@ -151,6 +216,10 @@ class WordLevelDetector:
             base_window=self.BASE_WINDOW,
             base_stride=self.BASE_STRIDE,
             short_window_cap=self.SHORT_WINDOW_CAP,
+        )
+        elapsed = time.monotonic() - t0
+        logger.debug(
+            "predict() inference completed in %.3fs for %d tokens", elapsed, len(tokens)
         )
 
         rows = []
@@ -182,7 +251,6 @@ class WordLevelDetector:
                 start = cursor
             end = start + len(sent)
             cursor = end
-            # V4: 使用静态方法
             label = "AIGT" if self._label_to_id(str(row.get("label", ""))) == 1 else "HWT"
             spans.append((start, end, label))
         return spans
@@ -241,7 +309,6 @@ class WordLevelDetector:
             logger.warning("Unexpected error calling external backend: %s", exc)
             return None
 
-    # V4: 抽取 —— 根据句子标签初始化 token 级别的标签和置信度
     def _init_token_labels_from_sentences(
         self,
         tokens: list[dict[str, Any]],
@@ -266,7 +333,6 @@ class WordLevelDetector:
 
         return token_labels, token_conf, sentence_token_indices
 
-    # V4: 抽取 —— 解析相邻两句之间的局部切换边界
     def _resolve_local_boundary(
         self, local_text: str, combined_idxs: list[int]
     ) -> int:
@@ -277,7 +343,6 @@ class WordLevelDetector:
             local_boundary = int(local_res.switch_word_index)
         return max(0, min(local_boundary, len(combined_idxs) - 1))
 
-    # V4: 抽取 —— 在句子切换点处精化 token 标签
     def _refine_boundaries_at_switches(
         self,
         text: str,
@@ -286,7 +351,7 @@ class WordLevelDetector:
         token_labels: list[int],
         token_conf: list[float],
     ) -> None:
-        """遍历相邻句子，在标签不同的切换点处调用局部检测器精化边界。原地修改 token_labels 和 token_conf。"""
+        """遍历相邻句子，在标签不同的切换点处调用局部检测器精化边界。"""
         for i in range(len(spans) - 1):
             left_label = spans[i][2]
             right_label = spans[i + 1][2]
@@ -305,7 +370,6 @@ class WordLevelDetector:
             if not local_text:
                 continue
 
-            # V4: 使用抽取出的方法
             local_boundary = self._resolve_local_boundary(local_text, combined_idxs)
             boundary_global = combined_idxs[local_boundary]
 
@@ -336,7 +400,6 @@ class WordLevelDetector:
         if not spans:
             return self.predict(text)
 
-        # V4: 拆分为两步
         token_labels, token_conf, sentence_token_indices = self._init_token_labels_from_sentences(
             tokens, spans
         )
