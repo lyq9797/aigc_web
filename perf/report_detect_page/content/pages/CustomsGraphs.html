@@ -2,19 +2,18 @@
 <html lang="en">
 
 <head>
-
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="">
-    <meta name="author" content="">
+    <meta name="description" content="Apache JMeter Performance Test Dashboard - Customs Graphs">
+    <meta name="author" content="Graduate Dev Team">
 
-    <title>Apache JMeter Dashboard</title>
+    <title>Apache JMeter Dashboard - Customs Graphs</title>
 
     <!-- Bootstrap Core CSS -->
     <link href="../../sbadmin2-1.0.7/bower_components/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
 
-    <!-- icone onglet -->
+    <!-- Favicon -->
     <link rel="icon" type="image/png" href="icon-apache.png" />
 
     <!-- MetisMenu CSS -->
@@ -23,14 +22,13 @@
     <!-- Legends CSS -->
     <link href="../css/legends.css" rel="stylesheet">
 
-
-    <!-- Custom CSS -->
+    <!-- Custom CSS (SB Admin 2 Theme) -->
     <link href="../../sbadmin2-1.0.7/dist/css/sb-admin-2.css" rel="stylesheet">
 
     <!-- Custom Fonts -->
     <link href="../../sbadmin2-1.0.7/bower_components/font-awesome/css/font-awesome.min.css" rel="stylesheet" type="text/css">
 
-   <!-- JQuery UI style -->
+    <!-- JQuery UI style -->
     <link href="../css/jquery-ui.min.css" rel="stylesheet">
     <link href="../css/jquery-ui.structure.min.css" rel="stylesheet">
     <link href="../css/jquery-ui.theme.min.css" rel="stylesheet">
@@ -53,11 +51,9 @@
             </div>
             <!-- /.navbar-header -->
 
-
             <div class="navbar-default sidebar" role="navigation">
                 <div class="sidebar-nav navbar-collapse">
                     <ul class="nav" id="side-menu">
-
                         <li>
                             <a href="../../index.html"><i class="fa fa-dashboard fa-fw"></i> Dashboard</a>
                         </li>
@@ -66,7 +62,6 @@
                             <ul class="nav nav-second-level">
                                 <li>
                                     <a href="OverTime.html">Over Time</a>
-
                                 </li>
                                 <li>
                                     <a href="Throughput.html">Throughput</a>
@@ -74,22 +69,21 @@
                                 <li>
                                     <a href="ResponseTimes.html">Response Times</a>
                                 </li>
-                
                             </ul>
                             <!-- /.nav-second-level -->
                         </li>
-                        
+
                         <li>
                             <a href="#"><i class="fa fa-bar-chart-o fa-fw"></i> Customs Graphs<span class="fa arrow"></span></a>
                             <ul class="nav nav-second-level">
                                 <li>
                                     <a href="CustomsGraphs.html">Over Time<span class="fa arrow"></span></a>
                                     <ul class="nav nav-third-level in" id="submenu">
+                                        <!-- Dynamic submenu items will be injected here by customGraph.js -->
                                     </ul>
-                                <li>
+                                </li> <!-- 修复了原版缺失的 </li> 标签 -->
                             </ul>
                         </li>
-
                     </ul>
                 </div>
                 <!-- /.sidebar-collapse -->
@@ -98,39 +92,50 @@
         </nav>
 
         <div id="page-wrapper">
+            <!-- Test Information Section -->
             <div class="row">
                 <div class="col-lg-12">
-                     <div class="panel panel-default" >
+                     <div class="panel panel-default">
                         <div class="panel-heading" style="text-align:center;">
                            <p class="dashboard-title">Test and Report information</p>
                         </div>
                         <div class="panel-body">
-                            <table id="generalInfos" class="table table-bordered table-condensed " >
-                                <tr>
-                                    <td>File:</td>
-                                    <td>"results_detect_page.jtl"</td>
-                                </tr>
-                                <tr>
-                                    <td>Start Time:</td>
-                                    <td>"4/20/26, 4:51 PM"</td>
-                                </tr>
-                                <tr>
-                                    <td>End Time:</td>
-                                    <td>"4/20/26, 4:55 PM"</td>
-                                </tr>
+                            <table id="generalInfos" class="table table-bordered table-condensed">
+                                <thead>
                                     <tr>
-                                        <td>Filter for display:</td>
+                                        <th width="20%">Property</th>
+                                        <th>Value</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <th scope="row">File:</th>
+                                        <td>"results_detect_page.jtl"</td>
+                                    </tr>
+                                    <tr>
+                                        <th scope="row">Start Time:</th>
+                                        <td>"4/20/26, 4:51 PM"</td>
+                                    </tr>
+                                    <tr>
+                                        <th scope="row">End Time:</th>
+                                        <td>"4/20/26, 4:55 PM"</td>
+                                    </tr>
+                                    <tr>
+                                        <th scope="row">Filter for display:</th>
                                         <td>""</td>
                                     </tr>
+                                </tbody>
                             </table>
                         </div>
                     </div>
                 </div>
-            </div>    
+            </div>
             <!-- /.row -->
-                <div class="row" id="graphContainer">
-                
-                </div>
+
+            <!-- Graphs Container Section -->
+            <div class="row" id="graphContainer">
+                <!-- Dynamic graphs will be rendered here by customGraph.js -->
+            </div>
             <!-- /.row -->
         </div>
         <!-- /#page-wrapper -->
@@ -138,7 +143,7 @@
     </div>
     <!-- /#wrapper -->
 
-     <!-- jQuery -->
+    <!-- jQuery -->
     <script src="../../sbadmin2-1.0.7/bower_components/jquery/dist/jquery.min.js"></script>
 
     <!-- Bootstrap Core JavaScript -->
@@ -158,6 +163,8 @@
     <script src="../../sbadmin2-1.0.7/bower_components/flot/jquery.flot.selection.js"></script>
     <script src="../../sbadmin2-1.0.7/bower_components/flot.tooltip/js/jquery.flot.tooltip.min.js"></script>
     <script src="../../sbadmin2-1.0.7/bower_components/flot-axislabels/jquery.flot.axislabels.js"></script>
+
+    <!-- Custom JS -->
     <script src="../js/hashtable.js"></script>
     <script src="../js/jquery.numberformatter-1.2.3.min.js"></script>
     <script src="../js/curvedLines.js"></script>
@@ -165,12 +172,11 @@
     <script src="../js/customGraph.js"></script>
     <script src="../js/jquery-ui.min.js"></script>
     <script src="../../sbadmin2-1.0.7/bower_components/flot/jquery.flot.threshold.js"></script>
+
     <!-- Custom Theme JavaScript -->
     <script src="../../sbadmin2-1.0.7/dist/js/sb-admin-2.js"></script>
     <script src="../js/jquery.cookie.js"></script>
-
     <script src="../../sbadmin2-1.0.7/bower_components/flot/jquery.flot.symbol.js"></script>
 
 </body>
-
 </html>
