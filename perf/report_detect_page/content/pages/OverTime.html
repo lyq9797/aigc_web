@@ -2,44 +2,28 @@
 <html lang="en">
 
 <head>
-
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="">
-    <meta name="author" content="">
+    <meta name="description" content="Apache JMeter Performance Test Dashboard - Over Time Graphs">
+    <meta name="author" content="Graduate Dev Team">
 
-    <title>Apache JMeter Dashboard</title>
+    <title>Apache JMeter Dashboard - Over Time</title>
 
     <!-- Bootstrap Core CSS -->
     <link href="../../sbadmin2-1.0.7/bower_components/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
-
-    <!-- icone onglet -->
     <link rel="icon" type="image/png" href="icon-apache.png" />
-
-    <!-- MetisMenu CSS -->
     <link href="../../sbadmin2-1.0.7/bower_components/metisMenu/dist/metisMenu.min.css" rel="stylesheet">
-
-    <!-- Legends CSS -->
     <link href="../css/legends.css" rel="stylesheet">
-
-
-    <!-- Custom CSS -->
     <link href="../../sbadmin2-1.0.7/dist/css/sb-admin-2.css" rel="stylesheet">
-
-    <!-- Custom Fonts -->
     <link href="../../sbadmin2-1.0.7/bower_components/font-awesome/css/font-awesome.min.css" rel="stylesheet" type="text/css">
-
-   <!-- JQuery UI style -->
     <link href="../css/jquery-ui.min.css" rel="stylesheet">
     <link href="../css/jquery-ui.structure.min.css" rel="stylesheet">
     <link href="../css/jquery-ui.theme.min.css" rel="stylesheet">
 </head>
 
 <body>
-
     <div id="wrapper">
-
         <!-- Navigation -->
         <nav class="navbar navbar-default navbar-static-top" role="navigation" style="margin-bottom: 0">
             <div class="navbar-header">
@@ -51,13 +35,10 @@
                 </button>
                 <a class="navbar-brand" href="../../index.html">Apache JMeter Dashboard</a>
             </div>
-            <!-- /.navbar-header -->
-
 
             <div class="navbar-default sidebar" role="navigation">
                 <div class="sidebar-nav navbar-collapse">
                     <ul class="nav" id="side-menu">
-
                         <li>
                             <a href="../../index.html"><i class="fa fa-dashboard fa-fw"></i> Dashboard</a>
                         </li>
@@ -67,146 +48,100 @@
                                 <li>
                                     <a href="OverTime.html">Over Time<span class="fa arrow"></span></a>
                                     <ul class="nav nav-third-level in" id="submenu">
-                                        <li>
-                                            <a href="OverTime.html#responseTimesOverTime" onclick="$('#bodyResponseTimeOverTime').collapse('show');">
-                                                Response Times Over Time
-                                            </a>
-                                        </li>
-                                        <li>
-                                            <a href="OverTime.html#responseTimePercentilesOverTime" onclick="$('#bodyResponseTimePercentilesOverTime').collapse('show');">
-                                                Response Time Percentiles Over Time (successful responses)
-                                            </a>
-                                        </li>
-                                        <li>
-                                            <a href="OverTime.html#activeThreadsOverTime" onclick="$('#bodyActiveThreadsOverTime').collapse('show');">
-                                                Active Threads Over Time
-                                            </a>
-                                        </li>
-                                        <li>
-                                            <a href="OverTime.html#bytesThroughputOverTime" onclick="$('#bodyBytesThroughputOverTime').collapse('show');">
-                                                Bytes Throughput Over Time
-                                            </a>
-                                        </li>
-                                        <li>
-                                            <a href="OverTime.html#latenciesOverTime" onclick="$('#bodyLatenciesOverTime').collapse('show');">
-                                                Latencies Over Time
-                                            </a>
-                                        </li>
-                                        <li>
-                                            <a href="OverTime.html#connectTimeOverTime" onclick="$('#bodyConnectTimeOverTime').collapse('show');">
-                                                Connect Time Over Time
-                                            </a>
-                                        </li>
+                                        <li><a href="#responseTimesOverTime" class="nav-link-collapse">Response Times Over Time</a></li>
+                                        <li><a href="#responseTimePercentilesOverTime" class="nav-link-collapse">Response Time Percentiles Over Time</a></li>
+                                        <li><a href="#activeThreadsOverTime" class="nav-link-collapse">Active Threads Over Time</a></li>
+                                        <li><a href="#bytesThroughputOverTime" class="nav-link-collapse">Bytes Throughput Over Time</a></li>
+                                        <li><a href="#latenciesOverTime" class="nav-link-collapse">Latencies Over Time</a></li>
+                                        <li><a href="#connectTimeOverTime" class="nav-link-collapse">Connect Time Over Time</a></li>
                                     </ul>
                                 </li>
-                                <li>
-                                    <a href="Throughput.html">Throughput</a>
-                                </li>
-                                <li>
-                                    <a href="ResponseTimes.html">Response Times</a>
-                                </li>
+                                <li><a href="Throughput.html">Throughput</a></li>
+                                <li><a href="ResponseTimes.html">Response Times</a></li>
                             </ul>
-                            <!-- /.nav-second-level -->
                         </li>
-
                         <li>
                             <a href="#"><i class="fa fa-bar-chart-o fa-fw"></i>Customs Graphs<span class="fa arrow"></span></a>
                             <ul class="nav nav-second-level">
-                                <li>
-                                    <a href="CustomsGraphs.html">Over Time</a>
-                                </li>
+                                <li><a href="CustomsGraphs.html">Over Time</a></li>
                             </ul>
                         </li>
-
                     </ul>
                 </div>
-                <!-- /.sidebar-collapse -->
             </div>
-            <!-- /.navbar-static-side -->
         </nav>
-        <!--modal-->
+
+        <!-- Zoom Modal -->
         <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-          <div class="modal-dialog" style="width:90%;height: 5%;">
-            <div class="modal-content">
-              <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="myModalLabel">Zoom</h4>
-              </div>
-              <div class="modal-body">
-                <div class="flot-chart">
-                    <div class="flot-chart-content" id="flot-modal-content"></div>
+            <div class="modal-dialog" style="width:90%;height: 5%;">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                        <h4 class="modal-title" id="myModalLabel">Zoom</h4>
+                    </div>
+                    <div class="modal-body">
+                        <div class="flot-chart">
+                            <div class="flot-chart-content" id="flot-modal-content"></div>
+                        </div>
+                    </div>
+                    <div class="modal-footer" id="modalFooter">
+                        <p id="legendModal" hidden></p>
+                        <ul id="choicesModal" class="legend"></ul>
+                    </div>
                 </div>
-              </div>
-              <div class="modal-footer" id="modalFooter">
-                <p id="legendModal" hidden></p>
-                <ul id="choicesModal" class="legend"></ul>
-              </div>
             </div>
-          </div>
         </div>
 
         <div id="page-wrapper">
+            <!-- Test Information -->
             <div class="row">
                 <div class="col-lg-12">
-                     <div class="panel panel-default" >
+                    <div class="panel panel-default">
                         <div class="panel-heading" style="text-align:center;">
-                           <p class="dashboard-title">Test and Report information</p>
+                            <p class="dashboard-title">Test and Report information</p>
                         </div>
                         <div class="panel-body">
-                        <table id="generalInfos" class="table table-bordered table-condensed " >
-                            <tr>
-                                <td>File:</td>
-                                <td>"results_detect_page.jtl"</td>
-                            </tr>
-                            <tr>
-                                <td>Start Time:</td>
-                                <td>"4/20/26, 4:51 PM"</td>
-                            </tr>
-                            <tr>
-                                <td>End Time:</td>
-                                <td>"4/20/26, 4:55 PM"</td>
-                            </tr>
-                                <tr>
-                                    <td>Filter for display:</td>
-                                    <td>""</td>
-                                </tr>
-                        </table>
-                     </div>
+                            <table id="generalInfos" class="table table-bordered table-condensed">
+                                <thead>
+                                    <tr><th width="20%">Property</th><th>Value</th></tr>
+                                </thead>
+                                <tbody>
+                                    <tr><th scope="row">File:</th><td>"results_detect_page.jtl"</td></tr>
+                                    <tr><th scope="row">Start Time:</th><td>"4/20/26, 4:51 PM"</td></tr>
+                                    <tr><th scope="row">End Time:</th><td>"4/20/26, 4:55 PM"</td></tr>
+                                    <tr><th scope="row">Filter for display:</th><td>""</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
             </div>
-            <!-- /.row -->
-            <div class="row" id="graphContainer">
 
-            <!-- /.col-lg-6 -->
-            <div class="col-lg-12 portlet" id="responseTimesOverTime">
+            <!-- Graphs Container -->
+            <div class="row" id="graphContainer">
+                <!-- 图表 1: Response Times -->
+                <div class="col-lg-12 portlet" id="responseTimesOverTime">
                     <div class="panel panel-default">
                         <div class="panel-heading portlet-header">
-                             <i  class="fa fa-bar-chart-o fa-fw" ></i> 
-                            <span type="button" class="span-title dropdown-toggle click-title" data-toggle="collapse" href="#bodyResponseTimeOverTime" aria-expanded="true" aria-controls="bodyResponseTimeOverTime">Response Times Over Time</span>
-                             <div class="pull-right">
+                            <i class="fa fa-bar-chart-o fa-fw"></i>
+                            <span class="span-title dropdown-toggle click-title" data-toggle="collapse" href="#bodyResponseTimeOverTime" aria-expanded="true">Response Times Over Time</span>
+                            <div class="pull-right">
                                 <div class="btn-group">
-                                    <a class="btn btn-link btn-xs">
-                                        <i class="glyphicon glyphicon-resize-vertical"></i>
-                                    </a>
-                                    <button type="button" class="btn btn-link btn-xs dropdown-toggle" data-toggle="dropdown">
-                                        <i class="fa fa-wrench"></i>
-                                    </button>
+                                    <a class="btn btn-link btn-xs"><i class="glyphicon glyphicon-resize-vertical"></i></a>
+                                    <button type="button" class="btn btn-link btn-xs dropdown-toggle" data-toggle="dropdown"><i class="fa fa-wrench"></i></button>
                                     <ul class="dropdown-menu dropdown-user">
-                                        <li><a href="#bodyResponseTimeOverTime" onClick="checkAll('choicesResponseTimesOverTime');">Display all samples</a>
-                                        </li>
-                                        <li><a href="#bodyResponseTimeOverTime" onClick="uncheckAll('choicesResponseTimesOverTime');">Hide all samples</a>
-                                        </li>
-                                        <li><a href="#bodyResponseTimeOverTime" onclick="exportToPNG('flotResponseTimesOverTime', this);">Save as PNG</a></li>
+                                        <li><a href="#" class="action-check-all" data-target="choicesResponseTimesOverTime">Display all samples</a></li>
+                                        <li><a href="#" class="action-uncheck-all" data-target="choicesResponseTimesOverTime">Hide all samples</a></li>
+                                        <li><a href="#" class="action-export-png" data-target="flotResponseTimesOverTime">Save as PNG</a></li>
                                     </ul>
-                                    <button type="button" class="btn btn-link btn-xs dropdown-toggle" data-toggle="collapse" href="#bodyResponseTimeOverTime" aria-expanded="true" aria-controls="bodyResponseTimeOverTime">
+                                    <button type="button" class="btn btn-link btn-xs dropdown-toggle" data-toggle="collapse" href="#bodyResponseTimeOverTime" aria-expanded="true">
                                         <i class="fa fa-chevron-up"></i>
                                     </button>
                                 </div>
                             </div>
                         </div>
-                        <!-- /.panel-heading -->
                         <div class="collapse in portlet-content" id="bodyResponseTimeOverTime">
-                            <div class="panel-body" id="collapseResponseTimesOverTime">
+                            <div class="panel-body">
                                 <div class="flot-chart">
                                     <div class="flot-chart-content" id="flotResponseTimesOverTime" style="float: left; width:80%;"></div>
                                     <div style="float:left;margin-left:5px">
@@ -220,42 +155,32 @@
                                 <ul id="choicesResponseTimesOverTime" class="legend"></ul>
                             </div>
                         </div>
-                        <!-- /.panel-body -->
                     </div>
-                    <!-- /.panel -->
                 </div>
-                <!-- /.col-lg-12 -->
-                
-                <!-- /.col-lg-12 -->
+
+                <!-- 图表 2: Response Time Percentiles -->
                 <div class="col-lg-12 portlet" id="responseTimePercentilesOverTime">
                     <div class="panel panel-default">
                         <div class="panel-heading portlet-header">
                             <i class="fa fa-bar-chart-o fa-fw"></i>
-                            <span type="button" class="dropdown-toggle click-title span-title" data-toggle="collapse" href="#bodyResponseTimePercentilesOverTime" aria-expanded="true" aria-controls="bodyResponseTimePercentilesOverTime">Response Time Percentiles Over Time (successful responses)</span>
+                            <span class="dropdown-toggle click-title span-title" data-toggle="collapse" href="#bodyResponseTimePercentilesOverTime" aria-expanded="false">Response Time Percentiles Over Time (successful responses)</span>
                             <div class="pull-right">
                                 <div class="btn-group">
-                                    <a class="btn btn-link btn-xs">
-                                        <i class="glyphicon glyphicon-resize-vertical"></i>
-                                    </a>
-                                    <button type="button" class="btn btn-link btn-xs dropdown-toggle" data-toggle="dropdown">
-                                        <i class="fa fa-wrench"></i>
-                                    </button>
+                                    <a class="btn btn-link btn-xs"><i class="glyphicon glyphicon-resize-vertical"></i></a>
+                                    <button type="button" class="btn btn-link btn-xs dropdown-toggle" data-toggle="dropdown"><i class="fa fa-wrench"></i></button>
                                     <ul class="dropdown-menu dropdown-user">
-                                        <li><a href="#responseTimePercentilesOverTime" onClick="checkAll('choicesResponseTimePercentilesOverTime');">Display all samples</a>
-                                        </li>
-                                        <li><a href="#responseTimePercentilesOverTime" onClick="uncheckAll('choicesResponseTimePercentilesOverTime');">Hide all samples</a>
-                                        </li>
-                                        <li><a href="#responseTimePercentilesOverTime" onclick="exportToPNG('flotResponseTimePercentilesOverTime', this);">Save as PNG</a></li>
+                                        <li><a href="#" class="action-check-all" data-target="choicesResponseTimePercentilesOverTime">Display all samples</a></li>
+                                        <li><a href="#" class="action-uncheck-all" data-target="choicesResponseTimePercentilesOverTime">Hide all samples</a></li>
+                                        <li><a href="#" class="action-export-png" data-target="flotResponseTimePercentilesOverTime">Save as PNG</a></li>
                                     </ul>
-                                    <button type="button" class="btn btn-link btn-xs dropdown-toggle" data-toggle="collapse" href="#bodyResponseTimePercentilesOverTime" aria-expanded="true" aria-controls="bodyResponseTimePercentilesOverTime">
+                                    <button type="button" class="btn btn-link btn-xs dropdown-toggle" data-toggle="collapse" href="#bodyResponseTimePercentilesOverTime" aria-expanded="false">
                                         <i class="fa fa-chevron-down"></i>
                                     </button>
                                 </div>
                             </div>
                         </div>
-                        <!-- /.panel-heading -->
                         <div class="collapse out portlet-content" id="bodyResponseTimePercentilesOverTime">
-                            <div class="panel-body" id="collapseConnectTime">
+                            <div class="panel-body">
                                 <div class="flot-chart">
                                     <div class="flot-chart-content" id="flotResponseTimePercentilesOverTime" style="float: left; width:80%;"></div>
                                     <div style="float:left;margin-left:5px">
@@ -265,45 +190,36 @@
                                 </div>
                             </div>
                             <div class="panel-footer" id="footerResponseTimePercentilesOverTime">
-                                    <p id="legendResponseTimePercentilesOverTime" hidden></p>
-                                    <ul id="choicesResponseTimePercentilesOverTime" class="legend"></ul>
+                                <p id="legendResponseTimePercentilesOverTime" hidden></p>
+                                <ul id="choicesResponseTimePercentilesOverTime" class="legend"></ul>
                             </div>
                         </div>
-                        <!-- /.panel-body -->
-
                     </div>
-                    <!-- /.panel -->
                 </div>
-                <!-- /.col-lg-12 -->
-                
+
+                <!-- 图表 3: Active Threads -->
                 <div class="col-lg-12 portlet" id="activeThreadsOverTime">
-                    <div class="panel panel-default" >
+                    <div class="panel panel-default">
                         <div class="panel-heading portlet-header">
-                           <i class="fa fa-bar-chart-o fa-fw"> </i>  <span type="button" class="span-title dropdown-toggle click-title" data-toggle="collapse" href="#bodyActiveThreadsOverTime" aria-expanded="true" aria-controls="bodyActiveThreadsOverTime">Active Threads Over Time</span>
-                           <div class="pull-right">
+                            <i class="fa fa-bar-chart-o fa-fw"></i>
+                            <span class="span-title dropdown-toggle click-title" data-toggle="collapse" href="#bodyActiveThreadsOverTime" aria-expanded="false">Active Threads Over Time</span>
+                            <div class="pull-right">
                                 <div class="btn-group">
-                                    <a class="drag btn btn-link btn-xs">
-                                        <i class="glyphicon glyphicon-resize-vertical"></i>
-                                    </a>
-                                    <button type="button" class="btn btn-link btn-xs dropdown-toggle" data-toggle="dropdown">
-                                        <i class="fa fa-wrench"></i>
-                                    </button>
+                                    <a class="drag btn btn-link btn-xs"><i class="glyphicon glyphicon-resize-vertical"></i></a>
+                                    <button type="button" class="btn btn-link btn-xs dropdown-toggle" data-toggle="dropdown"><i class="fa fa-wrench"></i></button>
                                     <ul class="dropdown-menu dropdown-user">
-                                        <li><a href="#activeThreadsOverTime" onClick="checkAll('choicesActiveThreadsOverTime');">Display all samples</a>
-                                        </li>
-                                        <li><a href="#activeThreadsOverTime" onClick="uncheckAll('choicesActiveThreadsOverTime');">Hide all samples</a>
-                                        </li>
-                                        <li><a href="#activeThreadsOverTime" onclick="exportToPNG('flotActiveThreadsOverTime', this);">Save as PNG</a></li>
+                                        <li><a href="#" class="action-check-all" data-target="choicesActiveThreadsOverTime">Display all samples</a></li>
+                                        <li><a href="#" class="action-uncheck-all" data-target="choicesActiveThreadsOverTime">Hide all samples</a></li>
+                                        <li><a href="#" class="action-export-png" data-target="flotActiveThreadsOverTime">Save as PNG</a></li>
                                     </ul>
-                                    <button type="button" class="btn btn-link btn-xs dropdown-toggle" data-toggle="collapse" href="#bodyActiveThreadsOverTime" aria-expanded="true" aria-controls="bodyActiveThreadsOverTime">
+                                    <button type="button" class="btn btn-link btn-xs dropdown-toggle" data-toggle="collapse" href="#bodyActiveThreadsOverTime" aria-expanded="false">
                                         <i class="fa fa-chevron-down"></i>
                                     </button>
                                 </div>
                             </div>
                         </div>
-                        <!-- /.panel-heading -->
                         <div class="collapse out portlet-content" id="bodyActiveThreadsOverTime">
-                            <div class="panel-body" id="collapseActiveThreadsOverTime">
+                            <div class="panel-body">
                                 <div class="flot-chart">
                                     <div class="flot-chart-content" id="flotActiveThreadsOverTime" style="float: left; width:80%;"></div>
                                     <div style="float:left;margin-left:5px">
@@ -313,46 +229,36 @@
                                 </div>
                             </div>
                             <div class="panel-footer" id="footerActiveThreadsOverTime">
-                                    <p id="legendActiveThreadsOverTime" hidden></p>
-                                    <ul id="choicesActiveThreadsOverTime" class="legend">
-
-                                    </ul>
-                                </div>
+                                <p id="legendActiveThreadsOverTime" hidden></p>
+                                <ul id="choicesActiveThreadsOverTime" class="legend"></ul>
+                            </div>
                         </div>
-                        <!-- /.panel-body -->
                     </div>
-                    <!-- /.panel -->
                 </div>
-                
 
+                <!-- 图表 4: Bytes Throughput -->
                 <div class="col-lg-12 portlet" id="bytesThroughputOverTime">
                     <div class="panel panel-default">
                         <div class="panel-heading portlet-header">
-                             <i class="fa fa-bar-chart-o fa-fw" ></i> <span type="button" class="dropdown-toggle click-title span-title" data-toggle="collapse" href="#bodyBytesThroughputOverTime" aria-expanded="true" aria-controls="bodyBytesThroughputOverTime">Bytes Throughput Over Time</span>
-                           <div class="pull-right">
+                            <i class="fa fa-bar-chart-o fa-fw"></i>
+                            <span class="dropdown-toggle click-title span-title" data-toggle="collapse" href="#bodyBytesThroughputOverTime" aria-expanded="false">Bytes Throughput Over Time</span>
+                            <div class="pull-right">
                                 <div class="btn-group">
-                                    <a class="btn btn-link btn-xs">
-                                        <i class="glyphicon glyphicon-resize-vertical"></i>
-                                    </a>
-                                    <button type="button" class="btn btn-link btn-xs dropdown-toggle" data-toggle="dropdown">
-                                        <i class="fa fa-wrench"></i>
-                                    </button>
+                                    <a class="btn btn-link btn-xs"><i class="glyphicon glyphicon-resize-vertical"></i></a>
+                                    <button type="button" class="btn btn-link btn-xs dropdown-toggle" data-toggle="dropdown"><i class="fa fa-wrench"></i></button>
                                     <ul class="dropdown-menu dropdown-user">
-                                        <li><a href="#bytesThroughputOverTime" onClick="checkAll('choicesBytesThroughputOverTime');">Display all samples</a>
-                                        </li>
-                                        <li><a href="#bytesThroughputOverTime" onClick="uncheckAll('choicesBytesThroughputOverTime');">Hide all samples</a>
-                                        </li>
-                                        <li><a href="#bytesThroughputOverTime" onclick="exportToPNG('flotBytesThroughputOverTime', this);">Save as PNG</a></li>
+                                        <li><a href="#" class="action-check-all" data-target="choicesBytesThroughputOverTime">Display all samples</a></li>
+                                        <li><a href="#" class="action-uncheck-all" data-target="choicesBytesThroughputOverTime">Hide all samples</a></li>
+                                        <li><a href="#" class="action-export-png" data-target="flotBytesThroughputOverTime">Save as PNG</a></li>
                                     </ul>
-                                    <button type="button" class="btn btn-link btn-xs dropdown-toggle" data-toggle="collapse" href="#bodyBytesThroughputOverTime" aria-expanded="true" aria-controls="bodyBytesThroughputOverTime">
+                                    <button type="button" class="btn btn-link btn-xs dropdown-toggle" data-toggle="collapse" href="#bodyBytesThroughputOverTime" aria-expanded="false">
                                         <i class="fa fa-chevron-down"></i>
                                     </button>
                                 </div>
                             </div>
                         </div>
-                        <!-- /.panel-heading -->
                         <div class="collapse out portlet-content" id="bodyBytesThroughputOverTime">
-                            <div class="panel-body " id="collapseBytes">
+                            <div class="panel-body">
                                 <div class="flot-chart">
                                     <div class="flot-chart-content" id="flotBytesThroughputOverTime" style="float: left; width:80%;"></div>
                                     <div style="float:left;margin-left:5px">
@@ -361,46 +267,37 @@
                                     </div>
                                 </div>
                             </div>
-                            <!-- /.panel-body -->
                             <div class="panel-footer" id="footerBytesThroughputOverTime">
                                 <p id="legendBytesThroughputOverTime" hidden></p>
                                 <ul id="choicesBytesThroughputOverTime" class="legend"></ul>
                             </div>
                         </div>
                     </div>
-                    <!-- /.panel -->
                 </div>
 
-                <!-- /.col-lg-6 -->
+                <!-- 图表 5: Latencies -->
                 <div class="col-lg-12 portlet" id="latenciesOverTime">
                     <div class="panel panel-default">
                         <div class="panel-heading portlet-header">
                             <i class="fa fa-bar-chart-o fa-fw"></i>
-                            <span type="button" class="dropdown-toggle click-title span-title" data-toggle="collapse" href="#bodyLatenciesOverTime" aria-expanded="true" aria-controls="bodyLatenciesOverTime">Latencies Over Time</span>
+                            <span class="dropdown-toggle click-title span-title" data-toggle="collapse" href="#bodyLatenciesOverTime" aria-expanded="false">Latencies Over Time</span>
                             <div class="pull-right">
                                 <div class="btn-group">
-                                    <a class="btn btn-link btn-xs">
-                                        <i class="glyphicon glyphicon-resize-vertical"></i>
-                                    </a>
-                                    <button type="button" class="btn btn-link btn-xs dropdown-toggle" data-toggle="dropdown">
-                                        <i class="fa fa-wrench"></i>
-                                    </button>
+                                    <a class="btn btn-link btn-xs"><i class="glyphicon glyphicon-resize-vertical"></i></a>
+                                    <button type="button" class="btn btn-link btn-xs dropdown-toggle" data-toggle="dropdown"><i class="fa fa-wrench"></i></button>
                                     <ul class="dropdown-menu dropdown-user">
-                                        <li><a href="#latenciesOverTime" onClick="checkAll('choicesLatenciesOverTime');">Display all samples</a>
-                                        </li>
-                                        <li><a href="#latenciesOverTime" onClick="uncheckAll('choicesLatenciesOverTime');">Hide all samples</a>
-                                        </li>
-                                        <li><a href="#latenciesOverTime" onclick="exportToPNG('flotLatenciesOverTime', this);">Save as PNG</a></li>
+                                        <li><a href="#" class="action-check-all" data-target="choicesLatenciesOverTime">Display all samples</a></li>
+                                        <li><a href="#" class="action-uncheck-all" data-target="choicesLatenciesOverTime">Hide all samples</a></li>
+                                        <li><a href="#" class="action-export-png" data-target="flotLatenciesOverTime">Save as PNG</a></li>
                                     </ul>
-                                    <button type="button" class="btn btn-link btn-xs dropdown-toggle" data-toggle="collapse" href="#bodyLatenciesOverTime" aria-expanded="true" aria-controls="bodyLatenciesOverTime">
+                                    <button type="button" class="btn btn-link btn-xs dropdown-toggle" data-toggle="collapse" href="#bodyLatenciesOverTime" aria-expanded="false">
                                         <i class="fa fa-chevron-down"></i>
                                     </button>
                                 </div>
                             </div>
                         </div>
-                        <!-- /.panel-heading -->
                         <div class="collapse out portlet-content" id="bodyLatenciesOverTime">
-                            <div class="panel-body" id="collapseLatencies">
+                            <div class="panel-body">
                                 <div class="flot-chart">
                                     <div class="flot-chart-content" id="flotLatenciesOverTime" style="float: left; width:80%;"></div>
                                     <div style="float:left;margin-left:5px">
@@ -410,46 +307,36 @@
                                 </div>
                             </div>
                             <div class="panel-footer" id="footerLatenciesOverTime">
-                                    <p id="legendLatenciesOverTime" hidden></p>
-                                    <ul id="choicesLatenciesOverTime" class="legend"></ul>
+                                <p id="legendLatenciesOverTime" hidden></p>
+                                <ul id="choicesLatenciesOverTime" class="legend"></ul>
                             </div>
                         </div>
-                        <!-- /.panel-body -->
-
                     </div>
-                    <!-- /.panel -->
                 </div>
 
-                <!-- /.col-lg-6 -->
+                <!-- 图表 6: Connect Time -->
                 <div class="col-lg-12 portlet" id="connectTimeOverTime">
                     <div class="panel panel-default">
                         <div class="panel-heading portlet-header">
                             <i class="fa fa-bar-chart-o fa-fw"></i>
-                            <span type="button" class="dropdown-toggle click-title span-title" data-toggle="collapse" href="#bodyConnectTimeOverTime" aria-expanded="true" aria-controls="bodyConnectTimeOverTime">Connect Time Over Time</span>
+                            <span class="dropdown-toggle click-title span-title" data-toggle="collapse" href="#bodyConnectTimeOverTime" aria-expanded="false">Connect Time Over Time</span>
                             <div class="pull-right">
                                 <div class="btn-group">
-                                    <a class="btn btn-link btn-xs">
-                                        <i class="glyphicon glyphicon-resize-vertical"></i>
-                                    </a>
-                                    <button type="button" class="btn btn-link btn-xs dropdown-toggle" data-toggle="dropdown">
-                                        <i class="fa fa-wrench"></i>
-                                    </button>
+                                    <a class="btn btn-link btn-xs"><i class="glyphicon glyphicon-resize-vertical"></i></a>
+                                    <button type="button" class="btn btn-link btn-xs dropdown-toggle" data-toggle="dropdown"><i class="fa fa-wrench"></i></button>
                                     <ul class="dropdown-menu dropdown-user">
-                                        <li><a href="#connectTimeOverTime" onClick="checkAll('choicesConnectTimeOverTime');">Display all samples</a>
-                                        </li>
-                                        <li><a href="#connectTimeOverTime" onClick="uncheckAll('choicesConnectTimeOverTime');">Hide all samples</a>
-                                        </li>
-                                        <li><a href="#connectTimeOverTime" onclick="exportToPNG('flotConnectTimeOverTime', this);">Save as PNG</a></li>
+                                        <li><a href="#" class="action-check-all" data-target="choicesConnectTimeOverTime">Display all samples</a></li>
+                                        <li><a href="#" class="action-uncheck-all" data-target="choicesConnectTimeOverTime">Hide all samples</a></li>
+                                        <li><a href="#" class="action-export-png" data-target="flotConnectTimeOverTime">Save as PNG</a></li>
                                     </ul>
-                                    <button type="button" class="btn btn-link btn-xs dropdown-toggle" data-toggle="collapse" href="#bodyConnectTimeOverTime" aria-expanded="true" aria-controls="bodyConnectTimeOverTime">
+                                    <button type="button" class="btn btn-link btn-xs dropdown-toggle" data-toggle="collapse" href="#bodyConnectTimeOverTime" aria-expanded="false">
                                         <i class="fa fa-chevron-down"></i>
                                     </button>
                                 </div>
                             </div>
                         </div>
-                        <!-- /.panel-heading -->
                         <div class="collapse out portlet-content" id="bodyConnectTimeOverTime">
-                            <div class="panel-body" id="collapseConnectTime">
+                            <div class="panel-body">
                                 <div class="flot-chart">
                                     <div class="flot-chart-content" id="flotConnectTimeOverTime" style="float: left; width:80%;"></div>
                                     <div style="float:left;margin-left:5px">
@@ -459,34 +346,20 @@
                                 </div>
                             </div>
                             <div class="panel-footer" id="footerConnectTimeOverTime">
-                                    <p id="legendConnectTimeOverTime" hidden></p>
-                                    <ul id="choicesConnectTimeOverTime" class="legend"></ul>
+                                <p id="legendConnectTimeOverTime" hidden></p>
+                                <ul id="choicesConnectTimeOverTime" class="legend"></ul>
                             </div>
                         </div>
-                        <!-- /.panel-body -->
-
                     </div>
-                    <!-- /.panel -->
                 </div>
-                <!-- /.col-lg-6 -->
             </div>
-            <!-- /.row -->
         </div>
-        <!-- /#page-wrapper -->
-
     </div>
-    <!-- /#wrapper -->
 
-    <!-- jQuery -->
+    <!-- JavaScript Dependencies -->
     <script src="../../sbadmin2-1.0.7/bower_components/jquery/dist/jquery.min.js"></script>
-
-    <!-- Bootstrap Core JavaScript -->
     <script src="../../sbadmin2-1.0.7/bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
-
-    <!-- Metis Menu Plugin JavaScript -->
     <script src="../../sbadmin2-1.0.7/bower_components/metisMenu/dist/metisMenu.min.js"></script>
-
-    <!-- Flot Charts JavaScript -->
     <script src="../../sbadmin2-1.0.7/bower_components/flot/excanvas.min.js"></script>
     <script src="../../sbadmin2-1.0.7/bower_components/flot/jquery.flot.js"></script>
     <script src="../../sbadmin2-1.0.7/bower_components/flot/jquery.flot.pie.js"></script>
@@ -504,9 +377,41 @@
     <script src="../js/graph.js"></script>
     <script src="../js/jquery-ui.min.js"></script>
     <script src="../js/jquery.cookie.js"></script>
-    <!-- Custom Theme JavaScript -->
     <script src="../../sbadmin2-1.0.7/dist/js/sb-admin-2.js"></script>
 
-</body>
+    <!-- 页面级事件绑定 (替代原有的内联 onClick) -->
+    <script>
+        $(document).ready(function() {
+            // 侧边栏导航点击展开对应面板
+            $('.nav-link-collapse').on('click', function(e) {
+                e.preventDefault();
+                var targetId = $(this).attr('href');
+                var bodyId = targetId.replace('#', '#body');
+                // 简单映射：如 #responseTimesOverTime -> #bodyResponseTimeOverTime (需根据实际ID微调)
+                // 这里为了兼容原版逻辑，直接触发对应面板的展开
+                var panelBodyId = $(this).data('target') || targetId.replace('OverTime', 'TimeOverTime').replace('#', '#body');
+                // 原版逻辑是写死的，这里用通用方式触发
+                $(targetId).find('.collapse').collapse('show');
+            });
 
+            // 图表操作菜单：全选
+            $('.action-check-all').on('click', function(e) {
+                e.preventDefault();
+                checkAll($(this).data('target'));
+            });
+
+            // 图表操作菜单：取消全选
+            $('.action-uncheck-all').on('click', function(e) {
+                e.preventDefault();
+                uncheckAll($(this).data('target'));
+            });
+
+            // 图表操作菜单：导出 PNG
+            $('.action-export-png').on('click', function(e) {
+                e.preventDefault();
+                exportToPNG($(this).data('target'), this);
+            });
+        });
+    </script>
+</body>
 </html>
