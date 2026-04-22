@@ -2,44 +2,28 @@
 <html lang="en">
 
 <head>
-
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="">
-    <meta name="author" content="">
+    <meta name="description" content="Apache JMeter Performance Test Dashboard - Response Times Graphs">
+    <meta name="author" content="Graduate Dev Team">
 
-    <title>Apache JMeter Dashboard</title>
+    <title>Apache JMeter Dashboard - Response Times</title>
 
     <!-- Bootstrap Core CSS -->
     <link href="../../sbadmin2-1.0.7/bower_components/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
-
-    <!-- icone onglet -->
     <link rel="icon" type="image/png" href="icon-apache.png" />
-
-    <!-- MetisMenu CSS -->
     <link href="../../sbadmin2-1.0.7/bower_components/metisMenu/dist/metisMenu.min.css" rel="stylesheet">
-
-    <!-- Legends CSS -->
     <link href="../css/legends.css" rel="stylesheet">
-
-
-    <!-- Custom CSS -->
     <link href="../../sbadmin2-1.0.7/dist/css/sb-admin-2.css" rel="stylesheet">
-
-    <!-- Custom Fonts -->
     <link href="../../sbadmin2-1.0.7/bower_components/font-awesome/css/font-awesome.min.css" rel="stylesheet" type="text/css">
-
-   <!-- JQuery UI style -->
     <link href="../css/jquery-ui.min.css" rel="stylesheet">
     <link href="../css/jquery-ui.structure.min.css" rel="stylesheet">
     <link href="../css/jquery-ui.theme.min.css" rel="stylesheet">
 </head>
 
 <body>
-
     <div id="wrapper">
-
         <!-- Navigation -->
         <nav class="navbar navbar-default navbar-static-top" role="navigation" style="margin-bottom: 0">
             <div class="navbar-header">
@@ -51,118 +35,82 @@
                 </button>
                 <a class="navbar-brand" href="../../index.html">Apache JMeter Dashboard</a>
             </div>
-            <!-- /.navbar-header -->
-
 
             <div class="navbar-default sidebar" role="navigation">
                 <div class="sidebar-nav navbar-collapse">
                     <ul class="nav" id="side-menu">
-
                         <li>
                             <a href="../../index.html"><i class="fa fa-dashboard fa-fw"></i> Dashboard</a>
                         </li>
                         <li>
                             <a href="#"><i class="fa fa-bar-chart-o fa-fw"></i> Charts<span class="fa arrow"></span></a>
                             <ul class="nav nav-second-level">
-                                <li>
-                                    <a href="OverTime.html">Over Time</a>
-
-                                </li>
-                                <li>
-                                    <a href="Throughput.html">Throughput</a>
-                                </li>
+                                <li><a href="OverTime.html">Over Time</a></li>
+                                <li><a href="Throughput.html">Throughput</a></li>
                                 <li>
                                     <a href="ResponseTimes.html">Response Times<span class="fa arrow"></span></a>
-
                                     <ul class="nav nav-third-level in" id="submenu">
-                                        <li>
-                                            <a href="ResponseTimes.html#responseTimePercentiles" onclick="$('#bodyResponseTimePercentiles').collapse('show');">
-                                                Response Time Percentiles
-                                            </a>
-                                        </li>
-                                        <li>
-                                            <a href="ResponseTimes.html#syntheticResponseTimeDistribution" onclick="$('#bodySyntheticResponseTimeDistribution').collapse('show');">
-                                                Response Time Overview
-                                            </a>
-                                        </li>
-                                        <li>
-                                            <a href="ResponseTimes.html#timeVsThreads" onclick="$('#bodyTimeVsThreads').collapse('show');">Time Vs Threads</a>
-                                        </li>
-                                        <li>
-                                            <a href="ResponseTimes.html#responseTimeDistribution" onclick="$('#bodyResponseTimeDistribution').collapse('show');">
-                                                Response Time Distribution
-                                            </a>
-                                        </li>
+                                        <li><a href="#responseTimePercentiles" class="nav-link-collapse">Response Time Percentiles</a></li>
+                                        <li><a href="#syntheticResponseTimeDistribution" class="nav-link-collapse">Response Time Overview</a></li>
+                                        <li><a href="#timeVsThreads" class="nav-link-collapse">Time Vs Threads</a></li>
+                                        <li><a href="#responseTimeDistribution" class="nav-link-collapse">Response Time Distribution</a></li>
                                     </ul>
-
                                 </li>
                             </ul>
-                            <!-- /.nav-second-level -->
                         </li>
                         <li>
                             <a href="#"><i class="fa fa-bar-chart-o fa-fw"></i> Customs Graphs<span class="fa arrow"></span></a>
                             <ul class="nav nav-second-level">
-                                <li>
-                                    <a href="CustomsGraphs.html">Over Time</a>
-                                </li>
+                                <li><a href="CustomsGraphs.html">Over Time</a></li>
                             </ul>
                         </li>
                     </ul>
                 </div>
-                <!-- /.sidebar-collapse -->
             </div>
-            <!-- /.navbar-static-side -->
         </nav>
 
         <div id="page-wrapper">
+            <!-- Test Information -->
             <div class="row">
                 <div class="col-lg-12">
-                     <div class="panel panel-default" >
+                    <div class="panel panel-default">
                         <div class="panel-heading" style="text-align:center;">
-                           <p class="dashboard-title">Test and Report information</p>
+                            <p class="dashboard-title">Test and Report information</p>
                         </div>
                         <div class="panel-body">
-                        <table id="generalInfos" class="table table-bordered table-condensed " >
-                            <tr>
-                                <td>File:</td>
-                                <td>"results_detect_page.jtl"</td>
-                            </tr>
-                            <tr>
-                                <td>Start Time:</td>
-                                <td>"4/20/26, 4:51 PM"</td>
-                            </tr>
-                            <tr>
-                                <td>End Time:</td>
-                                <td>"4/20/26, 4:55 PM"</td>
-                            </tr>
-                                <tr>
-                                    <td>Filter for display:</td>
-                                    <td>""</td>
-                                </tr>
-                        </table>
-                     </div>
+                            <table id="generalInfos" class="table table-bordered table-condensed">
+                                <thead>
+                                    <tr><th width="20%">Property</th><th>Value</th></tr>
+                                </thead>
+                                <tbody>
+                                    <tr><th scope="row">File:</th><td>"results_detect_page.jtl"</td></tr>
+                                    <tr><th scope="row">Start Time:</th><td>"4/20/26, 4:51 PM"</td></tr>
+                                    <tr><th scope="row">End Time:</th><td>"4/20/26, 4:55 PM"</td></tr>
+                                    <tr><th scope="row">Filter for display:</th><td>""</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
             </div>
-            <!-- /.row -->
+
+            <!-- Graphs Container -->
             <div class="row" id="graphContainer">
+
+                <!-- 图表 1: Response Time Percentiles (带 Zoom 概览) -->
                 <div class="col-lg-12 portlet" id="responseTimePercentiles">
                     <div class="panel panel-default">
                         <div class="panel-heading portlet-header">
-                            <i class="fa fa-bar-chart-o fa-fw"></i>  <span type="button" class="span-title dropdown-toggle click-title" data-toggle="collapse" href="#bodyResponseTimePercentiles" aria-expanded="true" aria-controls="bodyResponseTimePercentiles">Response Time Percentiles</span>
+                            <i class="fa fa-bar-chart-o fa-fw"></i>
+                            <span role="button" class="span-title dropdown-toggle click-title" data-toggle="collapse" href="#bodyResponseTimePercentiles" aria-expanded="true" aria-controls="bodyResponseTimePercentiles">Response Time Percentiles</span>
                             <div class="pull-right">
                                 <div class="btn-group">
-                                    <a class="drag btn btn-link btn-xs">
-                                        <i class="glyphicon glyphicon-resize-vertical"></i>
-                                    </a>
-                                    <button type="button" class="btn btn-link btn-xs dropdown-toggle" data-toggle="dropdown">
-                                        <i class="fa fa-wrench"></i>
-                                    </button>
+                                    <a class="drag btn btn-link btn-xs"><i class="glyphicon glyphicon-resize-vertical"></i></a>
+                                    <button type="button" class="btn btn-link btn-xs dropdown-toggle" data-toggle="dropdown"><i class="fa fa-wrench"></i></button>
                                     <ul class="dropdown-menu dropdown-user">
-                                        <li><a href="#responseTimePercentiles" onClick="checkAll('choicesResponseTimePercentiles');">Display all samples</a>
-                                        </li>
-                                        <li><a href="#responseTimePercentiles" onClick="uncheckAll('choicesResponseTimePercentiles');">Hide all samples</a>
-                                        </li>
-                                        <li><a href="#responseTimePercentiles" onclick="exportToPNG('flotResponseTimesPercentiles', this);">Save as PNG</a></li>
+                                        <li><a href="#" class="action-check-all" data-target="choicesResponseTimePercentiles">Display all samples</a></li>
+                                        <li><a href="#" class="action-uncheck-all" data-target="choicesResponseTimePercentiles">Hide all samples</a></li>
+                                        <li><a href="#" class="action-export-png" data-target="flotResponseTimesPercentiles">Save as PNG</a></li>
                                     </ul>
                                     <button type="button" class="btn btn-link btn-xs dropdown-toggle" data-toggle="collapse" href="#bodyResponseTimePercentiles" aria-expanded="true" aria-controls="bodyResponseTimePercentiles">
                                         <i class="fa fa-chevron-up"></i>
@@ -170,9 +118,8 @@
                                 </div>
                             </div>
                         </div>
-                        <!-- /.panel-heading -->
                         <div class="collapse in portlet-content" id="bodyResponseTimePercentiles">
-                            <div class="panel-body" id="collapseResponseTimePercentiles">
+                            <div class="panel-body">
                                 <div class="flot-chart">
                                     <div class="flot-chart-content" id="flotResponseTimesPercentiles" style="float: left; width:80%;"></div>
                                     <div style="float:left;margin-left:5px">
@@ -183,87 +130,70 @@
                             </div>
                             <div class="panel-footer" id="footerPercentiles">
                                 <p id="legendResponseTimePercentiles" hidden></p>
-                                <ul id="choicesResponseTimePercentiles" class="legend">
-
-                                </ul>
+                                <ul id="choicesResponseTimePercentiles" class="legend"></ul>
                             </div>
                         </div>
-                        <!-- /.panel-body -->
                     </div>
-                    <!-- /.panel -->
                 </div>
+
+                <!-- 图表 2: Response Time Overview (无 Zoom 概览) -->
                 <div class="col-lg-12 portlet" id="syntheticResponseTimeDistribution">
                     <div class="panel panel-default">
                         <div class="panel-heading portlet-header">
-                            <i class="fa fa-bar-chart-o fa-fw"></i>  <span type="button" class="dropdown-toggle click-title span-title" data-toggle="collapse" href="#bodySyntheticResponseTimeDistribution" aria-expanded="true" aria-controls="bodySyntheticResponseTimeDistribution">Response Time Overview</span>
+                            <i class="fa fa-bar-chart-o fa-fw"></i>
+                            <span role="button" class="dropdown-toggle click-title span-title" data-toggle="collapse" href="#bodySyntheticResponseTimeDistribution" aria-expanded="false" aria-controls="bodySyntheticResponseTimeDistribution">Response Time Overview</span>
                             <div class="pull-right">
                                 <div class="btn-group">
-                                    <a class="drag btn btn-link btn-xs">
-                                        <i class="glyphicon glyphicon-resize-vertical"></i>
-                                    </a>
-                                    <button type="button" class="btn btn-link btn-xs dropdown-toggle" data-toggle="dropdown">
-                                        <i class="fa fa-wrench"></i>
-                                    </button>
+                                    <a class="drag btn btn-link btn-xs"><i class="glyphicon glyphicon-resize-vertical"></i></a>
+                                    <button type="button" class="btn btn-link btn-xs dropdown-toggle" data-toggle="dropdown"><i class="fa fa-wrench"></i></button>
                                     <ul class="dropdown-menu dropdown-user">
-                                        <li><a href="#syntheticResponseTimeDistribution" onClick="checkAll('choicesSyntheticResponseTimeDistribution');">Display all samples</a>
-                                        </li>
-                                        <li><a href="#syntheticResponseTimeDistribution" onClick="uncheckAll('choicesSyntheticResponseTimeDistribution');">Hide all samples</a>
-                                        </li>
-                                        <li><a href="#syntheticResponseTimeDistribution" onclick="exportToPNG('flotSyntheticResponseTimesDistribution', this);">Save as PNG</a></li>
+                                        <li><a href="#" class="action-check-all" data-target="choicesSyntheticResponseTimeDistribution">Display all samples</a></li>
+                                        <li><a href="#" class="action-uncheck-all" data-target="choicesSyntheticResponseTimeDistribution">Hide all samples</a></li>
+                                        <li><a href="#" class="action-export-png" data-target="flotSyntheticResponseTimesDistribution">Save as PNG</a></li>
                                     </ul>
-                                    <button type="button" class="btn btn-link btn-xs dropdown-toggle" data-toggle="collapse" href="#bodySyntheticResponseTimeDistribution" aria-expanded="true" aria-controls="bodySyntheticResponseTimeDistribution">
+                                    <button type="button" class="btn btn-link btn-xs dropdown-toggle" data-toggle="collapse" href="#bodySyntheticResponseTimeDistribution" aria-expanded="false" aria-controls="bodySyntheticResponseTimeDistribution">
                                         <i class="fa fa-chevron-down"></i>
                                     </button>
                                 </div>
                             </div>
                         </div>
-                        <!-- /.panel-heading -->
                         <div class="collapse out portlet-content" id="bodySyntheticResponseTimeDistribution">
-                            <div class="panel-body" id="collapseSyntheticResponseTimeDistribution">
-
+                            <div class="panel-body">
                                 <div class="flot-chart">
                                     <div class="flot-chart-content" id="flotSyntheticResponseTimeDistribution"></div>
                                 </div>
                             </div>
                             <div class="panel-footer" id="footerSyntheticResponseTimeDistribution">
                                 <p id="legendSyntheticResponseTimeDistribution" hidden></p>
-                                <ul id="choicesSyntheticResponseTimeDistribution" class="legend">
-
-                                </ul>
+                                <ul id="choicesSyntheticResponseTimeDistribution" class="legend"></ul>
                             </div>
                         </div>
-                        <!-- /.panel-body -->
                     </div>
-                    <!-- /.panel -->
                 </div>
+
+                <!-- 图表 3: Time Vs Threads (带 Zoom 概览) -->
                 <div class="col-lg-12 portlet" id="timeVsThreads">
                     <div class="panel panel-default">
                         <div class="panel-heading portlet-header">
-                           <i class="fa fa-bar-chart-o fa-fw"></i><span type="button" class="span-title dropdown-toggle click-title" data-toggle="collapse" href="#bodyTimeVsThreads" aria-expanded="true" aria-controls="bodyTimeVsThreads">Time Vs Threads</span>
+                           <i class="fa fa-bar-chart-o fa-fw"></i>
+                           <span role="button" class="span-title dropdown-toggle click-title" data-toggle="collapse" href="#bodyTimeVsThreads" aria-expanded="false" aria-controls="bodyTimeVsThreads">Time Vs Threads</span>
                            <div class="pull-right">
                                 <div class="btn-group">
-                                    <a class="drag btn btn-link btn-xs">
-                                        <i class="glyphicon glyphicon-resize-vertical"></i>
-                                    </a>
-                                    <button type="button" class="btn btn-link btn-xs dropdown-toggle" data-toggle="dropdown">
-                                        <i class="fa fa-wrench"></i>
-                                    </button>
+                                    <a class="drag btn btn-link btn-xs"><i class="glyphicon glyphicon-resize-vertical"></i></a>
+                                    <button type="button" class="btn btn-link btn-xs dropdown-toggle" data-toggle="dropdown"><i class="fa fa-wrench"></i></button>
                                     <ul class="dropdown-menu dropdown-user">
-                                        <li><a href="#timeVsThreads" onClick="checkAll('choicesTimeVsThreads');">Display all samples</a>
-                                        </li>
-                                        <li><a href="#timeVsThreads" onClick="uncheckAll('choicesTimeVsThreads');">Hide all samples</a>
-                                        </li>
-                                        <li><a href="#timeVsThreads" onclick="exportToPNG('flotTimesVsThreads', this);">Save as PNG</a></li>
+                                        <li><a href="#" class="action-check-all" data-target="choicesTimeVsThreads">Display all samples</a></li>
+                                        <li><a href="#" class="action-uncheck-all" data-target="choicesTimeVsThreads">Hide all samples</a></li>
+                                        <li><a href="#" class="action-export-png" data-target="flotTimesVsThreads">Save as PNG</a></li>
                                     </ul>
-                                    <button type="button" class="btn btn-link btn-xs dropdown-toggle" data-toggle="collapse" href="#bodyTimeVsThreads" aria-expanded="true" aria-controls="bodyTimeVsThreads">
+                                    <button type="button" class="btn btn-link btn-xs dropdown-toggle" data-toggle="collapse" href="#bodyTimeVsThreads" aria-expanded="false" aria-controls="bodyTimeVsThreads">
                                         <i class="fa fa-chevron-down"></i>
                                     </button>
                                 </div>
                             </div>
                         </div>
-                        <!-- /.panel-heading -->
                         <div class="collapse out portlet-content" id="bodyTimeVsThreads">
-                            <div class="panel-body" id="collapseTimeVsThreads">
+                            <div class="panel-body">
                                 <div class="flot-chart">
                                     <div class="flot-chart-content" id="flotTimesVsThreads" style="float: left; width:80%;"></div>
                                     <div style="float:left;margin-left:5px">
@@ -277,74 +207,51 @@
                                 <ul id="choicesTimeVsThreads" class="legend"></ul>
                             </div>
                         </div>
-                        <!-- /.panel-body -->
                     </div>
-                    <!-- /.panel -->
                 </div>
+
+                <!-- 图表 4: Response Time Distribution (无 Zoom 概览) -->
                 <div class="col-lg-12 portlet" id="responseTimeDistribution">
                     <div class="panel panel-default">
                         <div class="panel-heading portlet-header">
-                           <i class="fa fa-bar-chart-o fa-fw"></i> <span type="button" class="dropdown-toggle click-title span-title" data-toggle="collapse" href="#bodyResponseTimeDistribution" aria-expanded="true" aria-controls="bodyResponseTimeDistribution">Response Time Distribution</span>
+                           <i class="fa fa-bar-chart-o fa-fw"></i>
+                           <span role="button" class="dropdown-toggle click-title span-title" data-toggle="collapse" href="#bodyResponseTimeDistribution" aria-expanded="false" aria-controls="bodyResponseTimeDistribution">Response Time Distribution</span>
                            <div class="pull-right">
                                 <div class="btn-group">
-                                    <a class="drag btn btn-link btn-xs">
-                                        <i class="glyphicon glyphicon-resize-vertical"></i>
-                                    </a>
-                                    <button type="button" class="btn btn-link btn-xs dropdown-toggle" data-toggle="dropdown">
-                                        <i class="fa fa-wrench"></i>
-                                    </button>
+                                    <a class="drag btn btn-link btn-xs"><i class="glyphicon glyphicon-resize-vertical"></i></a>
+                                    <button type="button" class="btn btn-link btn-xs dropdown-toggle" data-toggle="dropdown"><i class="fa fa-wrench"></i></button>
                                     <ul class="dropdown-menu dropdown-user">
-                                        <li><a href="#responseTimeDistribution" onClick="checkAll('choicesResponseTimeDistribution');">Display all samples</a>
-                                        </li>
-                                        <li><a href="#responseTimeDistribution" onClick="uncheckAll('choicesResponseTimeDistribution');">Hide all samples</a>
-                                        </li>
-                                        <li><a href="#responseTimeDistribution" onclick="exportToPNG('flotResponseTimeDistribution', this);">Save as PNG</a></li>
+                                        <li><a href="#" class="action-check-all" data-target="choicesResponseTimeDistribution">Display all samples</a></li>
+                                        <li><a href="#" class="action-uncheck-all" data-target="choicesResponseTimeDistribution">Hide all samples</a></li>
+                                        <li><a href="#" class="action-export-png" data-target="flotResponseTimeDistribution">Save as PNG</a></li>
                                     </ul>
-                                    <button type="button" class="btn btn-link btn-xs dropdown-toggle" data-toggle="collapse" href="#bodyResponseTimeDistribution" aria-expanded="true" aria-controls="bodyResponseTimeDistribution">
+                                    <button type="button" class="btn btn-link btn-xs dropdown-toggle" data-toggle="collapse" href="#bodyResponseTimeDistribution" aria-expanded="false" aria-controls="bodyResponseTimeDistribution">
                                         <i class="fa fa-chevron-down"></i>
                                     </button>
                                 </div>
                             </div>
                         </div>
-                        <!-- /.panel-heading -->
                         <div class="collapse out portlet-content" id="bodyResponseTimeDistribution">
-                            <div class="panel-body" id="collapseResponseTimeDistribution">
-
+                            <div class="panel-body">
                                 <div class="flot-chart">
                                     <div class="flot-chart-content" id="flotResponseTimeDistribution"></div>
                                 </div>
                             </div>
                             <div class="panel-footer" id="footerResponseTimeDistribution">
                                 <p id="legendResponseTimeDistribution" hidden></p>
-                                <ul id="choicesResponseTimeDistribution" class="legend">
-
-                                </ul>
+                                <ul id="choicesResponseTimeDistribution" class="legend"></ul>
                             </div>
                         </div>
-                        <!-- /.panel-body -->
                     </div>
-                    <!-- /.panel -->
                 </div>
-
-                <!-- /.col-lg-6 -->
             </div>
-            <!-- /.row -->
         </div>
-        <!-- /#page-wrapper -->
-
     </div>
-    <!-- /#wrapper -->
 
-     <!-- jQuery -->
+    <!-- JavaScript Dependencies -->
     <script src="../../sbadmin2-1.0.7/bower_components/jquery/dist/jquery.min.js"></script>
-
-    <!-- Bootstrap Core JavaScript -->
     <script src="../../sbadmin2-1.0.7/bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
-
-    <!-- Metis Menu Plugin JavaScript -->
     <script src="../../sbadmin2-1.0.7/bower_components/metisMenu/dist/metisMenu.min.js"></script>
-
-    <!-- Flot Charts JavaScript -->
     <script src="../../sbadmin2-1.0.7/bower_components/flot/excanvas.min.js"></script>
     <script src="../../sbadmin2-1.0.7/bower_components/flot/jquery.flot.js"></script>
     <script src="../../sbadmin2-1.0.7/bower_components/flot/jquery.flot.pie.js"></script>
@@ -362,12 +269,39 @@
     <script src="../js/graph.js"></script>
     <script src="../js/jquery-ui.min.js"></script>
     <script src="../../sbadmin2-1.0.7/bower_components/flot/jquery.flot.threshold.js"></script>
-    <!-- Custom Theme JavaScript -->
     <script src="../../sbadmin2-1.0.7/dist/js/sb-admin-2.js"></script>
     <script src="../js/jquery.cookie.js"></script>
-
     <script src="../../sbadmin2-1.0.7/bower_components/flot/jquery.flot.symbol.js"></script>
 
-</body>
+    <!-- 页面级事件绑定 (替代原有的内联 onClick) -->
+    <script>
+        $(document).ready(function() {
+            // 侧边栏导航点击展开对应面板并平滑滚动
+            $('.nav-link-collapse').on('click', function(e) {
+                e.preventDefault();
+                var targetId = $(this).attr('href');
+                $(targetId).find('.collapse').collapse('show');
+                $('html, body').animate({ scrollTop: $(targetId).offset().top - 70 }, 500);
+            });
 
+            // 图表操作菜单：全选
+            $('.action-check-all').on('click', function(e) {
+                e.preventDefault();
+                if (typeof checkAll === 'function') checkAll($(this).data('target'));
+            });
+
+            // 图表操作菜单：取消全选
+            $('.action-uncheck-all').on('click', function(e) {
+                e.preventDefault();
+                if (typeof uncheckAll === 'function') uncheckAll($(this).data('target'));
+            });
+
+            // 图表操作菜单：导出 PNG
+            $('.action-export-png').on('click', function(e) {
+                e.preventDefault();
+                if (typeof exportToPNG === 'function') exportToPNG($(this).data('target'), this);
+            });
+        });
+    </script>
+</body>
 </html>
