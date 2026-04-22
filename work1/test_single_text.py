@@ -5,6 +5,7 @@ import string
 import logging
 from pathlib import Path
 from dataclasses import dataclass
+from typing import List, Tuple
 import torch
 import transformers
 import numpy as np
@@ -27,13 +28,14 @@ class AppConfig:
     window_step: int = 1
     max_seq_len: int = 1024
     feature_pad_len: int = 512
+    ai_threshold: float = 0.5
 
 
 class GPT2PerplexityCalculator:
     def __init__(self, config: AppConfig):
         self.config = config
         self.device = get_device()
-        logger.info(f"Loading GPT-2 model from {config.gpt2_model_path} to {self.device}")
+        logger.info(f"Loading GPT-2 model to {self.device}")
 
         self.tokenizer = transformers.AutoTokenizer.from_pretrained(config.gpt2_model_path)
         self.model = transformers.AutoModelForCausalLM.from_pretrained(config.gpt2_model_path)
@@ -43,9 +45,8 @@ class GPT2PerplexityCalculator:
         self.byte_encoder = bytes_to_unicode()
         self.byte_decoder = {v: k for k, v in self.byte_encoder.items()}
 
-    def calculate_perplexity(self, text: str):
-        if not text.strip():
-            return 0.0, 0, []
+    def calculate_perplexity(self, text: str) -> Tuple[float, int, List[float]]:
+        if not text.strip(): return 0.0, 0, []
 
         encoded = self.tokenizer(text, return_tensors="pt", truncation=True, max_length=self.config.max_seq_len).to(
             self.device)
@@ -62,15 +63,14 @@ class GPT2PerplexityCalculator:
         shift_logits = logits[:-1, :].contiguous()
         shift_labels = input_ids.squeeze()[1:].contiguous()
 
-        token_losses = torch.nn.CrossEntropyLoss(reduction="none")(shift_logits, shift_labels)
-        token_losses_list = token_losses.cpu().tolist()
+        token_losses = torch.nn.CrossEntropyLoss(reduction="none")(shift_logits, shift_labels).cpu().tolist()
 
         sub_tokens = [self.tokenizer._convert_id_to_token(tid) for tid in input_ids.squeeze()]
-        if not sub_tokens: return token_losses.mean().item(), 0, []
+        if not sub_tokens: return 0.0, 0, []
 
         byte_losses = [0.0] * len(sub_tokens[0])
         for t_idx, st in enumerate(sub_tokens[1:]):
-            byte_losses.extend([token_losses_list[t_idx]] * len(st))
+            byte_losses.extend([token_losses[t_idx]] * len(st))
 
         token_level_losses, start = [], 0
         while start < len(byte_to_word_idx) and start < len(byte_losses):
@@ -81,10 +81,10 @@ class GPT2PerplexityCalculator:
             start = end
 
         begin_word_idx = byte_to_word_idx[len(sub_tokens[0]) - 1] + 1 if sub_tokens[0] else 0
-        return token_losses.mean().item(), begin_word_idx, token_level_losses
+        return float(np.mean(token_losses)), begin_word_idx, token_level_losses
 
 
-def split_sentences(text: str) -> list[str]:
+def split_sentences(text: str) -> List[str]:
     text = (text or "").strip()
     if not text: return []
     chunks = re.split(r"(?<=[。！？.!?；;：:])\s+", text)
@@ -98,9 +98,9 @@ def is_trivial_sentence(sentence: str) -> bool:
     return len(s.split()) <= 1
 
 
-def pad_list(input_list: list, target_len: int, pad_val=0.0) -> list:
-    return input_list + [pad_val] * max(0, target_len - len(input_list)) if len(
-        input_list) < target_len else input_list[:target_len]
+def pad_list(input_list: list, target_len: int) -> list:
+    return input_list + [0.0] * max(0, target_len - len(input_list)) if len(input_list) < target_len else input_list[
+        :target_len]
 
 
 def calc_tail_difference(list1: list, list2: list) -> list:
@@ -116,14 +116,13 @@ class SingleSentencePredictor:
         self.ppl_calc = GPT2PerplexityCalculator(config)
 
         model_path = Path(config.head_model_folder) / config.head_model_name
-        logger.info(f"Loading Sentence Head model from {model_path}")
         try:
             self.head_model = torch.load(str(model_path), map_location=self.device, weights_only=False)
         except TypeError:
             self.head_model = torch.load(str(model_path), map_location=self.device)
         self.head_model.eval()
 
-    def _extract_features(self, sentences: list[str]) -> torch.Tensor:
+    def _extract_features(self, sentences: List[str]) -> torch.Tensor:
         s1 = sentences[0] if len(sentences) > 0 else ""
         s2 = sentences[1] if len(sentences) > 1 else s1
         s3 = sentences[2] if len(sentences) > 2 else s2
@@ -135,10 +134,10 @@ class SingleSentencePredictor:
         _, _, loss3 = self.ppl_calc.calculate_perplexity(s3)
         _, _, loss123 = self.ppl_calc.calculate_perplexity(f"{s1} {s2} {s3}")
 
-        diff = calc_tail_difference(loss123, loss3)
-        return torch.tensor(pad_list(diff, self.config.feature_pad_len), dtype=torch.float32)
+        return torch.tensor(pad_list(calc_tail_difference(loss123, loss3), self.config.feature_pad_len),
+                            dtype=torch.float32)
 
-    def predict_scores(self, sentences: list[str]) -> list[float]:
+    def predict_scores(self, sentences: List[str]) -> List[float]:
         if not sentences: return []
         votes = [[] for _ in range(len(sentences))]
 
@@ -152,7 +151,34 @@ class SingleSentencePredictor:
                 for i in range(start, min(start + self.config.window_size, len(sentences))):
                     votes[i].append(score)
 
-        return [sum(v) / len(v) if v else 0.5 for v in votes]
+        # 重构：引入置信度加权投票 (Confidence-weighted voting)
+        final_scores = []
+        for v in votes:
+            if not v:
+                final_scores.append(0.5)
+                continue
+            if len(v) <= 2:
+                final_scores.append(sum(v) / len(v))
+                continue
+
+            # 距离0.5越远，置信度越高，权重越大
+            weights = [abs(p - 0.5) * 2 for p in v]
+            total_w = sum(weights)
+            if total_w == 0:
+                final_scores.append(sum(v) / len(v))
+            else:
+                norm_w = [w / total_w for w in weights]
+                final_scores.append(sum(p * w for p, w in zip(v, norm_w)))
+
+        return final_scores
+
+
+def find_switch_index(results: List[dict], threshold: float) -> int:
+    """寻找从人类写作切换到AI生成的索引点"""
+    for idx, row in enumerate(results):
+        if row["confidence"] >= threshold:
+            return idx
+    return len(results)
 
 
 def main():
@@ -165,10 +191,8 @@ def main():
     args = parser.parse_args()
 
     config = AppConfig(
-        head_model_folder=args.head_folder,
-        head_model_name=args.head_model,
-        window_size=args.window_size,
-        window_step=args.window_step
+        head_model_folder=args.head_folder, head_model_name=args.head_model,
+        window_size=args.window_size, window_step=args.window_step
     )
 
     text = (args.single_text or "").strip()
@@ -180,15 +204,14 @@ def main():
     sents = split_sentences(text)
     scores = predictor.predict_scores(sents)
 
-    rows, switch_idx = [], -1
+    rows = []
     for idx, (sent, score) in enumerate(zip(sents, scores)):
-        label = "AIGT" if score >= 0.5 else "HWT"
+        label = "AIGT" if score >= config.ai_threshold else "HWT"
         rows.append(
             {"index": idx, "text": sent, "label": label, "confidence": round(score, 4), "ai_ratio": round(score, 4)})
-        if label == "AIGT" and switch_idx == -1: switch_idx = idx
-    if switch_idx == -1: switch_idx = len(sents)
 
-    print(json.dumps({"sentences": rows, "switch_sentence_index": switch_idx, "model_used": "v4-config"},
+    switch_idx = find_switch_index(rows, config.ai_threshold)
+    print(json.dumps({"sentences": rows, "switch_sentence_index": switch_idx, "model_used": "v5-weighted-vote"},
                      ensure_ascii=False))
 
 
