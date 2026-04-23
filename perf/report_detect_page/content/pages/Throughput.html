@@ -2,181 +2,121 @@
 <html lang="en">
 
 <head>
-
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="">
-    <meta name="author" content="">
+    <meta name="description" content="Apache JMeter Performance Test Dashboard - Throughput Graphs">
+    <meta name="author" content="Graduate Dev Team">
 
-    <title>Apache JMeter Dashboard</title>
+    <title>Apache JMeter Dashboard - Throughput</title>
 
     <!-- Bootstrap Core CSS -->
     <link href="../../sbadmin2-1.0.7/bower_components/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
-
-    <!-- icon -->
     <link rel="icon" type="image/png" href="icon-apache.png" />
-
-    <!-- MetisMenu CSS -->
     <link href="../../sbadmin2-1.0.7/bower_components/metisMenu/dist/metisMenu.min.css" rel="stylesheet">
-
-    <!-- Legends CSS -->
     <link href="../css/legends.css" rel="stylesheet">
-
-
-    <!-- Custom CSS -->
     <link href="../../sbadmin2-1.0.7/dist/css/sb-admin-2.css" rel="stylesheet">
-
-    <!-- Custom Fonts -->
     <link href="../../sbadmin2-1.0.7/bower_components/font-awesome/css/font-awesome.min.css" rel="stylesheet" type="text/css">
-
-   <!-- JQuery UI style -->
     <link href="../css/jquery-ui.min.css" rel="stylesheet">
     <link href="../css/jquery-ui.structure.min.css" rel="stylesheet">
     <link href="../css/jquery-ui.theme.min.css" rel="stylesheet">
 </head>
 
 <body>
-
     <div id="wrapper">
-
         <!-- Navigation -->
         <nav class="navbar navbar-default navbar-static-top" role="navigation" style="margin-bottom: 0">
             <div class="navbar-header">
                 <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
                     <span class="sr-only">Toggle navigation</span>
-                    <span class="icon-bar"></span>
-                    <span class="icon-bar"></span>
-                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span><span class="icon-bar"></span><span class="icon-bar"></span>
                 </button>
                 <a class="navbar-brand" href="../../index.html">Apache JMeter Dashboard</a>
             </div>
-            <!-- /.navbar-header -->
-
 
             <div class="navbar-default sidebar" role="navigation">
                 <div class="sidebar-nav navbar-collapse">
                     <ul class="nav" id="side-menu">
-
-                        <li>
-                            <a href="../../index.html"><i class="fa fa-dashboard fa-fw"></i> Dashboard</a>
-                        </li>
+                        <li><a href="../../index.html"><i class="fa fa-dashboard fa-fw"></i> Dashboard</a></li>
                         <li>
                             <a href="#"><i class="fa fa-bar-chart-o fa-fw"></i> Charts<span class="fa arrow"></span></a>
                             <ul class="nav nav-second-level">
-                                <li>
-                                    <a href="OverTime.html">Over Time</a>
-                                </li>
+                                <li><a href="OverTime.html">Over Time</a></li>
                                 <li>
                                     <a href="Throughput.html">Throughput<span class="fa arrow"></span></a>
                                     <ul class="nav nav-third-level in" id="submenu">
-                                        <li>
-                                            <a href="Throughput.html#hitsPerSecond" onclick="$('#bodyHitsPerSecond').collapse('show');">Hits Per Second</a>
-                                        </li>
-
-                                        <li>
-                                            <a href="Throughput.html#codesPerSecond" onclick="$('#bodyCodesPerSecond').collapse('show');">Codes Per Second</a>
-                                        </li>
-                                        <li>
-                                            <a href="Throughput.html#transactionsPerSecond" onclick="$('#bodyTransactionsPerSecond').collapse('show');">Transactions Per Second</a>
-                                        </li>
-                                        <li>
-                                            <a href="Throughput.html#totalTPS" onclick="$('#bodyTotalTPS').collapse('show');">Total Transactions Per Second</a>
-                                        </li>
-                                        <li>
-                                            <a href="Throughput.html#responseTimeVsRequest" onclick="$('#bodyResponseTimeVsRequest').collapse('show');">Response Time Vs Request</a>
-                                        </li>
-                                        <li>
-                                            <a href="Throughput.html#latencyVsRequest" onclick="$('#bodyLatenciesVsRequest').collapse('show');">Latency Vs Request</a>
-                                        </li>
+                                        <li><a href="#hitsPerSecond" class="nav-link-collapse">Hits Per Second</a></li>
+                                        <li><a href="#codesPerSecond" class="nav-link-collapse">Codes Per Second</a></li>
+                                        <li><a href="#transactionsPerSecond" class="nav-link-collapse">Transactions Per Second</a></li>
+                                        <li><a href="#totalTPS" class="nav-link-collapse">Total Transactions Per Second</a></li>
+                                        <li><a href="#responseTimeVsRequest" class="nav-link-collapse">Response Time Vs Request</a></li>
+                                        <li><a href="#latencyVsRequest" class="nav-link-collapse">Latency Vs Request</a></li>
                                     </ul>
                                 </li>
-                                <li>
-                                    <a href="ResponseTimes.html">Response Times</a>
-                                </li>
+                                <li><a href="ResponseTimes.html">Response Times</a></li>
                             </ul>
-                            <!-- /.nav-second-level -->
                         </li>
-
                         <li>
                             <a href="#"><i class="fa fa-bar-chart-o fa-fw"></i> Customs Graphs<span class="fa arrow"></span></a>
-                            <ul class="nav nav-second-level">
-                                <li>
-                                    <a href="CustomsGraphs.html">Over Time</a>
-                                </li>
-                            </ul>
+                            <ul class="nav nav-second-level"><li><a href="CustomsGraphs.html">Over Time</a></li></ul>
                         </li>
-
                     </ul>
                 </div>
-                <!-- /.sidebar-collapse -->
             </div>
-            <!-- /.navbar-static-side -->
         </nav>
 
         <div id="page-wrapper">
+            <!-- Test Information -->
             <div class="row">
                 <div class="col-lg-12">
-                     <div class="panel panel-default">
+                    <div class="panel panel-default">
                         <div class="panel-heading" style="text-align:center;">
-                           <p class="dashboard-title">Test and Report information</p>
+                            <p class="dashboard-title">Test and Report information</p>
                         </div>
                         <div class="panel-body">
-                        <table id="generalInfos" class="table table-bordered table-condensed " >
-                            <tr>
-                                <td>File:</td>
-                                <td>"results_detect_page.jtl"</td>
-                            </tr>
-                            <tr>
-                                <td>Start Time:</td>
-                                <td>"4/20/26, 4:51 PM"</td>
-                            </tr>
-                            <tr>
-                                <td>End Time:</td>
-                                <td>"4/20/26, 4:55 PM"</td>
-                            </tr>
-                                <tr>
-                                    <td>Filter for display:</td>
-                                    <td>""</td>
-                                </tr>
-                        </table>
-                     </div>
+                            <table id="generalInfos" class="table table-bordered table-condensed">
+                                <thead>
+                                    <tr><th width="20%">Property</th><th>Value</th></tr>
+                                </thead>
+                                <tbody>
+                                    <tr><th scope="row">File:</th><td>"results_detect_page.jtl"</td></tr>
+                                    <tr><th scope="row">Start Time:</th><td>"4/20/26, 4:51 PM"</td></tr>
+                                    <tr><th scope="row">End Time:</th><td>"4/20/26, 4:55 PM"</td></tr>
+                                    <tr><th scope="row">Filter for display:</th><td>""</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
             </div>
-            <!-- /.row -->
+
+            <!-- Graphs Container -->
             <div class="row" id="graphContainer">
 
-                <!-- /.col-lg-12 -->
-
+                <!-- 图表 1: Hits Per Second -->
                 <div class="col-lg-12 portlet" id="hitsPerSecond">
                     <div class="panel panel-default">
                         <div class="panel-heading portlet-header">
-                           <i class="fa fa-bar-chart-o fa-fw"> </i>  <span type="button" class="dropdown-toggle click-title span-title" data-toggle="collapse" href="#bodyHitsPerSecond" aria-expanded="true" aria-controls="bodyHitsPerSecond">Hits Per Second</span>
+                           <i class="fa fa-bar-chart-o fa-fw"></i>
+                           <span role="button" class="dropdown-toggle click-title span-title" data-toggle="collapse" href="#bodyHitsPerSecond" aria-expanded="true">Hits Per Second</span>
                            <div class="pull-right">
                                 <div class="btn-group">
-                                    <a class="btn btn-link btn-xs">
-                                        <i class="glyphicon glyphicon-resize-vertical"></i>
-                                    </a>
-                                    <button type="button" class="btn btn-link btn-xs dropdown-toggle" data-toggle="dropdown">
-                                        <i class="fa fa-wrench"></i>
-                                    </button>
+                                    <a class="btn btn-link btn-xs"><i class="glyphicon glyphicon-resize-vertical"></i></a>
+                                    <button type="button" class="btn btn-link btn-xs dropdown-toggle" data-toggle="dropdown"><i class="fa fa-wrench"></i></button>
                                     <ul class="dropdown-menu dropdown-user">
-                                        <li><a href="#hitsPerSecond" onClick="checkAll('choicesHitsPerSecond');">Display samples</a>
-                                        </li>
-                                        <li><a href="#hitsPerSecond" onClick="uncheckAll('choicesHitsPerSecond');">Hide samples</a>
-                                        </li>
-                                        <li><a href="#hitsPerSecond" onclick="exportToPNG('flotHitsPerSecond', this);">Save as PNG</a></li>
+                                        <li><a href="#" class="action-check-all" data-target="choicesHitsPerSecond">Display samples</a></li>
+                                        <li><a href="#" class="action-uncheck-all" data-target="choicesHitsPerSecond">Hide samples</a></li>
+                                        <li><a href="#" class="action-export-png" data-target="flotHitsPerSecond">Save as PNG</a></li>
                                     </ul>
-                                    <button type="button" class="btn btn-link btn-xs dropdown-toggle" data-toggle="collapse" href="#bodyHitsPerSecond" aria-expanded="true" aria-controls="bodyHitsPerSecond">
+                                    <button type="button" class="btn btn-link btn-xs dropdown-toggle" data-toggle="collapse" href="#bodyHitsPerSecond" aria-expanded="true">
                                         <i class="fa fa-chevron-up"></i>
                                     </button>
                                 </div>
                             </div>
                         </div>
-                        <!-- /.panel-heading -->
                         <div class="collapse in portlet-content" id="bodyHitsPerSecond">
-                            <div class="panel-body" id="collapseHitsPerSecond" >
-                                <div class="flot-chart" >
+                            <div class="panel-body">
+                                <div class="flot-chart">
                                     <div class="flot-chart-content" id="flotHitsPerSecond" style="float: left; width:80%;"></div>
                                     <div style="float:left;margin-left:5px">
                                         <p>Zoom :</p>
@@ -192,38 +132,29 @@
                     </div>
                 </div>
 
-                <!-- codesPerSecond -->
-
+                <!-- 图表 2: Codes Per Second -->
                 <div class="col-lg-12 portlet" id="codesPerSecond">
                     <div class="panel panel-default">
                         <div class="panel-heading portlet-header">
                             <i class="fa fa-bar-chart-o fa-fw"></i>
-                            <span type="button" class="dropdown-toggle click-title span-title" data-toggle="collapse" href="#bodyCodesPerSecond" aria-expanded="true" aria-controls="bodyCodesPerSecond">Codes Per Second</span>
+                            <span role="button" class="dropdown-toggle click-title span-title" data-toggle="collapse" href="#bodyCodesPerSecond" aria-expanded="false">Codes Per Second</span>
                             <div class="pull-right">
                                 <div class="btn-group">
-                                    <a class="btn btn-link btn-xs">
-                                        <i class="glyphicon glyphicon-resize-vertical"></i>
-                                    </a>
-                                    <button type="button" class="btn btn-link btn-xs dropdown-toggle" data-toggle="dropdown">
-                                        <i class="fa fa-wrench"></i>
-                                    </button>
+                                    <a class="btn btn-link btn-xs"><i class="glyphicon glyphicon-resize-vertical"></i></a>
+                                    <button type="button" class="btn btn-link btn-xs dropdown-toggle" data-toggle="dropdown"><i class="fa fa-wrench"></i></button>
                                     <ul class="dropdown-menu dropdown-user">
-                                        <li><a href="#codesPerSecond" onClick="checkAll('choicesCodesPerSecond');">Display samples</a>
-                                        </li>
-                                        <li><a href="#codesPerSecond" onClick="uncheckAll('choicesCodesPerSecond');">Hide samples</a>
-                                        </li>
-                                        <li><a href="#codesPerSecond" onclick="exportToPNG('flotCodesPerSecond', this);">Save as PNG</a></li>
+                                        <li><a href="#" class="action-check-all" data-target="choicesCodesPerSecond">Display samples</a></li>
+                                        <li><a href="#" class="action-uncheck-all" data-target="choicesCodesPerSecond">Hide samples</a></li>
+                                        <li><a href="#" class="action-export-png" data-target="flotCodesPerSecond">Save as PNG</a></li>
                                     </ul>
-                                    <button type="button" class="btn btn-link btn-xs dropdown-toggle" data-toggle="collapse" href="#bodyCodesPerSecond" aria-expanded="true" aria-controls="bodyCodesPerSecond">
+                                    <button type="button" class="btn btn-link btn-xs dropdown-toggle" data-toggle="collapse" href="#bodyCodesPerSecond" aria-expanded="false">
                                         <i class="fa fa-chevron-down"></i>
                                     </button>
                                 </div>
                             </div>
                         </div>
-                        <!-- /.panel-heading -->
-
                         <div class="collapse out portlet-content" id="bodyCodesPerSecond">
-                            <div class="panel-body" id="collapseCodesPerSecond">
+                            <div class="panel-body">
                                 <div class="flot-chart">
                                     <div class="flot-chart-content" id="flotCodesPerSecond" style="float: left; width:80%;"></div>
                                     <div style="float:left;margin-left:5px">
@@ -239,34 +170,30 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- 图表 3: Transactions Per Second -->
                 <div class="col-lg-12 portlet" id="transactionsPerSecond">
                     <div class="panel panel-default">
                         <div class="panel-heading portlet-header">
-                          <i class="fa fa-bar-chart-o fa-fw"> </i> <span type="button" class="dropdown-toggle click-title span-title" data-toggle="collapse" href="#bodyTransactionsPerSecond" aria-expanded="true" aria-controls="bodyTransactionsPerSecond">Transactions Per Second</span>
+                          <i class="fa fa-bar-chart-o fa-fw"></i>
+                          <span role="button" class="dropdown-toggle click-title span-title" data-toggle="collapse" href="#bodyTransactionsPerSecond" aria-expanded="false">Transactions Per Second</span>
                           <div class="pull-right">
                                 <div class="btn-group">
-                                    <a class="btn btn-link btn-xs">
-                                        <i class="glyphicon glyphicon-resize-vertical"></i>
-                                    </a>
-                                    <button type="button" class="btn btn-link btn-xs dropdown-toggle" data-toggle="dropdown">
-                                        <i class="fa fa-wrench"></i>
-                                    </button>
+                                    <a class="btn btn-link btn-xs"><i class="glyphicon glyphicon-resize-vertical"></i></a>
+                                    <button type="button" class="btn btn-link btn-xs dropdown-toggle" data-toggle="dropdown"><i class="fa fa-wrench"></i></button>
                                     <ul class="dropdown-menu dropdown-user">
-                                        <li><a href="#transactionsPerSecond" onClick="checkAll('choicesTransactionsPerSecond');">Display all samples</a>
-                                        </li>
-                                        <li><a href="#transactionsPerSecond" onClick="uncheckAll('choicesTransactionsPerSecond');">Hide all samples</a>
-                                        </li>
-                                        <li><a href="#transactionsPerSecond" onclick="exportToPNG('flotTransactionsPerSecond', this);">Save as PNG</a></li>
+                                        <li><a href="#" class="action-check-all" data-target="choicesTransactionsPerSecond">Display all samples</a></li>
+                                        <li><a href="#" class="action-uncheck-all" data-target="choicesTransactionsPerSecond">Hide all samples</a></li>
+                                        <li><a href="#" class="action-export-png" data-target="flotTransactionsPerSecond">Save as PNG</a></li>
                                     </ul>
-                                    <button type="button" class="btn btn-link btn-xs dropdown-toggle" data-toggle="collapse" href="#bodyTransactionsPerSecond" aria-expanded="true" aria-controls="bodyTransactionsPerSecond">
+                                    <button type="button" class="btn btn-link btn-xs dropdown-toggle" data-toggle="collapse" href="#bodyTransactionsPerSecond" aria-expanded="false">
                                         <i class="fa fa-chevron-down"></i>
                                     </button>
                                 </div>
                             </div>
                         </div>
-                        <!-- /.panel-heading -->
                         <div class="collapse out portlet-content" id="bodyTransactionsPerSecond">
-                            <div class="panel-body" id="collapseTransactionsPerSecond">
+                            <div class="panel-body">
                                 <div class="flot-chart">
                                     <div class="flot-chart-content" id="flotTransactionsPerSecond" style="float: left; width:80%;"></div>
                                     <div style="float:left;margin-left:5px">
@@ -280,39 +207,32 @@
                                 <ul id="choicesTransactionsPerSecond" class="legend"></ul>
                             </div>
                         </div>
-                        <!-- /.panel-body -->
                     </div>
-                    <!-- /.panel -->
                 </div>
 
+                <!-- 图表 4: Total TPS -->
                 <div class="col-lg-12 portlet" id="totalTPS">
                     <div class="panel panel-default">
                         <div class="panel-heading portlet-header">
-                          <i class="fa fa-bar-chart-o fa-fw"> </i> <span type="button" class="dropdown-toggle click-title span-title" data-toggle="collapse" href="#bodyTotalTPS" aria-expanded="true" aria-controls="bodyTotalTPS">Total Transactions Per Second</span>
+                          <i class="fa fa-bar-chart-o fa-fw"></i>
+                          <span role="button" class="dropdown-toggle click-title span-title" data-toggle="collapse" href="#bodyTotalTPS" aria-expanded="false">Total Transactions Per Second</span>
                           <div class="pull-right">
                                 <div class="btn-group">
-                                    <a class="btn btn-link btn-xs">
-                                        <i class="glyphicon glyphicon-resize-vertical"></i>
-                                    </a>
-                                    <button type="button" class="btn btn-link btn-xs dropdown-toggle" data-toggle="dropdown">
-                                        <i class="fa fa-wrench"></i>
-                                    </button>
+                                    <a class="btn btn-link btn-xs"><i class="glyphicon glyphicon-resize-vertical"></i></a>
+                                    <button type="button" class="btn btn-link btn-xs dropdown-toggle" data-toggle="dropdown"><i class="fa fa-wrench"></i></button>
                                     <ul class="dropdown-menu dropdown-user">
-                                        <li><a href="#totalTPS" onClick="checkAll('choicesTotalTPS');">Display all samples</a>
-                                        </li>
-                                        <li><a href="#totalTPS" onClick="uncheckAll('choicesTotalTPS');">Hide all samples</a>
-                                        </li>
-                                        <li><a href="#totalTPS" onclick="exportToPNG('flotTotalTPS', this);">Save as PNG</a></li>
+                                        <li><a href="#" class="action-check-all" data-target="choicesTotalTPS">Display all samples</a></li>
+                                        <li><a href="#" class="action-uncheck-all" data-target="choicesTotalTPS">Hide all samples</a></li>
+                                        <li><a href="#" class="action-export-png" data-target="flotTotalTPS">Save as PNG</a></li>
                                     </ul>
-                                    <button type="button" class="btn btn-link btn-xs dropdown-toggle" data-toggle="collapse" href="#bodyTotalTPS" aria-expanded="true" aria-controls="bodyTotalTPS">
+                                    <button type="button" class="btn btn-link btn-xs dropdown-toggle" data-toggle="collapse" href="#bodyTotalTPS" aria-expanded="false">
                                         <i class="fa fa-chevron-down"></i>
                                     </button>
                                 </div>
                             </div>
                         </div>
-                        <!-- /.panel-heading -->
                         <div class="collapse out portlet-content" id="bodyTotalTPS">
-                            <div class="panel-body" id="collapseTotalTPS">
+                            <div class="panel-body">
                                 <div class="flot-chart">
                                     <div class="flot-chart-content" id="flotTotalTPS" style="float: left; width:80%;"></div>
                                     <div style="float:left;margin-left:5px">
@@ -326,39 +246,32 @@
                                 <ul id="choicesTotalTPS" class="legend"></ul>
                             </div>
                         </div>
-                        <!-- /.panel-body -->
                     </div>
-                    <!-- /.panel -->
                 </div>
 
+                <!-- 图表 5: Response Time Vs Request -->
                 <div class="col-lg-12 portlet" id="responseTimeVsRequest">
                     <div class="panel panel-default">
                         <div class="panel-heading portlet-header">
-                          <i class="fa fa-bar-chart-o fa-fw"> </i> <span type="button" class="dropdown-toggle click-title span-title" data-toggle="collapse" href="#bodyResponseTimeVsRequest" aria-expanded="true" aria-controls="bodyResponseTimeVsRequest">Response Time Vs Request</span>
+                          <i class="fa fa-bar-chart-o fa-fw"></i>
+                          <span role="button" class="dropdown-toggle click-title span-title" data-toggle="collapse" href="#bodyResponseTimeVsRequest" aria-expanded="false">Response Time Vs Request</span>
                           <div class="pull-right">
                                 <div class="btn-group">
-                                    <a class="btn btn-link btn-xs">
-                                        <i class="glyphicon glyphicon-resize-vertical"></i>
-                                    </a>
-                                    <button type="button" class="btn btn-link btn-xs dropdown-toggle" data-toggle="dropdown">
-                                        <i class="fa fa-wrench"></i>
-                                    </button>
+                                    <a class="btn btn-link btn-xs"><i class="glyphicon glyphicon-resize-vertical"></i></a>
+                                    <button type="button" class="btn btn-link btn-xs dropdown-toggle" data-toggle="dropdown"><i class="fa fa-wrench"></i></button>
                                     <ul class="dropdown-menu dropdown-user">
-                                        <li><a href="#responseTimeVsRequest" onClick="checkAll('choicesResponseTimeVsRequest');">Display all samples</a>
-                                        </li>
-                                        <li><a href="#responseTimeVsRequest" onClick="uncheckAll('choicesResponseTimeVsRequest');">Hide all samples</a>
-                                        </li>
-                                        <li><a href="#responseTimeVsRequest" onclick="exportToPNG('flotResponseTimeVsRequest', this);">Save as PNG</a></li>
+                                        <li><a href="#" class="action-check-all" data-target="choicesResponseTimeVsRequest">Display all samples</a></li>
+                                        <li><a href="#" class="action-uncheck-all" data-target="choicesResponseTimeVsRequest">Hide all samples</a></li>
+                                        <li><a href="#" class="action-export-png" data-target="flotResponseTimeVsRequest">Save as PNG</a></li>
                                     </ul>
-                                    <button type="button" class="btn btn-link btn-xs dropdown-toggle" data-toggle="collapse" href="#bodyResponseTimeVsRequest" aria-expanded="true" aria-controls="bodyResponseTimeVsRequest">
+                                    <button type="button" class="btn btn-link btn-xs dropdown-toggle" data-toggle="collapse" href="#bodyResponseTimeVsRequest" aria-expanded="false">
                                         <i class="fa fa-chevron-down"></i>
                                     </button>
                                 </div>
                             </div>
                         </div>
-                        <!-- /.panel-heading -->
                         <div class="collapse out portlet-content" id="bodyResponseTimeVsRequest">
-                            <div class="panel-body" id="collapseResponseTimeVsRequest">
+                            <div class="panel-body">
                                 <div class="flot-chart">
                                     <div class="flot-chart-content" id="flotResponseTimeVsRequest" style="float: left; width:80%;"></div>
                                     <div style="float:left;margin-left:5px">
@@ -367,43 +280,38 @@
                                     </div>
                                 </div>
                             </div>
-                            <div class="panel-footer" id="footerResponseRimeVsRequest">
-                                    <p id="legendResponseTimeVsRequest" hidden></p>
-                                    <ul id="choicesResponseTimeVsRequest" class="legend"></ul>
+                            <!-- 修复了原版 footerResponseRimeVsRequest 的拼写错误 -->
+                            <div class="panel-footer" id="footerResponseTimeVsRequest">
+                                <p id="legendResponseTimeVsRequest" hidden></p>
+                                <ul id="choicesResponseTimeVsRequest" class="legend"></ul>
                             </div>
                         </div>
-                        <!-- /.panel-body -->
                     </div>
-                    <!-- /.panel -->
                 </div>
-               <div class="col-lg-12 portlet" id="latencyVsRequest">
+
+                <!-- 图表 6: Latency Vs Request -->
+                <div class="col-lg-12 portlet" id="latencyVsRequest">
                     <div class="panel panel-default">
                         <div class="panel-heading portlet-header">
-                          <i class="fa fa-bar-chart-o fa-fw"> </i> <span type="button" class="dropdown-toggle click-title span-title" data-toggle="collapse" href="#bodyLatenciesVsRequest" aria-expanded="true" aria-controls="bodyLatenciesVsRequest">Latency Vs Request</span>
+                          <i class="fa fa-bar-chart-o fa-fw"></i>
+                          <span role="button" class="dropdown-toggle click-title span-title" data-toggle="collapse" href="#bodyLatenciesVsRequest" aria-expanded="false">Latency Vs Request</span>
                           <div class="pull-right">
                                 <div class="btn-group">
-                                    <a class="btn btn-link btn-xs">
-                                        <i class="glyphicon glyphicon-resize-vertical"></i>
-                                    </a>
-                                    <button type="button" class="btn btn-link btn-xs dropdown-toggle" data-toggle="dropdown">
-                                        <i class="fa fa-wrench"></i>
-                                    </button>
+                                    <a class="btn btn-link btn-xs"><i class="glyphicon glyphicon-resize-vertical"></i></a>
+                                    <button type="button" class="btn btn-link btn-xs dropdown-toggle" data-toggle="dropdown"><i class="fa fa-wrench"></i></button>
                                     <ul class="dropdown-menu dropdown-user">
-                                        <li><a href="#latencyVsRequest" onClick="checkAll('choicesLatencyVsRequest');">Display all samples</a>
-                                        </li>
-                                        <li><a href="#latencyVsRequest" onClick="uncheckAll('choicesLatencyVsRequest');">Hide all samples</a>
-                                        </li>
-                                        <li><a href="#latencyVsRequest" onclick="exportToPNG('flotLatenciesVsRequest', this);">Save as PNG</a></li>
+                                        <li><a href="#" class="action-check-all" data-target="choicesLatencyVsRequest">Display all samples</a></li>
+                                        <li><a href="#" class="action-uncheck-all" data-target="choicesLatencyVsRequest">Hide all samples</a></li>
+                                        <li><a href="#" class="action-export-png" data-target="flotLatenciesVsRequest">Save as PNG</a></li>
                                     </ul>
-                                    <button type="button" class="btn btn-link btn-xs dropdown-toggle" data-toggle="collapse" href="#bodyLatenciesVsRequest" aria-expanded="true" aria-controls="bodyLatenciesVsRequest">
+                                    <button type="button" class="btn btn-link btn-xs dropdown-toggle" data-toggle="collapse" href="#bodyLatenciesVsRequest" aria-expanded="false">
                                         <i class="fa fa-chevron-down"></i>
                                     </button>
                                 </div>
                             </div>
                         </div>
-                        <!-- /.panel-heading -->
                         <div class="collapse out portlet-content" id="bodyLatenciesVsRequest">
-                            <div class="panel-body" id="collapseLatencyVsRequest">
+                            <div class="panel-body">
                                 <div class="flot-chart">
                                     <div class="flot-chart-content" id="flotLatenciesVsRequest" style="float: left; width:80%;"></div>
                                     <div style="float:left;margin-left:5px">
@@ -411,35 +319,23 @@
                                         <div id="overviewLatenciesVsRequest" style="width:190px;height:100px;"></div>
                                     </div>
                                 </div>
-                                <div class="panel-footer" id="footerLatenciesVsRequest">
-                                    <p id="legendLatencyVsRequest" hidden></p>
-                                    <ul id="choicesLatencyVsRequest" class="legend"></ul>
-                                </div>
+                            </div>
+                            <!-- 修复了原版中 panel-footer 被错误嵌套在 panel-body 内部的 DOM 结构错误 -->
+                            <div class="panel-footer" id="footerLatenciesVsRequest">
+                                <p id="legendLatencyVsRequest" hidden></p>
+                                <ul id="choicesLatencyVsRequest" class="legend"></ul>
                             </div>
                         </div>
-                        <!-- /.panel-body -->
                     </div>
-                    <!-- /.panel -->
                 </div>
-
             </div>
-            <!-- /.row -->
         </div>
-        <!-- /#page-wrapper -->
-
     </div>
-    <!-- /#wrapper -->
 
-     <!-- jQuery -->
+    <!-- JavaScript Dependencies -->
     <script src="../../sbadmin2-1.0.7/bower_components/jquery/dist/jquery.min.js"></script>
-
-    <!-- Bootstrap Core JavaScript -->
     <script src="../../sbadmin2-1.0.7/bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
-
-    <!-- Metis Menu Plugin JavaScript -->
     <script src="../../sbadmin2-1.0.7/bower_components/metisMenu/dist/metisMenu.min.js"></script>
-
-    <!-- Flot Charts JavaScript -->
     <script src="../../sbadmin2-1.0.7/bower_components/flot/excanvas.min.js"></script>
     <script src="../../sbadmin2-1.0.7/bower_components/flot/jquery.flot.js"></script>
     <script src="../../sbadmin2-1.0.7/bower_components/flot/jquery.flot.pie.js"></script>
@@ -455,9 +351,36 @@
     <script src="../js/dashboard-commons.js"></script>
     <script src="../js/graph.js"></script>
     <script src="../js/jquery-ui.min.js"></script>
-    <!-- Custom Theme JavaScript -->
     <script src="../../sbadmin2-1.0.7/dist/js/sb-admin-2.js"></script>
     <script src="../js/jquery.cookie.js"></script>
-</body>
 
+    <!-- 页面级事件绑定 (替代原有的内联 onClick) -->
+    <script>
+        $(document).ready(function() {
+            // 侧边栏导航点击展开对应面板并平滑滚动
+            $('.nav-link-collapse').on('click', function(e) {
+                e.preventDefault();
+                var targetId = $(this).attr('href');
+                $(targetId).find('.collapse').collapse('show');
+                $('html, body').animate({ scrollTop: $(targetId).offset().top - 70 }, 500);
+            });
+
+            // 图表操作菜单事件委托
+            $(document).on('click', '.action-check-all', function(e) {
+                e.preventDefault();
+                if (typeof checkAll === 'function') checkAll($(this).data('target'));
+            });
+
+            $(document).on('click', '.action-uncheck-all', function(e) {
+                e.preventDefault();
+                if (typeof uncheckAll === 'function') uncheckAll($(this).data('target'));
+            });
+
+            $(document).on('click', '.action-export-png', function(e) {
+                e.preventDefault();
+                if (typeof exportToPNG === 'function') exportToPNG($(this).data('target'), this);
+            });
+        });
+    </script>
+</body>
 </html>
