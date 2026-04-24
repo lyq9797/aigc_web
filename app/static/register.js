@@ -9,13 +9,12 @@ if (Auth.token) {
   window.location.href = '/detect';
 }
 
-function setRegisterStatus(text, level = 'normal') {
-  const color = level === 'error' ? '#b13f00' : level === 'success' ? '#0a7f6f' : '#5f6c75';
-  regMsgEl.style.color = color;
+function setRegisterMessage(text, style = 'normal') {
+  regMsgEl.style.color = style === 'error' ? '#b13f00' : style === 'success' ? '#0a7f6f' : '#5f6c75';
   regMsgEl.textContent = text;
 }
 
-function validateRegisterForm() {
+function validateRegisterFields() {
   const username = regUsernameEl.value.trim();
   const password = regPasswordEl.value;
   const confirm = regConfirmEl.value;
@@ -32,7 +31,7 @@ function validateRegisterForm() {
     throw new Error('请确认密码');
   }
   if (password !== confirm) {
-    throw new Error('两次密码不一致');
+    throw new Error('两次密码输入不一致');
   }
   if (password.length < 6) {
     throw new Error('密码长度至少 6 位');
@@ -42,15 +41,15 @@ function validateRegisterForm() {
 
 async function doRegister() {
   try {
-    setRegisterStatus('注册中...');
-    const { username, password } = validateRegisterForm();
+    setRegisterMessage('注册中...');
+    const { username, password } = validateRegisterFields();
     await api('/api/register', 'POST', { username, password }, false);
-    setRegisterStatus('注册成功，3 秒后跳转到登录页...', 'success');
+    setRegisterMessage('注册成功，3 秒后跳转到登录页...', 'success');
     setTimeout(() => {
       window.location.href = '/login';
     }, 3000);
   } catch (err) {
-    setRegisterStatus(err.message, 'error');
+    setRegisterMessage(err.message, 'error');
   }
 }
 
@@ -60,7 +59,8 @@ goLoginBtn.addEventListener('click', () => {
 });
 
 document.addEventListener('keydown', (event) => {
-  if (event.key === 'Enter' && (document.activeElement === regPasswordEl || document.activeElement === regConfirmEl || document.activeElement === regUsernameEl)) {
+  if (event.key !== 'Enter') return;
+  if ([regUsernameEl, regPasswordEl, regConfirmEl].includes(document.activeElement)) {
     event.preventDefault();
     doRegister();
   }
