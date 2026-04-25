@@ -27,6 +27,7 @@ class InferenceConfig:
     base_window: int = 512
     base_stride: int = 384
     short_window_cap: int = 256
+    batch_size: int = 8  # 新增批处理大小
 
 
 def set_seed(seed: int) -> None:
@@ -58,8 +59,7 @@ class DeBERTaCRFTagger(nn.Module):
             mask = attention_mask.bool()
             crf_labels = labels.clone()
             crf_labels[crf_labels == -100] = 0
-            loss = -self.crf(logits, crf_labels, mask=mask, reduction="mean")
-            return loss
+            return -self.crf(logits, crf_labels, mask=mask, reduction="mean")
 
         mask = attention_mask.bool()
         predictions = self.crf.decode(logits, mask=mask)
@@ -77,28 +77,35 @@ class InferenceEngine:
         self.device = device
         self.config = config
 
-    def _decode_window_word_predictions(self, encoding: BatchEncoding, pred_ids: List[int]) -> List[int]:
-        attention_mask = encoding["attention_mask"][0].tolist()
-        pred_ids = pred_ids[: len(attention_mask)]
+    def _decode_window_word_predictions_batch(self, encodings: BatchEncoding, pred_ids_batch: List[List[int]]) -> List[
+        List[int]]:
+        batch_word_preds = []
+        for batch_idx in range(len(pred_ids_batch)):
+            attention_mask = encodings["attention_mask"][batch_idx].tolist()
+            pred_ids = pred_ids_batch[batch_idx][: len(attention_mask)]
 
-        try:
-            word_ids = encoding.word_ids(batch_index=0)
-        except Exception:
-            word_ids = None
+            try:
+                word_ids = encodings.word_ids(batch_index=batch_idx)
+            except Exception:
+                word_ids = None
 
-        if word_ids is None:
-            special_tokens_mask = encoding["special_tokens_mask"][0].tolist()
-            return [int(pred_ids[i]) for i, is_special in enumerate(special_tokens_mask)
-                    if attention_mask[i] == 1 and not is_special]
-
-        per_word_votes: Dict[int, List[int]] = {}
-        for i, wid in enumerate(word_ids):
-            if wid is None or attention_mask[i] == 0:
+            if word_ids is None:
+                special_tokens_mask = encodings["special_tokens_mask"][batch_idx].tolist()
+                preds = [int(pred_ids[i]) for i, is_special in enumerate(special_tokens_mask)
+                         if attention_mask[i] == 1 and not is_special]
+                batch_word_preds.append(preds)
                 continue
-            per_word_votes.setdefault(wid, [0, 0])
-            per_word_votes[wid][int(pred_ids[i])] += 1
 
-        return [1 if votes[1] > votes[0] else 0 for _, votes in sorted(per_word_votes.items())]
+            per_word_votes: Dict[int, List[int]] = {}
+            for i, wid in enumerate(word_ids):
+                if wid is None or attention_mask[i] == 0:
+                    continue
+                per_word_votes.setdefault(wid, [0, 0])
+                per_word_votes[wid][int(pred_ids[i])] += 1
+
+            batch_word_preds.append([1 if votes[1] > votes[0] else 0 for _, votes in sorted(per_word_votes.items())])
+
+        return batch_word_preds
 
     def _build_adaptive_windows(self, doc_len: int) -> List[Tuple[int, int]]:
         if doc_len <= 0:
@@ -140,24 +147,31 @@ class InferenceEngine:
         coverage_counts = np.zeros(doc_len, dtype=np.float32)
 
         self.model.eval()
-        with torch.no_grad():
-            for start, end in windows:
-                encoding = self.tokenizer(
-                    words[start:end], is_split_into_words=True, max_length=self.config.max_len,
-                    padding="max_length", truncation=True, return_tensors="pt", return_special_tokens_mask=True,
-                )
-                input_ids = encoding["input_ids"].to(self.device)
-                attention_mask = encoding["attention_mask"].to(self.device)
 
+        # 批处理推理
+        for i in range(0, len(windows), self.config.batch_size):
+            batch_windows = windows[i:i + self.config.batch_size]
+            batch_words = [words[start:end] for start, end in batch_windows]
+
+            encodings = self.tokenizer(
+                batch_words, is_split_into_words=True, max_length=self.config.max_len,
+                padding="max_length", truncation=True, return_tensors="pt", return_special_tokens_mask=True,
+            )
+            input_ids = encodings["input_ids"].to(self.device)
+            attention_mask = encodings["attention_mask"].to(self.device)
+
+            with torch.no_grad():
                 try:
                     predictions = self.model(input_ids, attention_mask)
                 except Exception as e:
-                    logger.error(f"Inference failed [{start}:{end}]: {e}")
+                    logger.error(f"Batch inference failed: {e}")
                     continue
 
-                pred_ids = predictions[0].detach().cpu().tolist()
-                word_preds = self._decode_window_word_predictions(encoding, pred_ids)
+            pred_ids_batch = predictions.detach().cpu().tolist()
+            batch_word_preds = self._decode_window_word_predictions_batch(encodings, pred_ids_batch)
 
+            for win_idx, (start, end) in enumerate(batch_windows):
+                word_preds = batch_word_preds[win_idx]
                 for local_idx, pred in enumerate(word_preds):
                     global_idx = start + local_idx
                     if global_idx < doc_len:
@@ -182,6 +196,7 @@ def main() -> None:
     parser.add_argument("--best_model_path", type=str,
                         default=os.path.join(os.path.dirname(__file__), "deberta_CRF(new)_best.pt"))
     parser.add_argument("--max_len", type=int, default=512)
+    parser.add_argument("--batch_size", type=int, default=8)
     parser.add_argument("--seed", type=int, default=42)
     args = parser.parse_args()
 
@@ -192,10 +207,8 @@ def main() -> None:
         return
 
     config = InferenceConfig(
-        model_name=args.model_name,
-        best_model_path=args.best_model_path,
-        max_len=args.max_len,
-        seed=args.seed
+        model_name=args.model_name, best_model_path=args.best_model_path,
+        max_len=args.max_len, seed=args.seed, batch_size=args.batch_size
     )
 
     set_seed(config.seed)
