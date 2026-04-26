@@ -21,141 +21,122 @@ let currentDetectResult = null;
 let currentDetectTime = null;
 let currentExportFormat = 'txt';
 
-function formatExportFileTime(date) {
+function formatExportDateTime(date) {
   const value = date instanceof Date ? date : new Date();
-  const pad = (v) => String(v).padStart(2, '0');
-  return `${value.getFullYear()}${pad(value.getMonth() + 1)}${pad(value.getDate())}_${pad(value.getHours())}${pad(value.getMinutes())}${pad(value.getSeconds())}`;
+  const y = value.getFullYear();
+  const m = String(value.getMonth() + 1).padStart(2, '0');
+  const d = String(value.getDate()).padStart(2, '0');
+  const h = String(value.getHours()).padStart(2, '0');
+  const min = String(value.getMinutes()).padStart(2, '0');
+  const s = String(value.getSeconds()).padStart(2, '0');
+  return `${y}-${m}-${d} ${h}:${min}:${s}`;
 }
 
-function downloadFile(name, data, mimeType) {
-  const blob = new Blob([data], { type: mimeType });
+function formatExportFileTime(date) {
+  const value = date instanceof Date ? date : new Date();
+  const y = value.getFullYear();
+  const m = String(value.getMonth() + 1).padStart(2, '0');
+  const d = String(value.getDate()).padStart(2, '0');
+  const h = String(value.getHours()).padStart(2, '0');
+  const min = String(value.getMinutes()).padStart(2, '0');
+  const s = String(value.getSeconds()).padStart(2, '0');
+  return `${y}${m}${d}_${h}${min}${s}`;
+}
+
+function downloadTextFile(filename, content, mimeType) {
+  const blob = new Blob([content], { type: mimeType });
   const url = URL.createObjectURL(blob);
-  const anchor = document.createElement('a');
-  anchor.href = url;
-  anchor.download = name;
-  document.body.appendChild(anchor);
-  anchor.click();
-  anchor.remove();
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
   URL.revokeObjectURL(url);
 }
 
-function updateExportButtonState() {
-  if (exportDetectBtn) {
-    exportDetectBtn.disabled = !currentDetectResult;
-  }
-}
-
-function renderWords(words) {
+function renderWordHighlight(words) {
   if (!wordHighlightContent) return;
-  if (!Array.isArray(words) || words.length === 0) {
+  if (!words || !words.length) {
     wordHighlightContent.textContent = '暂无结果';
     return;
   }
   wordHighlightContent.innerHTML = words
-    .map((word) => `<span class="word ${word.label_id === 1 ? 'aigt' : 'hwt'}" title="${word.label}">${escapeHtml(word.token)}</span>`)
+    .map((w) => {
+      const cls = w.label_id === 1 ? 'aigt' : 'hwt';
+      return `<span class="word ${cls}" title="${escapeHtml(w.label)}">${escapeHtml(w.token)}</span>`;
+    })
     .join(' ');
 }
 
-function renderSentenceList(sentences) {
+function renderSentences(sentences) {
   if (!sentenceList) return;
-  if (!Array.isArray(sentences) || sentences.length === 0) {
+  if (!sentences || !sentences.length) {
     sentenceList.innerHTML = '<div class="muted">暂无结果</div>';
     return;
   }
   sentenceList.innerHTML = sentences
-    .map((sentence) => `
-      <div class="sentence-item ${sentence.label === 'AIGT' ? 'aigt' : 'hwt'}">
-        <div><strong>句子 ${sentence.index + 1}</strong> | ${escapeHtml(sentence.label)}</div>
-        <div>${escapeHtml(sentence.text)}</div>
-      </div>
-    `)
+    .map((s) => {
+      const cls = s.label === 'AIGT' ? 'aigt' : 'hwt';
+      return `
+        <div class="sentence-item ${cls}">
+          <div><strong>句子 ${s.index + 1}</strong> | 标签: ${escapeHtml(s.label)} | 置信度: ${escapeHtml(s.confidence)}</div>
+          <div>${escapeHtml(s.text)}</div>
+        </div>
+      `;
+    })
     .join('');
 }
 
-async function detectText() {
-  try {
-    detectMsg.style.color = '#5f6c75';
-    detectMsg.textContent = '检测中...';
-    const text = inputText.value.trim();
-    if (!text) {
-      throw new Error('请输入文本内容');
-    }
-    const res = await api('/api/detect', 'POST', { text }, true);
-    currentDetectResult = res.result;
-    currentDetectTime = new Date();
-    renderWords(currentDetectResult.words || []);
-    renderSentenceList(currentDetectResult.sentences || []);
-    detectMsg.style.color = '#0a7f6f';
-    detectMsg.textContent = '检测完成';
-    updateExportButtonState();
-  } catch (err) {
-    detectMsg.style.color = '#b13f00';
-    detectMsg.textContent = err.message;
-  }
-}
-
-function closeExportMenu() {
-  if (!exportDetectMenu) return;
-  exportDetectMenu.classList.add('hidden');
-}
-
-function openExportMenu() {
-  if (!exportDetectMenu || !exportDetectBtn || exportDetectBtn.disabled) return;
-  exportDetectMenu.classList.toggle('hidden');
-}
-
-function exportResult(format) {
-  if (!currentDetectResult) {
-    detectMsg.style.color = '#b13f00';
-    detectMsg.textContent = '请先完成检测后再导出';
-    return;
-  }
-  currentExportFormat = format;
-  closeExportMenu();
-  const fileTime = formatExportFileTime(currentDetectTime || new Date());
-  const fileNameBase = `detect_result_${fileTime}`;
-  const payload = {
+function buildExportData() {
+  return {
     type: 'detect',
     exported_at: new Date().toISOString(),
-    input_text: inputText.value,
-    result: currentDetectResult,
+    exported_at_local: formatExportDateTime(new Date()),
+    input_text: inputText.value || '',
+    result: currentDetectResult || {},
   };
+}
 
-  if (format === 'json') {
-    downloadFile(`${fileNameBase}.json`, `${JSON.stringify(payload, null, 2)}\n`, 'application/json;charset=utf-8');
-    return;
-  }
+function buildExportText() {
+  const data = buildExportData();
+  const words = Array.isArray(data.result.words) ? data.result.words : [];
+  const sentences = Array.isArray(data.result.sentences) ? data.result.sentences : [];
 
-  const wordLines = Array.isArray(currentDetectResult.words)
-    ? currentDetectResult.words.map((word, index) => `${index + 1}. ${word.token}\t${word.label || (word.label_id === 1 ? 'AIGT' : 'HWT')}`)
-    : ['暂无结果'];
-  const sentenceLines = Array.isArray(currentDetectResult.sentences)
-    ? currentDetectResult.sentences.map((sentence, index) => `${index + 1}. ${sentence.label}\t${sentence.confidence ?? '-'}\t${sentence.text}`)
-    : ['暂无结果'];
+  const wordLines = words.length
+    ? words.map((word, index) => `${index + 1}. ${word.token}\t${word.label || (word.label_id === 1 ? 'AIGT' : 'HWT')}`).join('\n')
+    : '暂无结果';
 
-  const content = [
+  const sentenceLines = sentences.length
+    ? sentences.map((sentence, index) => `${index + 1}. ${sentence.label}\t${sentence.confidence ?? '-'}\t${sentence.text}`).join('\n')
+    : '暂无结果';
+
+  return [
     'AI 文本检测结果',
-    `导出时间：${formatExportDateTime(currentDetectTime || new Date())}`,
+    `导出时间：${data.exported_at_local}`,
     '',
     '原始文本',
-    inputText.value || '暂无内容',
+    data.input_text || '暂无内容',
     '',
     '单词级结果',
     '序号\t单词\t标签',
-    ...wordLines,
+    wordLines,
     '',
     '句子级结果',
     '序号\t标签\t置信度\t文本',
-    ...sentenceLines,
+    sentenceLines,
+    '',
   ].join('\n');
-
-  downloadFile(`${fileNameBase}.txt`, content, 'text/plain;charset=utf-8');
 }
 
-fileSelectBtn?.addEventListener('click', () => fileInput.click());
-fileInput?.addEventListener('change', async () => {
-  const file = fileInput.files && fileInput.files[0];
-  if (!file) return;
+function updateExportState() {
+  if (!exportDetectBtn) return;
+  exportDetectBtn.disabled = !currentDetectResult;
+}
+
+async function detectFileContent() {
+  if (!fileInput?.files?.[0]) return;
+  const file = fileInput.files[0];
   selectedFileName.textContent = file.name;
   selectedFileName.classList.add('visible');
   try {
@@ -176,12 +157,69 @@ fileInput?.addEventListener('change', async () => {
     selectedFileName.classList.remove('visible');
     fileInfo.textContent = '支持 .txt、.doc、.docx 文件';
   }
-});
+}
 
+function toggleExportMenu() {
+  if (!exportDetectMenu || !exportDetectBtn || exportDetectBtn.disabled) return;
+  const isHidden = exportDetectMenu.classList.toggle('hidden');
+  exportDetectMenu.setAttribute('aria-hidden', String(isHidden));
+}
+
+function closeExportMenu() {
+  if (!exportDetectMenu) return;
+  exportDetectMenu.classList.add('hidden');
+  exportDetectMenu.setAttribute('aria-hidden', 'true');
+}
+
+function exportDetectResult(format) {
+  if (!currentDetectResult) {
+    detectMsg.style.color = '#b13f00';
+    detectMsg.textContent = '请先完成检测后再导出';
+    return;
+  }
+  currentExportFormat = format;
+  closeExportMenu();
+  const baseName = `detect_result_${formatExportFileTime(currentDetectTime || new Date())}`;
+
+  if (format === 'json') {
+    downloadTextFile(`${baseName}.json`, `${JSON.stringify(buildExportData(), null, 2)}\n`, 'application/json;charset=utf-8');
+    return;
+  }
+  downloadTextFile(`${baseName}.txt`, buildExportText(), 'text/plain;charset=utf-8');
+}
+
+function renderDetection(words, sentences) {
+  renderWordHighlight(words);
+  renderSentences(sentences);
+  currentDetectResult = { words, sentences };
+  currentDetectTime = new Date();
+  updateExportState();
+}
+
+async function detectText() {
+  try {
+    detectMsg.style.color = '#5f6c75';
+    detectMsg.textContent = '检测中，请稍候...';
+    const text = inputText.value.trim();
+    if (!text) {
+      throw new Error('请输入文本内容');
+    }
+    const res = await api('/api/detect', 'POST', { text }, true);
+    renderDetection(res.result.words || [], res.result.sentences || []);
+    detectMsg.style.color = '#0a7f6f';
+    detectMsg.textContent = '检测完成';
+  } catch (err) {
+    detectMsg.style.color = '#b13f00';
+    detectMsg.textContent = err.message;
+  }
+}
+
+fileSelectBtn?.addEventListener('click', () => fileInput.click());
+fileInput?.addEventListener('change', detectFileContent);
 detectBtn?.addEventListener('click', detectText);
-exportDetectBtn?.addEventListener('click', openExportMenu);
-exportDetectTxtBtn?.addEventListener('click', () => exportResult('txt'));
-exportDetectJsonBtn?.addEventListener('click', () => exportResult('json'));
+exportDetectBtn?.addEventListener('click', toggleExportMenu);
+exportDetectTxtBtn?.addEventListener('click', () => exportDetectResult('txt'));
+exportDetectJsonBtn?.addEventListener('click', () => exportDetectResult('json'));
 
 document.addEventListener('click', (event) => {
   if (!exportDetectMenu || !exportDetectBtn) return;
