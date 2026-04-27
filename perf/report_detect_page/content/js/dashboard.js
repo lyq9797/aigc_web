@@ -14,221 +14,200 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 */
+
+// 全局过滤与显示控制变量
 var showControllersOnly = false;
 var seriesFilter = "";
 var filtersOnlySampleSeries = true;
 
-/*
- * Add header in statistics table to group metrics by category
- * format
- *
+/**
+ * 为统计表格添加分类表头（如：请求、执行、响应时间等）
+ * @param {HTMLTableSectionElement} header - 表格的 thead 元素
  */
 function summaryTableHeader(header) {
-    var newRow = header.insertRow(-1);
-    newRow.className = "tablesorter-no-sort";
-    var cell = document.createElement('th');
-    cell.setAttribute("data-sorter", false);
-    cell.colSpan = 1;
-    cell.innerHTML = "Requests";
-    newRow.appendChild(cell);
+    var $header = $(header);
+    var $newRow = $('<tr class="tablesorter-no-sort"></tr>');
 
-    cell = document.createElement('th');
-    cell.setAttribute("data-sorter", false);
-    cell.colSpan = 3;
-    cell.innerHTML = "Executions";
-    newRow.appendChild(cell);
+    // 定义分类表头配置
+    var headers = [
+        { text: "Requests", colSpan: 1 },
+        { text: "Executions", colSpan: 3 },
+        { text: "Response Times (ms)", colSpan: 7 },
+        { text: "Throughput", colSpan: 1 },
+        { text: "Network (KB/sec)", colSpan: 2 }
+    ];
 
-    cell = document.createElement('th');
-    cell.setAttribute("data-sorter", false);
-    cell.colSpan = 7;
-    cell.innerHTML = "Response Times (ms)";
-    newRow.appendChild(cell);
+    // 使用 jQuery 批量追加 th 元素
+    $.each(headers, function(index, config) {
+        $newRow.append(
+            $('<th>')
+                .attr('data-sorter', false)
+                .attr('colspan', config.colSpan)
+                .text(config.text)
+        );
+    });
 
-    cell = document.createElement('th');
-    cell.setAttribute("data-sorter", false);
-    cell.colSpan = 1;
-    cell.innerHTML = "Throughput";
-    newRow.appendChild(cell);
-
-    cell = document.createElement('th');
-    cell.setAttribute("data-sorter", false);
-    cell.colSpan = 2;
-    cell.innerHTML = "Network (KB/sec)";
-    newRow.appendChild(cell);
+    $header.append($newRow);
 }
 
-/*
- * Populates the table identified by id parameter with the specified data and
- * format
- *
+/**
+ * 根据配置数据动态创建并填充表格
+ * @param {jQuery} table - 表格的 jQuery 对象
+ * @param {Object} info - 表格数据配置（包含 titles, items, overall 等）
+ * @param {Function} formatter - 单元格数据格式化回调函数
+ * @param {Array} defaultSorts - 默认排序规则
+ * @param {number} seriesIndex - 用于过滤的系列索引
+ * @param {Function} headerCreator - 自定义表头生成回调
  */
 function createTable(table, info, formatter, defaultSorts, seriesIndex, headerCreator) {
-    var tableRef = table[0];
+    var $table = $(table);
+    if ($table.length === 0) return; // 防御性检查：确保表格元素存在
 
-    // Create header and populate it with data.titles array
+    var tableRef = $table[0];
     var header = tableRef.createTHead();
 
-    // Call callback is available
-    if(headerCreator) {
+    // 1. 生成自定义表头（如果提供了回调）
+    if (headerCreator) {
         headerCreator(header);
     }
 
-    var newRow = header.insertRow(-1);
-    for (var index = 0; index < info.titles.length; index++) {
-        var cell = document.createElement('th');
-        cell.innerHTML = info.titles[index];
-        newRow.appendChild(cell);
+    // 2. 生成主表头（列名）
+    var $headerRow = $('<tr></tr>');
+    for (var i = 0; i < info.titles.length; i++) {
+        $headerRow.append($('<th>').text(info.titles[i]));
     }
+    $(header).append($headerRow);
 
-    var tBody;
+    // 3. 生成总计行（Overall body）
+    if (info.overall) {
+        var $overallBody = $('<tbody class="tablesorter-no-sort"></tbody>');
+        var $overallRow = $('<tr></tr>');
+        var overallData = info.overall.data;
 
-    // Create overall body if defined
-    if(info.overall){
-        tBody = document.createElement('tbody');
-        tBody.className = "tablesorter-no-sort";
-        tableRef.appendChild(tBody);
-        var newRow = tBody.insertRow(-1);
-        var data = info.overall.data;
-        for(var index=0;index < data.length; index++){
-            var cell = newRow.insertCell(-1);
-            cell.innerHTML = formatter ? formatter(index, data[index]): data[index];
+        for (var j = 0; j < overallData.length; j++) {
+            var cellText = formatter ? formatter(j, overallData[j]) : overallData[j];
+            $overallRow.append($('<td>').html(cellText));
         }
+        $overallBody.append($overallRow);
+        $table.append($overallBody);
     }
 
-    // Create regular body
-    tBody = document.createElement('tbody');
-    tableRef.appendChild(tBody);
+    // 4. 生成数据行（Regular body）
+    var $tBody = $('<tbody></tbody>');
+    var regexp = seriesFilter ? new RegExp(seriesFilter, 'i') : null;
 
-    var regexp;
-    if(seriesFilter) {
-        regexp = new RegExp(seriesFilter, 'i');
-    }
-    // Populate body with data.items array
-    for(var index=0; index < info.items.length; index++){
-        var item = info.items[index];
-        if((!regexp || filtersOnlySampleSeries && !info.supportsControllersDiscrimination || regexp.test(item.data[seriesIndex]))
-                &&
-                (!showControllersOnly || !info.supportsControllersDiscrimination || item.isController)){
-            if(item.data.length > 0) {
-                var newRow = tBody.insertRow(-1);
-                for(var col=0; col < item.data.length; col++){
-                    var cell = newRow.insertCell(-1);
-                    cell.innerHTML = formatter ? formatter(col, item.data[col]) : item.data[col];
-                }
+    for (var k = 0; k < info.items.length; k++) {
+        var item = info.items[k];
+
+        // 复杂的过滤逻辑：处理正则过滤、仅显示采样器、仅显示控制器等
+        var passFilter = (!regexp || (filtersOnlySampleSeries && !info.supportsControllersDiscrimination) || regexp.test(item.data[seriesIndex]));
+        var passController = (!showControllersOnly || !info.supportsControllersDiscrimination || item.isController);
+
+        if (passFilter && passController && item.data.length > 0) {
+            var $dataRow = $('<tr></tr>');
+            for (var col = 0; col < item.data.length; col++) {
+                var cellVal = formatter ? formatter(col, item.data[col]) : item.data[col];
+                $dataRow.append($('<td>').html(cellVal));
             }
+            $tBody.append($dataRow);
         }
     }
+    $table.append($tBody);
 
-    // Add support of columns sort
-    table.tablesorter({sortList : defaultSorts});
+    // 5. 初始化表格排序插件
+    $table.tablesorter({ sortList: defaultSorts });
 }
 
+// ==================== 页面初始化逻辑 ====================
 $(document).ready(function() {
 
-    // Customize table sorter default options
-    $.extend( $.tablesorter.defaults, {
+    // 配置 tablesorter 插件的默认选项
+    $.extend($.tablesorter.defaults, {
         theme: 'blue',
         cssInfoBlock: "tablesorter-no-sort",
         widthFixed: true,
         widgets: ['zebra']
     });
 
-    var data = {"OkPercent": 100.0, "KoPercent": 0.0};
-    var dataset = [
-        {
-            "label" : "FAIL",
-            "data" : data.KoPercent,
-            "color" : "#FF6347"
-        },
-        {
-            "label" : "PASS",
-            "data" : data.OkPercent,
-            "color" : "#9ACD32"
-        }];
-    $.plot($("#flot-requests-summary"), dataset, {
-        series : {
-            pie : {
-                show : true,
-                radius : 1,
-                label : {
-                    show : true,
-                    radius : 3 / 4,
-                    formatter : function(label, series) {
-                        return '<div style="font-size:8pt;text-align:center;padding:2px;color:white;">'
-                            + label
-                            + '<br/>'
-                            + Math.round10(series.percent, -2)
-                            + '%</div>';
+    // 1. 渲染请求摘要饼图 (Flot Chart)
+    var pieData = [
+        { label: "FAIL", data: 0.0, color: "#FF6347" },
+        { label: "PASS", data: 100.0, color: "#9ACD32" }
+    ];
+
+    $.plot($("#flot-requests-summary"), pieData, {
+        series: {
+            pie: {
+                show: true,
+                radius: 1,
+                label: {
+                    show: true,
+                    radius: 3 / 4,
+                    formatter: function(label, series) {
+                        return '<div style="font-size:8pt;text-align:center;padding:2px;color:white;">' +
+                            label + '<br/>' + Math.round10(series.percent, -2) + '%</div>';
                     },
-                    background : {
-                        opacity : 0.5,
-                        color : '#000'
-                    }
+                    background: { opacity: 0.5, color: '#000' }
                 }
             }
         },
-        legend : {
-            show : true
-        }
+        legend: { show: true }
     });
 
-    // Creates APDEX table
-    createTable($("#apdexTable"), {"supportsControllersDiscrimination": true, "overall": {"data": [1.0, 500, 1500, "Total"], "isController": false}, "titles": ["Apdex", "T (Toleration threshold)", "F (Frustration threshold)", "Label"], "items": [{"data": [1.0, 500, 1500, "GET /detect (10 users)"], "isController": false}, {"data": [1.0, 500, 1500, "GET /detect (50 users)"], "isController": false}, {"data": [1.0, 500, 1500, "GET /detect (20 users)"], "isController": false}, {"data": [1.0, 500, 1500, "GET /detect (100 users)"], "isController": false}]}, function(index, item){
-        switch(index){
-            case 0:
-                item = item.toFixed(3);
-                break;
-            case 1:
-            case 2:
-                item = formatDuration(item);
-                break;
-        }
+    // 2. 渲染 APDEX 表格
+    createTable($("#apdexTable"), {
+        "supportsControllersDiscrimination": true,
+        "overall": {"data": [1.0, 500, 1500, "Total"], "isController": false},
+        "titles": ["Apdex", "T (Toleration threshold)", "F (Frustration threshold)", "Label"],
+        "items": [
+            {"data": [1.0, 500, 1500, "GET /detect (10 users)"], "isController": false},
+            {"data": [1.0, 500, 1500, "GET /detect (50 users)"], "isController": false},
+            {"data": [1.0, 500, 1500, "GET /detect (20 users)"], "isController": false},
+            {"data": [1.0, 500, 1500, "GET /detect (100 users)"], "isController": false}
+        ]
+    }, function(index, item){
+        if (index === 0) return item.toFixed(3);
+        if (index === 1 || index === 2) return formatDuration(item);
         return item;
     }, [[0, 0]], 3);
 
-    // Create statistics table
-    createTable($("#statisticsTable"), {"supportsControllersDiscrimination": true, "overall": {"data": ["Total", 1153222, 0, 0.0, 6.791411367455462, 0, 95, 19.0, 21.0, 88.0, 91.0, 4805.091666666667, 15907.481201171875, 577.1740966796875], "isController": false}, "titles": ["Label", "#Samples", "FAIL", "Error %", "Average", "Min", "Max", "Median", "90th pct", "95th pct", "99th pct", "Transactions/s", "Received", "Sent"], "items": [{"data": ["GET /detect (10 users)", 293537, 0, 0.0, 1.8783730841427326, 0, 81, 2.0, 2.0, 2.0, 3.0, 4894.9755698967765, 16205.046076123119, 587.9706983372105], "isController": false}, {"data": ["GET /detect (50 users)", 293612, 0, 0.0, 7.696643870141528, 0, 86, 9.0, 10.0, 10.0, 76.35000000010405, 4893.04402893044, 16198.651619213078, 587.7386870687931], "isController": false}, {"data": ["GET /detect (20 users)", 288366, 0, 0.0, 3.4777123516641693, 0, 73, 4.0, 5.0, 5.0, 5.0, 4805.779614692354, 15909.758685358476, 577.2567310616793], "isController": false}, {"data": ["GET /detect (100 users)", 277707, 0, 0.0, 14.468313726337472, 0, 95, 19.0, 21.0, 88.0, 91.0, 4626.984788150419, 15317.850031083906, 555.7803993579117], "isController": false}]}, function(index, item){
-        switch(index){
-            // Errors pct
-            case 3:
-                item = item.toFixed(2) + '%';
-                break;
-            // Mean
-            case 4:
-            // Mean
-            case 7:
-            // Median
-            case 8:
-            // Percentile 1
-            case 9:
-            // Percentile 2
-            case 10:
-            // Percentile 3
-            case 11:
-            // Throughput
-            case 12:
-            // Kbytes/s
-            case 13:
-            // Sent Kbytes/s
-                item = item.toFixed(2);
-                break;
-        }
+    // 3. 渲染核心统计数据表格
+    createTable($("#statisticsTable"), {
+        "supportsControllersDiscrimination": true,
+        "overall": {"data": ["Total", 1153222, 0, 0.0, 6.79, 0, 95, 19.0, 21.0, 88.0, 91.0, 4805.09, 15907.48, 577.17], "isController": false},
+        "titles": ["Label", "#Samples", "FAIL", "Error %", "Average", "Min", "Max", "Median", "90th pct", "95th pct", "99th pct", "Transactions/s", "Received", "Sent"],
+        "items": [
+            {"data": ["GET /detect (10 users)", 293537, 0, 0.0, 1.88, 0, 81, 2.0, 2.0, 2.0, 3.0, 4894.98, 16205.05, 587.97], "isController": false},
+            {"data": ["GET /detect (50 users)", 293612, 0, 0.0, 7.70, 0, 86, 9.0, 10.0, 10.0, 76.35, 4893.04, 16198.65, 587.74], "isController": false},
+            {"data": ["GET /detect (20 users)", 288366, 0, 0.0, 3.48, 0, 73, 4.0, 5.0, 5.0, 5.0, 4805.78, 15909.76, 577.26], "isController": false},
+            {"data": ["GET /detect (100 users)", 277707, 0, 0.0, 14.47, 0, 95, 19.0, 21.0, 88.0, 91.0, 4626.98, 15317.85, 555.78], "isController": false}
+        ]
+    }, function(index, item){
+        if (index === 3) return item.toFixed(2) + '%'; // 错误率
+        if (index >= 4 && index <= 13) return item.toFixed(2); // 时间与吞吐量指标
         return item;
     }, [[0, 0]], 0, summaryTableHeader);
 
-    // Create error table
-    createTable($("#errorsTable"), {"supportsControllersDiscrimination": false, "titles": ["Type of error", "Number of errors", "% in errors", "% in all samples"], "items": []}, function(index, item){
-        switch(index){
-            case 2:
-            case 3:
-                item = item.toFixed(2) + '%';
-                break;
-        }
+    // 4. 渲染错误信息表格
+    createTable($("#errorsTable"), {
+        "supportsControllersDiscrimination": false,
+        "titles": ["Type of error", "Number of errors", "% in errors", "% in all samples"],
+        "items": []
+    }, function(index, item){
+        if (index === 2 || index === 3) return item.toFixed(2) + '%';
         return item;
     }, [[1, 1]]);
 
-        // Create top5 errors by sampler
-    createTable($("#top5ErrorsBySamplerTable"), {"supportsControllersDiscrimination": false, "overall": {"data": ["Total", 1153222, 0, "", "", "", "", "", "", "", "", "", ""], "isController": false}, "titles": ["Sample", "#Samples", "#Errors", "Error", "#Errors", "Error", "#Errors", "Error", "#Errors", "Error", "#Errors", "Error", "#Errors"], "items": [{"data": [], "isController": false}, {"data": [], "isController": false}, {"data": [], "isController": false}, {"data": [], "isController": false}]}, function(index, item){
+    // 5. 渲染前5大错误统计表格
+    createTable($("#top5ErrorsBySamplerTable"), {
+        "supportsControllersDiscrimination": false,
+        "overall": {"data": ["Total", 1153222, 0, "", "", "", "", "", "", "", "", "", ""], "isController": false},
+        "titles": ["Sample", "#Samples", "#Errors", "Error", "#Errors", "Error", "#Errors", "Error", "#Errors", "Error", "#Errors", "Error", "#Errors"],
+        "items": [
+            {"data": [], "isController": false}, {"data": [], "isController": false},
+            {"data": [], "isController": false}, {"data": [], "isController": false}
+        ]
+    }, function(index, item){
         return item;
     }, [[0, 0]], 0);
 
