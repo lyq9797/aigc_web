@@ -6,8 +6,12 @@ const Auth = {
     return localStorage.getItem('aigc_user') || '';
   },
   set(token, username) {
-    if (token) localStorage.setItem('aigc_token', token);
-    if (username) localStorage.setItem('aigc_user', username);
+    if (token) {
+      localStorage.setItem('aigc_token', token);
+    }
+    if (username) {
+      localStorage.setItem('aigc_user', username);
+    }
   },
   clear() {
     localStorage.removeItem('aigc_token');
@@ -25,7 +29,9 @@ function escapeHtml(value) {
 }
 
 function buildHeaders(needAuth) {
-  const headers = {};
+  const headers = {
+    'Accept': 'application/json',
+  };
   if (needAuth) {
     if (!Auth.token) {
       throw new Error('请先登录');
@@ -35,7 +41,7 @@ function buildHeaders(needAuth) {
   return headers;
 }
 
-async function api(path, method = 'GET', body = null, needAuth = false) {
+async function api(path, method = 'GET', body = null, needAuth = false, timeoutMs = 15000) {
   const headers = buildHeaders(needAuth);
   let requestBody = null;
 
@@ -46,19 +52,23 @@ async function api(path, method = 'GET', body = null, needAuth = false) {
     requestBody = JSON.stringify(body);
   }
 
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
+
   const response = await fetch(path, {
     method,
     headers,
     body: requestBody,
-  });
+    signal: controller.signal,
+  }).finally(() => clearTimeout(timeout));
 
-  const payload = await response.json().catch(() => ({}));
+  const data = await response.json().catch(() => ({}));
   if (!response.ok) {
-    const error = new Error(payload.detail || '请求失败');
-    error.detail = payload.detail;
+    const error = new Error(data.detail || '请求失败');
+    error.detail = data.detail;
     throw error;
   }
-  return payload;
+  return data;
 }
 
 function requireLogin() {
