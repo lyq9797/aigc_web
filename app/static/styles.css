@@ -1,14 +1,17 @@
 :root {
-  --bg: #fdf7ef;
+  --bg: #f8f3eb;
   --surface: #ffffff;
-  --text: #253136;
-  --muted: #677580;
-  --primary: #127267;
-  --primary-soft: #70b4a9;
-  --border: #dce0de;
-  --shadow: 0 20px 35px rgba(37, 49, 54, 0.09);
-  --radius: 20px;
-  --warn: #d34c41;
+  --text: #243038;
+  --muted: #64707d;
+  --primary: #0f7d6b;
+  --primary-strong: #0b695a;
+  --border: #d9d6d0;
+  --shadow: 0 22px 44px rgba(36, 48, 56, 0.1);
+  --radius: 22px;
+  --danger: #c44b3c;
+  --success: #1e8a6a;
+  --ai: #fff3df;
+  --human: #e6f4eb;
 }
 
 * {
@@ -17,11 +20,11 @@
 
 body {
   margin: 0;
-  font-family: 'Outfit', 'Segoe UI', sans-serif;
   min-height: 100vh;
+  font-family: 'Outfit', 'Segoe UI', sans-serif;
   color: var(--text);
-  background: radial-gradient(circle at top left, rgba(18, 114, 105, 0.08), transparent 28%),
-              radial-gradient(circle at bottom right, rgba(244, 196, 149, 0.10), transparent 32%),
+  background: radial-gradient(circle at top left, rgba(15, 125, 105, 0.07), transparent 28%),
+              radial-gradient(circle at bottom right, rgba(244, 196, 149, 0.08), transparent 32%),
               var(--bg);
 }
 
@@ -30,18 +33,21 @@ button, input, textarea {
 }
 
 button {
-  border: none;
   cursor: pointer;
+  border: none;
   border-radius: 999px;
-  transition: transform 0.16s ease, background-color 0.16s ease;
+  transition: transform 0.14s ease, box-shadow 0.14s ease;
 }
 
-button:hover {
+button:hover,
+button:focus-visible {
   transform: translateY(-1px);
+  outline: none;
+  box-shadow: 0 10px 28px rgba(15, 125, 105, 0.15);
 }
 
 .container {
-  width: min(1200px, calc(100% - 32px));
+  width: min(1180px, calc(100% - 32px));
   margin: 0 auto;
   padding: 28px 0 48px;
 }
@@ -53,17 +59,18 @@ button:hover {
   box-shadow: var(--shadow);
 }
 
-.header {
+.header,
+.panel {
   display: flex;
-  align-items: center;
   justify-content: space-between;
+  align-items: center;
   gap: 18px;
   padding: 24px 28px;
 }
 
 .form-group {
   display: grid;
-  gap: 10px;
+  gap: 12px;
 }
 
 label {
@@ -76,10 +83,15 @@ label {
 .textarea {
   width: 100%;
   border: 1px solid var(--border);
-  border-radius: 16px;
+  border-radius: 18px;
   padding: 14px 16px;
   background: #fff;
   color: var(--text);
+}
+
+.input:focus,
+.textarea:focus {
+  outline: 2px solid rgba(15, 125, 105, 0.25);
 }
 
 textarea {
@@ -93,13 +105,19 @@ textarea {
   justify-content: center;
   gap: 10px;
   padding: 12px 18px;
-  background: linear-gradient(135deg, var(--primary), var(--primary-soft));
+  background: linear-gradient(135deg, var(--primary), var(--primary-strong));
   color: #fff;
 }
 
 .btn.ghost {
-  background: #f5f1ea;
+  background: #f0ece5;
   color: var(--text);
+}
+
+.btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
 }
 
 .muted {
@@ -142,12 +160,12 @@ textarea {
   position: absolute;
   top: calc(100% + 10px);
   right: 0;
-  min-width: 220px;
+  min-width: 240px;
   padding: 16px;
   border-radius: 18px;
   border: 1px solid var(--border);
   background: #fff;
-  box-shadow: 0 18px 36px rgba(37, 49, 54, 0.12);
+  box-shadow: 0 22px 44px rgba(36, 48, 56, 0.12);
 }
 
 .export-menu.hidden {
@@ -155,40 +173,58 @@ textarea {
 }
 
 .export-menu-item {
+  display: block;
   width: 100%;
   padding: 12px 14px;
+  margin-bottom: 8px;
   border-radius: 14px;
   border: 1px solid var(--border);
-  background: #f8f4ed;
+  background: #f9f5ee;
+  color: var(--text);
+  text-align: left;
+}
+
+.export-menu-item:last-child {
+  margin-bottom: 0;
 }
 
 .export-menu-item:hover {
-  background: #f1e9dc;
+  background: #f0e8db;
 }
 
 .word.hwt {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 8px;
+  margin: 2px;
   background: var(--human);
   border: 1px solid #8bbc9a;
+  border-radius: 6px;
   color: #1a4937;
 }
 
 .word.aigt {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 8px;
+  margin: 2px;
   background: var(--ai);
   border: 1px solid #e3ae84;
+  border-radius: 6px;
   color: #7e412c;
 }
 
 .sentence-item {
   border: 1px solid var(--border);
-  border-radius: 16px;
-  padding: 14px;
+  border-radius: 18px;
+  padding: 16px;
   background: #fff;
 }
 
 .history-thumb {
-  padding: 14px;
+  padding: 16px;
   border: 1px solid var(--border);
-  border-radius: 16px;
+  border-radius: 18px;
   background: #fff;
   transition: transform 160ms ease, border-color 160ms ease;
 }
@@ -196,5 +232,5 @@ textarea {
 .history-thumb:hover,
 .history-thumb.active {
   transform: translateY(-1px);
-  border-color: var(--primary);
+  border-color: var(--primary-strong);
 }
