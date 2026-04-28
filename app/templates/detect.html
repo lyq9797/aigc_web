@@ -4,10 +4,14 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>文本检测 - AI 文本检测系统</title>
-  <link rel="preload" href="/static/styles.css?v=20260420-3" as="style" />
-  <link rel="stylesheet" href="/static/styles.css?v=20260420-3" />
+  <link rel="preload" href="/static/styles.css?v=20260420-4" as="style" />
+  <link rel="stylesheet" href="/static/styles.css?v=20260420-4" />
 </head>
 <body>
+  <noscript>
+    <div style="padding:16px;background:#ffefef;color:#802020;text-align:center;">本页面依赖 JavaScript，建议启用后继续使用。</div>
+  </noscript>
+
   <div class="bg-shape bg-one"></div>
   <div class="bg-shape bg-two"></div>
 
@@ -27,7 +31,7 @@
         <button id="clearBtn" class="ghost" type="button">清除内容</button>
         <div class="export-control-wrap">
           <button id="exportDetectBtn" class="ghost export-trigger" type="button" disabled aria-haspopup="true" aria-expanded="false">结果导出</button>
-          <div id="exportDetectMenu" class="export-menu hidden" aria-hidden="true">
+          <div id="exportDetectMenu" class="export-menu hidden" aria-hidden="true" aria-label="导出菜单">
             <div class="export-menu-panel" role="dialog" aria-modal="true" aria-label="检测结果导出格式选择">
               <div class="export-menu-title">选择导出格式</div>
               <button id="exportDetectTxtBtn" class="export-menu-item" type="button">导出为 TXT</button>
@@ -38,7 +42,7 @@
       </div>
 
       <h2 id="detectTitle">检测文本内容</h2>
-      <textarea id="inputText" rows="10" placeholder="在这里粘贴或输入待检测文本..."></textarea>
+      <textarea id="inputText" rows="10" placeholder="在这里粘贴或输入待检测文本..." aria-label="检测文本输入区"></textarea>
 
       <div class="file-row">
         <input id="fileInput" class="hidden-file-input" type="file" accept=".txt,.docx,.doc" aria-label="上传文件进行检测" />
@@ -50,8 +54,8 @@
       <button id="detectBtn" class="primary big detect-action-btn" type="button">开始检测</button>
       <p id="detectMsg" class="msg" aria-live="polite"></p>
 
-      <div class="highlight-panel">
-        <h3>单词级高亮</h3>
+      <section aria-labelledby="wordHighlightTitle" class="highlight-panel">
+        <h3 id="wordHighlightTitle">单词级高亮</h3>
         <div id="wordHighlight" class="highlight-box highlight-box-with-legend" aria-live="polite" aria-label="单词级检测结果">
           <div class="word-legend legend-floating" aria-label="单词级标签图例">
             <span class="legend-item legend-human">HWT（人类）</span>
@@ -59,17 +63,17 @@
           </div>
           <div id="wordHighlightContent">暂无结果</div>
         </div>
-      </div>
+      </section>
 
-      <div class="sentence-panel">
-        <h3>句子级结果</h3>
-        <p class="sentence-help-text">置信度表示模型对该句子来源的判断程度，数值越大表示更加接近 AI 风格。</p>
+      <section aria-labelledby="sentenceListTitle" class="sentence-panel">
+        <h3 id="sentenceListTitle">句子级结果</h3>
+        <p class="sentence-help-text">置信度表示模型对该句子来源判断的确定程度，数值越大表示更像 AI，越接近 0 表示更像人类。</p>
         <div id="sentenceList" class="sentence-list"></div>
-      </div>
+      </section>
     </section>
   </main>
 
-  <script src="/static/common.js?v=20260417-5"></script>
-  <script src="/static/detect.js?v=20260420-3"></script>
+  <script src="/static/common.js?v=20260417-6"></script>
+  <script src="/static/detect.js?v=20260420-4"></script>
 </body>
 </html>
