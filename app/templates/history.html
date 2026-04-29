@@ -4,9 +4,14 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>历史记录 - AI 文本检测系统</title>
-  <link rel="stylesheet" href="/static/styles.css?v=20260420-3" />
+  <link rel="preload" href="/static/styles.css?v=20260420-4" as="style" />
+  <link rel="stylesheet" href="/static/styles.css?v=20260420-4" />
 </head>
 <body>
+  <noscript>
+    <div style="padding:16px;background:#ffefef;color:#802020;text-align:center;">本页面依赖 JavaScript，建议启用后继续使用。</div>
+  </noscript>
+
   <div class="bg-shape bg-one"></div>
   <div class="bg-shape bg-two"></div>
 
@@ -21,7 +26,7 @@
 
   <main class="layout-single" role="main">
     <section class="card history-card-full" aria-labelledby="historyTitle">
-      <h2 id="historyTitle">历史记录页面</h2>
+      <h2 id="historyTitle">历史记录</h2>
       <div id="historyShell" class="history-shell">
         <aside id="historySidebar" class="history-sidebar" aria-label="历史检测列表">
           <div class="history-sidebar-head">
@@ -51,18 +56,18 @@
           <div id="detailPanel" class="hidden">
             <div id="detailTime" class="switch-info muted">时间：暂无</div>
             <h4>原始文本</h4>
-            <div id="detailInput" class="highlight-box">暂无结果</div>
+            <div id="detailInput" class="highlight-box" aria-label="原始文本内容">暂无结果</div>
             <h4>单词级高亮</h4>
-            <div id="detailWords" class="highlight-box">暂无结果</div>
+            <div id="detailWords" class="highlight-box" aria-label="单词级高亮结果">暂无结果</div>
             <h4>句子级结果</h4>
-            <div id="detailSentences" class="sentence-list"></div>
+            <div id="detailSentences" class="sentence-list" aria-label="句子级结果"></div>
           </div>
         </section>
       </div>
     </section>
   </main>
 
-  <script src="/static/common.js?v=20260417-5"></script>
-  <script src="/static/history.js?v=20260417-5"></script>
+  <script src="/static/common.js?v=20260417-6"></script>
+  <script src="/static/history.js?v=20260417-6"></script>
 </body>
 </html>
