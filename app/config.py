@@ -1,108 +1,105 @@
+"""
+应用全局配置模块 (Application Global Configuration)
+
+"""
+
+import logging
 import os
-from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional
+from typing import Final
+
+logger = logging.getLogger(__name__)
+
+# ==========================================
+# 1. 基础环境识别 (Environment Detection)
+# ==========================================
+
+# 获取当前运行环境，默认为 production 以遵循“安全失败 (Fail-Secure)”原则
+APP_ENV: Final[str] = os.getenv("APP_ENV", "production").lower()
+IS_DEBUG: Final[bool] = APP_ENV in ("development", "dev", "test", "local")
+
+# ==========================================
+# 2. 基础路径配置 (Base Paths)
+# ==========================================
+
+# 项目根目录（假设 config.py 位于 project_root/config/ 或 project_root/src/ 下）
+BASE_DIR: Final[Path] = Path(__file__).resolve().parent.parent
+
+# SQLite 数据库文件路径
+DB_PATH: Final[Path] = BASE_DIR / "aigc_web.db"
+
+# ==========================================
+# 3. 安全与认证配置 (Security & Authentication)
+# ==========================================
+
+# 【安全检测核心说明 - 弱密钥防御】
+# 默认值 "change-this-in-production" 仅用于本地开发。
+SECRET_KEY: Final[str] = os.getenv("AIGC_WEB_SECRET")
+if not SECRET_KEY:
+    raise RuntimeError("AIGC_WEB_SECRET environment variable must be set in production")
 
 
-# =========================
-# Helper Functions
-# =========================
-
-def _get_env_int(name: str, default: int) -> int:
-    """从环境变量获取整数值，解析失败时抛出异常"""
-    raw = os.getenv(name)
-    if raw is None:
+# Token 过期时间（小时）
+def _get_env_int(key: str, default: int) -> int:
+    """安全地获取整数类型的环境变量"""
+    value = os.getenv(key)
+    if value is None:
         return default
     try:
-        return int(raw)
-    except ValueError as exc:
-        raise ValueError(f"环境变量 {name} 必须为整数") from exc
+        return int(value)
+    except ValueError:
+        logger.error("环境变量 %s 的值 '%s' 不是有效的整数，已回退至默认值 %d", key, value, default)
+        return default
 
 
-def _get_env_str(name: str, default: str) -> str:
-    """从环境变量获取字符串值"""
-    return os.getenv(name, default)
+TOKEN_EXPIRE_HOURS: Final[int] = _get_env_int("AIGC_TOKEN_EXPIRE_HOURS", 24)
+
+# ==========================================
+# 4. AI 模型与检测器配置 (AI Models & Detectors)
+# ==========================================
+
+# 【跨平台路径说明】
+# 统一使用 pathlib.Path 或正斜杠，确保跨平台兼容性。
+MODELS_DIR: Final[Path] = BASE_DIR / "models"
+DETECTORS_DIR: Final[Path] = BASE_DIR / "detectors"
+
+# 单词级 (Word-level) 检测模型配置
+WORD_MODEL_PATH: Final[str] = os.getenv(
+    "WORD_MODEL_PATH",
+    str(MODELS_DIR / "deberta_CRF(new)_best.pt")
+)
+WORD_MODEL_NAME: Final[str] = os.getenv(
+    "WORD_MODEL_NAME",
+    "microsoft/deberta-v3-base"
+)
+WORD_BOUNDARY_BACKEND_SCRIPT: Final[str] = os.getenv(
+    "WORD_BOUNDARY_BACKEND_SCRIPT",
+    str(DETECTORS_DIR / "deberta_CRF(new)_single_text.py")
+)
+
+# 句子级 (Sentence-level) 检测模型配置
+SENTENCE_BACKEND_SCRIPT: Final[str] = os.getenv(
+    "SENTENCE_BACKEND_SCRIPT",
+    str(DETECTORS_DIR / "test_single_text.py")
+)
 
 
-def _path_from_env(name: str, default: str) -> Path:
-    """从环境变量获取路径，自动展开波浪号"""
-    return Path(os.getenv(name, default)).expanduser().resolve()
+# ==========================================
+# 5. 配置校验与日志输出 (Validation & Logging)
+# ==========================================
+
+def _validate_paths() -> None:
+    """校验关键文件路径是否存在（仅在非测试环境下执行严格校验）"""
+    paths_to_check = {
+        "Word Model": WORD_MODEL_PATH,
+        "Word Detector Script": WORD_BOUNDARY_BACKEND_SCRIPT,
+        "Sentence Detector Script": SENTENCE_BACKEND_SCRIPT,
+    }
+
+    for name, path_str in paths_to_check.items():
+        if not Path(path_str).exists():
+            logger.warning("【配置警告】%s 路径不存在: %s", name, path_str)
 
 
-# =========================
-# Settings Class
-# =========================
-
-@dataclass(frozen=True)
-class Settings:
-    """应用配置类，支持环境变量覆盖"""
-
-    # =====================
-    # 路径配置
-    # =====================
-    base_dir: Path = Path(__file__).resolve().parent.parent
-    db_path: Path = base_dir / "aigc_web.db"
-
-    # =====================
-    # 安全配置
-    # =====================
-    secret_key: str = _get_env_str("AIGC_WEB_SECRET", "change-this-in-production")
-    token_expire_hours: int = _get_env_int("AIGC_TOKEN_EXPIRE_HOURS", 24)
-
-    # =====================
-    # 词边界检测模型
-    # =====================
-    word_model_path: Path = _path_from_env("WORD_MODEL_PATH", "deberta_CRF(new)_best.pt")
-    word_model_name: str = _get_env_str("WORD_MODEL_NAME", "microsoft/deberta-v3-base")
-    word_boundary_backend_script: Path = _path_from_env(
-        "WORD_BOUNDARY_BACKEND_SCRIPT",
-        "work2/deberta_CRF(new)_single_text.py",
-    )
-
-    # =====================
-    # 句子分割模型
-    # =====================
-    sentence_backend_script: Path = _path_from_env(
-        "SENTENCE_BACKEND_SCRIPT",
-        "work1/test_single_text.py",
-    )
-
-    # =====================
-    # 运行模式
-    # =====================
-    debug: bool = os.getenv("AIGC_DEBUG", "false").lower() == "true"
-
-    def validate(self) -> None:
-        """验证配置有效性"""
-        errors = []
-
-        if self.secret_key == "change-this-in-production":
-            errors.append("请在生产环境中设置 AIGC_WEB_SECRET")
-
-        if self.token_expire_hours <= 0:
-            errors.append("AIGC_TOKEN_EXPIRE_HOURS 必须为正整数")
-
-        if self.debug:
-            print("⚠️ 警告: 系统运行在调试模式，请勿用于生产环境")
-
-        if errors:
-            raise ValueError("; ".join(errors))
-
-    def to_dict(self) -> dict:
-        """导出配置（脱敏）"""
-        return {
-            "base_dir": str(self.base_dir),
-            "db_path": str(self.db_path),
-            "token_expire_hours": self.token_expire_hours,
-            "word_model_path": str(self.word_model_path),
-            "word_model_name": self.word_model_name,
-            "debug": self.debug,
-        }
-
-
-# =========================
-# Global Instance
-# =========================
-
-settings = Settings()
-settings.validate()
+# 模块加载时执行路径校验
+_validate_paths()
