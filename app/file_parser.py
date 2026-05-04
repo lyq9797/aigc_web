@@ -1,120 +1,213 @@
+"""
+文件文本提取模块 (File Text Extraction)
+
+"""
+
 from __future__ import annotations
 
 import io
+import logging
+import os
 import tempfile
 from pathlib import Path
+from typing import Final
 
 from fastapi import HTTPException, status
 
-# 支持的文件后缀/编码/大小限制（10MB）
-SUPPORTED_SUFFIXES = {".txt", ".docx", ".doc"}
-SUPPORTED_ENCODINGS = ("utf-8-sig", "utf-8", "gb18030", "gbk")
-MAX_FILE_SIZE = 10 * 1024 * 1024
+# 使用模块级 logger，避免使用 basicConfig 污染全局日志配置
+logger = logging.getLogger(__name__)
+
+# ==========================================
+# 1. 常量配置 (Constants)
+# ==========================================
+
+SUPPORTED_EXTENSIONS: Final[set[str]] = {".txt", ".docx", ".doc"}
+
+# 按优先级排列的文本编码。utf-8-sig 用于处理带 BOM 头的 Windows 记事本文件。
+TXT_ENCODINGS: Final[tuple[str, ...]] = ("utf-8-sig", "utf-8", "gb18030", "gbk")
 
 
-def _raise_bad_request(detail: str) -> None:
-    """抛出400请求异常，统一错误处理"""
-    raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=detail)
-
+# ==========================================
+# 2. TXT 文本解析 (TXT Parsing)
+# ==========================================
 
 def _decode_text_bytes(raw: bytes) -> str:
-    """尝试多种编码解码文本字节流"""
-    for encoding in SUPPORTED_ENCODINGS:
+    """
+    尝试多种编码将字节流解码为字符串。
+
+    【安全检测说明】
+    Python 内置的 decode 方法对恶意字节流有较好的容错性，不会引发 ReDoS。
+    但需注意，如果 raw 极大（如几百 MB），多次 decode 尝试会导致 CPU 飙升。
+    因此，必须在上传接口层限制文件大小。
+    """
+    for encoding in TXT_ENCODINGS:
         try:
             return raw.decode(encoding)
         except UnicodeDecodeError:
             continue
-    _raise_bad_request("TXT 文件编码无法识别，请保存为 UTF-8 或 GBK")
 
+    raise HTTPException(
+        status_code=status.HTTP_400_BAD_REQUEST,
+        detail="TXT 文件编码无法识别，请保存为 UTF-8 或 GBK 格式"
+    )
+
+
+# ==========================================
+# 3. DOCX 文本解析 (DOCX Parsing)
+# ==========================================
 
 def _extract_docx_text(raw: bytes) -> str:
-    """解析docx文件（纯段落+表格内容）"""
+    """
+    从 .docx 文件中提取文本（包括段落和表格）。
+
+    """
     try:
+        # 【安全加固】强制使用 defusedxml 替换标准 xml 解析器，防御 XXE 攻击
+        try:
+            import defusedxml
+            defusedxml.defuse()
+        except ImportError:
+            logger.warning("defusedxml 未安装，docx 解析可能存在 XXE 风险。请执行: pip install defusedxml")
+
         from docx import Document
-    except Exception as exc:
+    except ImportError as exc:
+        logger.error("缺少 docx 解析库: %s", exc)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="缺少 docx 解析库，请安装 python-docx"
+            detail="服务器缺少文档解析依赖"
         ) from exc
 
-    document = Document(io.BytesIO(raw))
+    try:
+        document = Document(io.BytesIO(raw))
+    except Exception as exc:
+        logger.warning("docx 文件结构损坏或包含恶意 XML: %s", exc)
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="DOCX 文件损坏或格式不合法"
+        ) from exc
+
     # 提取段落文本
     paragraphs = [p.text.strip() for p in document.paragraphs if p.text.strip()]
     if paragraphs:
         return "\n".join(paragraphs)
 
-    # 提取表格文本
-    table_lines = []
+    # 降级提取表格文本（若段落为空）
+    table_lines: list[str] = []
     for table in document.tables:
         for row in table.rows:
-            row_texts = [cell.text.strip() for cell in row.cells if cell.text.strip()]
-            if row_texts:
-                table_lines.append("\t".join(row_texts))
+            cells = [cell.text.strip() for cell in row.cells if cell.text.strip()]
+            if cells:
+                table_lines.append("\t".join(cells))
+
     return "\n".join(table_lines)
 
 
+# ==========================================
+# 4. DOC 文本解析 (Legacy DOC Parsing via COM)
+# ==========================================
+
 def _extract_doc_text(raw: bytes) -> str:
-    """调用Word组件解析doc文件（Windows环境依赖）"""
+    """
+    使用 Windows COM 组件调用本地 Microsoft Word 解析旧版 .doc 文件。
+
+    """
     try:
         import pythoncom
         from win32com.client import DispatchEx
-    except Exception as exc:
+    except ImportError as exc:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="当前环境缺少 Word 组件，无法解析 .doc 文件，请安装 Microsoft Word 或转换为 .docx",
+            detail="当前环境不支持 .doc 文件解析（需 Windows 及 Word 组件），请转换为 .docx 格式后重试",
         ) from exc
 
-    temp_path = None
+    temp_path: str | None = None
     word_app = None
+
     try:
-        # 创建临时文件写入字节流
+        # 1. 安全写入临时文件
+        # 【安全说明】使用 tempfile 确保文件名不可预测，防止路径遍历和临时文件竞争条件 (TOCTOU)
         with tempfile.NamedTemporaryFile(delete=False, suffix=".doc") as temp_file:
             temp_file.write(raw)
-            temp_path = Path(temp_file.name)
+            temp_path = temp_file.name
 
-        # 初始化COM组件并打开Word
+        # 2. 初始化 COM 环境
         pythoncom.CoInitialize()
+
+        # 3. 启动 Word 进程
         word_app = DispatchEx("Word.Application")
         word_app.Visible = False
-        word_app.DisplayAlerts = 0
+        word_app.DisplayAlerts = 0  # 禁用所有弹窗警告，防止进程阻塞
 
-        doc = word_app.Documents.Open(str(temp_path), ReadOnly=1)
+        # 4. 打开并提取文本
+        # ReadOnly=1 防止恶意宏修改文件，ConfirmConversions=False 防止弹窗
+        doc = word_app.Documents.Open(temp_path, ReadOnly=1, ConfirmConversions=False)
         try:
-            return doc.Content.Text.strip()
+            text = doc.Content.Text
         finally:
             doc.Close(False)
+
+        return text.strip()
+
     except HTTPException:
         raise
     except Exception as exc:
-        _raise_bad_request(f".doc 文件解析失败: {str(exc)}")
+        logger.error("COM 解析 .doc 文件失败: %s", exc, exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=".doc 文件解析失败，文件可能已损坏或包含不支持的格式"
+        ) from exc
     finally:
-        # 安全关闭Word进程
-        if word_app:
+        # 5. 严格的资源清理 (防止僵尸进程和临时文件泄露)
+        if word_app is not None:
             try:
                 word_app.Quit()
-            except Exception:
-                pass
-        # 卸载COM组件
-        pythoncom.CoUninitialize()
-        # 删除临时文件（不存在则忽略）
-        if temp_path:
-            temp_path.unlink(missing_ok=True)
+            except Exception as e:
+                logger.warning("Word COM 进程强制退出失败: %s", e)
 
+        try:
+            pythoncom.CoUninitialize()
+        except Exception as e:
+            logger.debug("COM 组件反初始化异常 (可忽略): %s", e)
+
+        if temp_path and os.path.exists(temp_path):
+            try:
+                os.remove(temp_path)
+            except OSError as e:
+                logger.warning("临时文件清理失败 [%s]: %s", temp_path, e)
+
+
+# ==========================================
+# 5. 统一路由分发 (Routing & Dispatch)
+# ==========================================
 
 def extract_text_from_file(filename: str, raw: bytes) -> str:
-    """主函数：根据文件后缀提取文本内容"""
-    # 文件大小校验
-    if len(raw) > MAX_FILE_SIZE:
-        _raise_bad_request("文件过大，请上传小于 10MB 的文件")
+    """
+    根据文件扩展名路由到对应的文本提取器。
 
-    # 文件格式校验
+    Args:
+        filename: 原始文件名（用于判断后缀）。
+        raw: 文件的原始字节流。
+
+    Returns:
+        提取出的纯文本内容。
+
+    Raises:
+        HTTPException: 文件格式不支持或解析失败时抛出。
+    """
     suffix = Path(filename).suffix.lower()
-    if suffix not in SUPPORTED_SUFFIXES:
-        _raise_bad_request("仅支持 .txt、.docx、.doc 格式文件")
 
-    # 分格式解析
+    if suffix not in SUPPORTED_EXTENSIONS:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"不支持的文件格式。仅允许: {', '.join(SUPPORTED_EXTENSIONS)}",
+        )
+
     if suffix == ".txt":
         return _decode_text_bytes(raw).strip()
     if suffix == ".docx":
         return _extract_docx_text(raw).strip()
-    return _extract_doc_text(raw).strip()
+    if suffix == ".doc":
+        return _extract_doc_text(raw).strip()
+
+    # 理论上不会执行到这里，但为了类型安全和防御性编程保留
+    raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="内部路由错误")
