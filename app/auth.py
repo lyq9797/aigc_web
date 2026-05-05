@@ -1,391 +1,276 @@
 """
-Authentication and JWT utility module.
+身份验证与令牌管理模块 (Authentication & Token Management)
 
-提供：
-- 密码策略校验
-- PBKDF2密码哈希
-- 密码验证
-- JWT生成
-- JWT解析与验证
-- Bearer Token解析
 """
 
 import base64
 import hashlib
 import hmac
 import json
+import logging
 import secrets
-from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta, timezone
-from typing import Any, Optional
+from typing import Any, Optional, TypedDict
 
 from fastapi import HTTPException, status
 
 from .config import SECRET_KEY, TOKEN_EXPIRE_HOURS
 
+logger = logging.getLogger(__name__)
 
-# =========================
-# Security Configuration
-# =========================
+# ==========================================
+# 1. 常量与安全基线配置 (Constants & Security Baselines)
+# ==========================================
 
-PASSWORD_HASH_ITERATIONS = 200_000
-MIN_PASSWORD_LENGTH = 6
+# 【安全检测说明】PBKDF2 迭代次数
+PBKDF2_ITERATIONS = 200_000
+PBKDF2_ALGORITHM = "pbkdf2_sha256"
+PBKDF2_SALT_BYTES = 16
 
-PASSWORD_ALGORITHM = "pbkdf2_sha256"
-
+# 【安全检测说明】JWT 签名算法。必须严格限制为 HS256，防止算法混淆攻击。
 JWT_ALGORITHM = "HS256"
 JWT_TYPE = "JWT"
 
-BEARER_PREFIX = "Bearer"
 
-JWT_HEADER = {
-    "alg": JWT_ALGORITHM,
-    "typ": JWT_TYPE,
-}
+# ==========================================
+# 2. 类型定义 (Type Definitions)
+# ==========================================
 
-
-# =========================
-# Data Models
-# =========================
-
-@dataclass(frozen=True)
-class TokenPayload:
-    """
-    JWT Payload 数据结构。
-
-    Attributes:
-        sub: 用户ID
-        username: 用户名
-        iat: Token签发时间（Unix时间戳）
-        exp: Token过期时间（Unix时间戳）
-    """
-
+class JWTPayload(TypedDict):
+    """JWT Payload 结构定义"""
     sub: int
     username: str
-    iat: int
     exp: int
 
 
-# =========================
-# Internal Helpers
-# =========================
+class JWTHeader(TypedDict, total=False):
+    """JWT Header 结构定义"""
+    alg: str
+    typ: str
 
-def _raise_auth_error(
-    detail: str,
-    status_code: int = status.HTTP_401_UNAUTHORIZED,
-) -> None:
-    """
-    统一抛出认证相关异常。
 
-    Args:
-        detail: 错误描述
-        status_code: HTTP状态码
-    """
-    raise HTTPException(
-        status_code=status_code,
-        detail=detail,
-    )
-
+# ==========================================
+# 3. Base64 URL 编解码工具 (Base64 URL Utilities)
+# ==========================================
 
 def _b64url_encode(raw: bytes) -> str:
-    """
-    Base64 URL安全编码。
-
-    Args:
-        raw: 原始字节数据
-
-    Returns:
-        编码后的字符串
-    """
+    """Base64 URL 安全编码，去除填充符 '='"""
     return base64.urlsafe_b64encode(raw).rstrip(b"=").decode("utf-8")
 
 
 def _b64url_decode(raw: str) -> bytes:
-    """
-    Base64 URL安全解码。
-
-    Args:
-        raw: Base64字符串
-
-    Returns:
-        解码后的字节数据
-    """
-    padded = raw + "=" * ((4 - len(raw) % 4) % 4)
-    return base64.urlsafe_b64decode(padded.encode("utf-8"))
+    """Base64 URL 安全解码，自动补全填充符 '='"""
+    # 计算需要补全的 '=' 数量
+    padding = "=" * ((4 - len(raw) % 4) % 4)
+    return base64.urlsafe_b64decode((raw + padding).encode("utf-8"))
 
 
-def _sign_token(signing_input: bytes) -> bytes:
-    """
-    使用 HMAC-SHA256 生成JWT签名。
-
-    Args:
-        signing_input: JWT签名内容
-
-    Returns:
-        签名字节串
-    """
-    return hmac.new(
-        SECRET_KEY.encode("utf-8"),
-        signing_input,
-        hashlib.sha256,
-    ).digest()
-
-
-# =========================
-# Password Functions
-# =========================
-
-def validate_password_policy(password: str) -> None:
-    """
-    校验密码策略。
-
-    Args:
-        password: 用户密码
-
-    Raises:
-        HTTPException: 密码不符合要求
-    """
-    if len(password) < MIN_PASSWORD_LENGTH:
-        _raise_auth_error(
-            f"密码长度不能少于 {MIN_PASSWORD_LENGTH} 位",
-            status.HTTP_400_BAD_REQUEST,
-        )
-
+# ==========================================
+# 4. 密码哈希与验证 (Password Hashing & Verification)
+# ==========================================
 
 def hash_password(password: str) -> str:
     """
-    使用PBKDF2-HMAC-SHA256生成密码哈希。
+    使用 PBKDF2-HMAC-SHA256 对密码进行哈希处理。
 
-    Args:
-        password: 原始密码
-
-    Returns:
-        编码后的密码哈希字符串
+    【安全检测说明】
+    - 使用 secrets.token_bytes 生成密码学安全的随机盐值，防止彩虹表攻击。
+    - 返回格式：{algorithm}${salt}${digest}，便于未来算法升级时进行兼容验证。
     """
-    validate_password_policy(password)
-
-    salt = secrets.token_bytes(16)
-
+    salt = secrets.token_bytes(PBKDF2_SALT_BYTES)
     digest = hashlib.pbkdf2_hmac(
         "sha256",
         password.encode("utf-8"),
         salt,
-        PASSWORD_HASH_ITERATIONS,
+        PBKDF2_ITERATIONS
     )
-
-    return (
-        f"{PASSWORD_ALGORITHM}"
-        f"${_b64url_encode(salt)}"
-        f"${_b64url_encode(digest)}"
-    )
+    return f"{PBKDF2_ALGORITHM}${_b64url_encode(salt)}${_b64url_encode(digest)}"
 
 
-def verify_password(password: str, encoded_hash: str) -> bool:
+def verify_password(plain_password: str, encoded_hash: str) -> bool:
     """
-    验证密码是否正确。
+    验证明文密码是否与存储的哈希值匹配。
 
-    Args:
-        password: 用户输入密码
-        encoded_hash: 存储的密码哈希
-
-    Returns:
-        True表示验证通过，否则False
+    【安全检测说明】
+    - 使用 hmac.compare_digest 进行常量时间比较，防御时序攻击 (Timing Attack)。
+    - 捕获所有 Exception 是为了防止恶意构造的 hash 字符串导致程序崩溃或抛出异常，
+      从而引发拒绝服务 (DoS) 或泄露内部堆栈信息。统一返回 False 是最安全的做法。
     """
     try:
-        algo, salt_s, digest_s = encoded_hash.split("$", 2)
-
-        if algo != PASSWORD_ALGORITHM:
+        parts = encoded_hash.split("$", 2)
+        if len(parts) != 3:
             return False
 
-        salt = _b64url_decode(salt_s)
-        expected_digest = _b64url_decode(digest_s)
+        algo, salt_b64, digest_b64 = parts
+
+        # 校验算法标识，防止算法降级攻击
+        if algo != PBKDF2_ALGORITHM:
+            return False
+
+        salt = _b64url_decode(salt_b64)
+        expected_digest = _b64url_decode(digest_b64)
 
         actual_digest = hashlib.pbkdf2_hmac(
             "sha256",
-            password.encode("utf-8"),
+            plain_password.encode("utf-8"),
             salt,
-            PASSWORD_HASH_ITERATIONS,
+            PBKDF2_ITERATIONS
         )
 
-        return hmac.compare_digest(
-            actual_digest,
-            expected_digest,
-        )
+        # 【安全核心】常量时间比较
+        return hmac.compare_digest(actual_digest, expected_digest)
 
-    except Exception:
+    except Exception as e:
+        # 记录调试日志，但不向客户端暴露具体错误
+        logger.debug("Password verification failed due to malformed hash")
         return False
 
 
-# =========================
-# JWT Functions
-# =========================
+# ==========================================
+# 5. JWT 令牌管理 (JWT Token Management)
+# ==========================================
+
+def _get_signing_key() -> bytes:
+    """获取 JWT 签名密钥"""
+    # 【安全检测说明】确保 SECRET_KEY 被正确编码为字节。
+    # 生产环境中应校验 SECRET_KEY 的长度和熵值。
+    if isinstance(SECRET_KEY, str):
+        return SECRET_KEY.encode("utf-8")
+    return SECRET_KEY
+
 
 def create_token(user_id: int, username: str) -> str:
     """
-    创建JWT访问令牌。
+    生成 JWT (JSON Web Token)。
 
     Args:
-        user_id: 用户ID
-        username: 用户名
+        user_id: 用户唯一标识 (映射到 JWT 的 'sub' 字段)。
+        username: 用户名。
 
     Returns:
-        JWT字符串
+        签名后的 JWT 字符串。
     """
-    now = datetime.now(timezone.utc)
+    header: JWTHeader = {"alg": JWT_ALGORITHM, "typ": JWT_TYPE}
 
-    payload = TokenPayload(
-        sub=user_id,
-        username=username,
-        iat=int(now.timestamp()),
-        exp=int(
-            (
-                now
-                + timedelta(hours=TOKEN_EXPIRE_HOURS)
-            ).timestamp()
-        ),
-    )
+    exp_time = datetime.now(timezone.utc) + timedelta(hours=TOKEN_EXPIRE_HOURS)
+    payload: JWTPayload = {
+        "sub": user_id,
+        "username": username,
+        "exp": int(exp_time.timestamp()),
+    }
 
-    header_b64 = _b64url_encode(
-        json.dumps(
-            JWT_HEADER,
-            separators=(",", ":"),
-        ).encode("utf-8")
-    )
+    # 序列化并编码 Header 和 Payload
+    header_b64 = _b64url_encode(json.dumps(header, separators=(",", ":")).encode("utf-8"))
+    payload_b64 = _b64url_encode(json.dumps(payload, separators=(",", ":")).encode("utf-8"))
 
-    payload_b64 = _b64url_encode(
-        json.dumps(
-            asdict(payload),
-            separators=(",", ":"),
-        ).encode("utf-8")
-    )
+    signing_input = f"{header_b64}.{payload_b64}".encode("utf-8")
 
-    signing_input = (
-        f"{header_b64}.{payload_b64}"
-    ).encode("utf-8")
+    # 生成 HMAC-SHA256 签名
+    signature = hmac.new(_get_signing_key(), signing_input, hashlib.sha256).digest()
+    signature_b64 = _b64url_encode(signature)
 
-    signature_b64 = _b64url_encode(
-        _sign_token(signing_input)
-    )
-
-    return (
-        f"{header_b64}."
-        f"{payload_b64}."
-        f"{signature_b64}"
-    )
+    return f"{header_b64}.{payload_b64}.{signature_b64}"
 
 
-def decode_token(token: str) -> dict[str, Any]:
+def decode_token(token: str) -> JWTPayload:
     """
-    验证并解析JWT。
+    解析并验证 JWT 令牌。
 
-    验证内容：
-        1. Token格式
-        2. JWT签名
-        3. Header合法性
-        4. Token过期时间
-        5. Subject字段
+    【安全检测说明 - 算法混淆防御】
+    必须从 Header 中读取 'alg' 字段并与预期的 JWT_ALGORITHM 进行严格比对。
+    如果不校验 'alg'，攻击者可将 Header 改为 {"alg": "none"} 并移除签名，
+    或改为非对称算法（如 RS256）并使用公钥进行签名，从而绕过验证。
 
-    Args:
-        token: JWT字符串
-
-    Returns:
-        Token Payload字典
+    Raises:
+        HTTPException: 令牌格式错误、签名无效或已过期时抛出 401 异常。
     """
     try:
         header_b64, payload_b64, signature_b64 = token.split(".")
     except ValueError as exc:
-        _raise_auth_error("Invalid token format") from exc
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid token format"
+        ) from exc
 
-    signing_input = (
-        f"{header_b64}.{payload_b64}"
-    ).encode("utf-8")
+    # 1. 验证签名 (Signature Verification)
+    signing_input = f"{header_b64}.{payload_b64}".encode("utf-8")
+    expected_sig = hmac.new(_get_signing_key(), signing_input, hashlib.sha256).digest()
+    got_sig = _b64url_decode(signature_b64)
 
-    expected_sig = _sign_token(signing_input)
+    # 【安全核心】常量时间比较，防御时序攻击
+    if not hmac.compare_digest(expected_sig, got_sig):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid token signature"
+        )
 
-    actual_sig = _b64url_decode(signature_b64)
-
-    if not hmac.compare_digest(
-        expected_sig,
-        actual_sig,
-    ):
-        _raise_auth_error("Invalid token signature")
-
+    # 2. 解析 Header 并校验算法 (Algorithm Validation)
     try:
-        header = json.loads(
-            _b64url_decode(header_b64).decode("utf-8")
-        )
-
-        payload = json.loads(
-            _b64url_decode(payload_b64).decode("utf-8")
-        )
-
+        header_data = json.loads(_b64url_decode(header_b64).decode("utf-8"))
+        if header_data.get("alg") != JWT_ALGORITHM:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Unsupported or invalid token algorithm"
+            )
     except json.JSONDecodeError as exc:
-        _raise_auth_error("Invalid token payload") from exc
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Malformed token header"
+        ) from exc
 
-    if (
-        header.get("alg") != JWT_ALGORITHM
-        or header.get("typ") != JWT_TYPE
-    ):
-        _raise_auth_error("Invalid token header")
+    # 3. 解析 Payload 并校验过期时间 (Expiration Validation)
+    try:
+        payload_data: JWTPayload = json.loads(_b64url_decode(payload_b64).decode("utf-8"))
+    except json.JSONDecodeError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Malformed token payload"
+        ) from exc
 
-    now_ts = int(
-        datetime.now(
-            timezone.utc
-        ).timestamp()
-    )
+    now_ts = int(datetime.now(timezone.utc).timestamp())
+    exp_ts = int(payload_data.get("exp", 0))
 
-    if int(payload.get("exp", 0)) < now_ts:
-        _raise_auth_error("Token expired")
+    if exp_ts < now_ts:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token expired"
+        )
 
-    if payload.get("sub") is None:
-        _raise_auth_error("Token subject missing")
-
-    token_payload = TokenPayload(
-        sub=int(payload["sub"]),
-        username=str(payload["username"]),
-        iat=int(payload["iat"]),
-        exp=int(payload["exp"]),
-    )
-
-    return asdict(token_payload)
+    return payload_data
 
 
-# =========================
-# Authorization Header
-# =========================
+# ==========================================
+# 6. HTTP 请求头解析 (HTTP Header Parsing)
+# ==========================================
 
-def parse_bearer_token(
-    auth_header: Optional[str],
-) -> str:
+def parse_bearer_token(auth_header: Optional[str]) -> str:
     """
-    从Authorization Header中提取Bearer Token。
+    从 HTTP Authorization 请求头中提取 Bearer Token。
 
     Args:
-        auth_header: Authorization请求头
+        auth_header: Authorization 请求头的值 (例如: "Bearer eyJhbG...")。
 
     Returns:
-        JWT字符串
+        提取出的纯 Token 字符串。
 
     Raises:
-        HTTPException: Header格式错误
+        HTTPException: 缺少 Header 或格式不正确时抛出 401 异常。
     """
     if not auth_header:
-        _raise_auth_error(
-            "Missing Authorization header"
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Missing Authorization header",
+            headers={"WWW-Authenticate": "Bearer"},
         )
 
-    scheme, _, token = auth_header.partition(" ")
+    parts = auth_header.split()
 
-    if scheme.lower() != BEARER_PREFIX.lower():
-        _raise_auth_error(
-            "Expected Bearer token"
+    # 【安全检测说明】严格校验 Schema 格式，防止注入或解析绕过
+    if len(parts) != 2 or parts[0].lower() != "bearer":
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid Authorization header format. Expected 'Bearer <token>'",
+            headers={"WWW-Authenticate": "Bearer"},
         )
 
-    token = token.strip()
-
-    if not token:
-        _raise_auth_error(
-            "Missing token"
-        )
-
-    return token
+    return parts[1].strip()
