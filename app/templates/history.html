@@ -2,70 +2,186 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="description" content="查看AI文本检测历史记录 - 回顾检测结果，支持导出分析" />
+  <meta name="theme-color" content="#0f7d6b" />
   <title>历史记录 - AI 文本检测系统</title>
   <link rel="preload" href="/static/styles.css?v=20260420-4" as="style" />
   <link rel="stylesheet" href="/static/styles.css?v=20260420-4" />
+  <link rel="icon" type="image/x-icon" href="/static/favicon.ico" />
 </head>
 <body>
   <noscript>
-    <div style="padding:16px;background:#ffefef;color:#802020;text-align:center;">本页面依赖 JavaScript，建议启用后继续使用。</div>
+    <div class="noscript-warning">
+      ⚠️ 本页面依赖 JavaScript，请启用后继续使用。
+    </div>
   </noscript>
 
+  <!-- Background decoration -->
   <div class="bg-shape bg-one"></div>
   <div class="bg-shape bg-two"></div>
 
+  <!-- ========================================================================
+       Header / Navigation
+    ======================================================================= -->
+
   <header class="topbar centered-topbar" role="banner">
-    <h1>AI 文本检测系统</h1>
+    <div class="logo-area">
+      <span class="logo-icon">📋</span>
+      <h1>AI 文本检测系统</h1>
+    </div>
     <nav class="user-panel" aria-label="用户操作">
-      <span id="currentUser" class="muted" aria-live="polite"></span>
-      <button id="goDetectBtn" class="ghost" type="button">返回文本检测</button>
-      <button id="logoutBtn" class="ghost" type="button">退出登录</button>
+      <span id="currentUser" class="user-name" aria-live="polite"></span>
+      <button id="goDetectBtn" class="btn-secondary btn-sm" type="button">
+        🔍 返回检测
+      </button>
+      <button id="logoutBtn" class="btn-secondary btn-sm" type="button">
+        🚪 退出登录
+      </button>
     </nav>
   </header>
 
+  <!-- ========================================================================
+       Main Content - History Records
+    ======================================================================= -->
+
   <main class="layout-single" role="main">
     <section class="card history-card-full" aria-labelledby="historyTitle">
-      <h2 id="historyTitle">历史记录</h2>
+
+      <div class="page-header">
+        <h2 id="historyTitle">
+          <span class="section-icon">📊</span> 历史记录
+        </h2>
+        <p class="page-subtitle">查看过往检测结果，支持导出和分析</p>
+      </div>
+
       <div id="historyShell" class="history-shell">
+
+        <!-- Left sidebar: History list -->
         <aside id="historySidebar" class="history-sidebar" aria-label="历史检测列表">
           <div class="history-sidebar-head">
-            <h3>查看历史记录</h3>
-            <button id="clearHistoryBtn" class="ghost" type="button">清除历史记录</button>
+            <h3>
+              <span class="section-icon">📜</span> 检测记录
+            </h3>
+            <button id="clearHistoryBtn" class="btn-danger btn-sm" type="button" title="清空所有历史记录">
+              🗑️ 清空全部
+            </button>
           </div>
-          <div id="historyList" class="history-groups"></div>
+          <div id="historyList" class="history-groups">
+            <div class="muted loading-placeholder">⏳ 加载中...</div>
+          </div>
+          <div class="history-stats" id="historyStats"></div>
         </aside>
 
+        <!-- Right panel: Detail view -->
         <section class="history-detail" aria-live="polite">
           <div class="history-detail-head">
-            <button id="sidebarToggleBtn" class="ghost" type="button" aria-expanded="true">收起边栏</button>
-            <h3>具体检测详情</h3>
+            <button id="sidebarToggleBtn" class="btn-secondary btn-sm" type="button" aria-expanded="true" title="收起/展开侧边栏">
+              ◀ 收起边栏
+            </button>
+            <h3>
+              <span class="section-icon">🔍</span> 检测详情
+            </h3>
             <div class="export-control-wrap export-control-wrap-right">
-              <button id="exportHistoryBtn" class="ghost export-trigger" type="button" disabled aria-haspopup="true" aria-expanded="false">结果导出</button>
+              <button id="exportHistoryBtn" class="btn-secondary btn-sm export-trigger" type="button" disabled aria-haspopup="true" aria-expanded="false" title="导出当前检测结果">
+                📎 结果导出
+              </button>
               <div id="exportHistoryMenu" class="export-menu hidden" aria-hidden="true" aria-label="历史记录导出格式选择">
                 <div class="export-menu-panel" role="dialog" aria-modal="true" aria-label="历史记录导出格式选择">
-                  <div class="export-menu-title">选择导出格式</div>
-                  <button id="exportHistoryTxtBtn" class="export-menu-item" type="button">导出为 TXT</button>
-                  <button id="exportHistoryJsonBtn" class="export-menu-item" type="button">导出为 JSON</button>
+                  <div class="export-menu-title">📥 选择导出格式</div>
+                  <button id="exportHistoryTxtBtn" class="export-menu-item" type="button">
+                    📄 导出为 TXT
+                  </button>
+                  <button id="exportHistoryJsonBtn" class="export-menu-item" type="button">
+                    📋 导出为 JSON
+                  </button>
                 </div>
               </div>
             </div>
           </div>
 
-          <div id="detailEmpty" class="muted">点击左侧任意历史条目查看详情</div>
-          <div id="detailPanel" class="hidden">
-            <div id="detailTime" class="switch-info muted">时间：暂无</div>
-            <h4>原始文本</h4>
-            <div id="detailInput" class="highlight-box" aria-label="原始文本内容">暂无结果</div>
-            <h4>单词级高亮</h4>
-            <div id="detailWords" class="highlight-box" aria-label="单词级高亮结果">暂无结果</div>
-            <h4>句子级结果</h4>
-            <div id="detailSentences" class="sentence-list" aria-label="句子级结果"></div>
+          <!-- Empty state -->
+          <div id="detailEmpty" class="empty-state">
+            <div class="empty-icon">📭</div>
+            <div class="empty-text">暂无检测记录</div>
+            <div class="empty-hint">点击左侧历史条目查看详情，或前往检测页面创建新记录</div>
+          </div>
+
+          <!-- Detail panel (hidden initially) -->
+          <div id="detailPanel" class="detail-panel hidden">
+            <div class="detail-header">
+              <div id="detailTime" class="detail-time">
+                <span class="detail-icon">📅</span> 时间：暂无
+              </div>
+              <div id="detailStats" class="detail-stats"></div>
+            </div>
+
+            <div class="detail-section">
+              <h4>
+                <span class="section-icon">📄</span> 原始文本
+              </h4>
+              <div id="detailInput" class="highlight-box original-text" aria-label="原始文本内容">
+                <div class="muted">暂无内容</div>
+              </div>
+            </div>
+
+            <div class="detail-section">
+              <h4>
+                <span class="section-icon">🔤</span> 单词级高亮
+              </h4>
+              <div class="word-legend-mini">
+                <span class="legend-item legend-human">✍️ 人类</span>
+                <span class="legend-item legend-ai">🤖 AI</span>
+              </div>
+              <div id="detailWords" class="highlight-box word-container" aria-label="单词级高亮结果">
+                <div class="muted">暂无结果</div>
+              </div>
+            </div>
+
+            <div class="detail-section">
+              <h4>
+                <span class="section-icon">📝</span> 句子级结果
+              </h4>
+              <div id="detailSentences" class="sentence-list" aria-label="句子级结果">
+                <div class="muted">暂无结果</div>
+              </div>
+            </div>
           </div>
         </section>
+
       </div>
     </section>
   </main>
+
+  <!-- Confirmation dialog for clear history -->
+  <div id="confirmDialog" class="modal hidden">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>⚠️ 确认清空</h3>
+        <button class="modal-close" id="closeDialogBtn">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p>确定要清空所有历史记录吗？</p>
+        <p class="modal-warning">此操作不可恢复！</p>
+      </div>
+      <div class="modal-footer">
+        <button id="cancelClearBtn" class="btn-secondary">取消</button>
+        <button id="confirmClearBtn" class="btn-danger">确认清空</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading overlay -->
+  <div id="loadingOverlay" class="loading-overlay hidden">
+    <div class="loading-spinner">
+      <div class="spinner"></div>
+      <p>加载中...</p>
+    </div>
+  </div>
+
+  <!-- ========================================================================
+       Scripts
+    ======================================================================== -->
 
   <script src="/static/common.js?v=20260417-6"></script>
   <script src="/static/history.js?v=20260417-6"></script>
