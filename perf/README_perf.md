@@ -1,53 +1,20 @@
-# Homepage Performance Test (JMeter)
+# 首页性能测试 (JMeter)
 
-## Scope
-- Target endpoint: `GET /login`
-- Concurrency levels: 10, 20, 50, 100 users
-- Metrics: Average response time, Min response time, Max response time, Error %
+## 测试范围
+- **目标接口**: `GET /login`
+- **并发用户数**: 10, 20, 50, 100
+- **关注指标**: 平均响应时间、最小响应时间、最大响应时间、错误率 (%)
 
-Additional plan:
-- `GET /detect` page-only pressure test (no call to `/api/detect`)
+**附加测试计划**:
+- `GET /detect` 纯页面压力测试（仅加载页面，不调用 `/api/detect` 后端接口）
 
-## Files
-- `perf/homepage_load_test.jmx`
-- `perf/detect_page_only_load_test.jmx`
+## 相关文件
+- `perf/homepage_load_test.jmx` (首页负载测试脚本)
+- `perf/detect_page_only_load_test.jmx` (检测页纯页面测试脚本)
 
-## 1) Start service
-From workspace root:
+## 1) 启动后端服务
+在工作区根目录下执行以下命令：
 
 ```powershell
 Set-Location F:\wy\网页\aigc_web
 conda run -n wy_subtaskC python -m uvicorn app.main:app --host 127.0.0.1 --port 8000
-```
-
-## 2) Run JMeter in non-GUI mode
-Adjust JMeter path as needed:
-
-```powershell
-$JMETER="C:\apache-jmeter-5.6.3\bin\jmeter.bat"
-Set-Location F:\wy\网页\aigc_web
-& $JMETER -n -t .\perf\homepage_load_test.jmx -l .\perf\results.jtl -e -o .\perf\report
-```
-
-Page-only test for detect page (no detection API):
-
-```powershell
-$JMETER="C:\apache-jmeter-5.6.3\bin\jmeter.bat"
-Set-Location F:\wy\网页\aigc_web
-& $JMETER -n -t .\perf\detect_page_only_load_test.jmx -l .\perf\results_detect_page.jtl -e -o .\perf\report_detect_page
-```
-
-## 3) Check report
-Open:
-- `perf/report/index.html`
-- `perf/report_detect_page/index.html`
-
-Main charts/tables:
-- Statistics (avg/min/max/error%)
-- Response Times Over Time
-- Active Threads Over Time
-
-## Notes
-- Thread groups run sequentially (10 -> 20 -> 50 -> 100), so results can be compared by group name.
-- If you want stricter real-time behavior, reduce ramp-up for each group.
-- If your homepage changes to `/`, keep sampler path as `/login` or update assertion rules for 302 redirect.
