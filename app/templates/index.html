@@ -1,37 +1,208 @@
-<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>首页 - AI 文本检测系统</title>
-  <link rel="preload" href="/static/styles.css?v=20260420-4" as="style" />
-  <link rel="stylesheet" href="/static/styles.css?v=20260420-4" />
-</head>
-<body>
-  <noscript>
-    <div style="padding:16px;background:#ffefef;color:#802020;text-align:center;">本页面依赖 JavaScript，建议启用后继续使用。</div>
-  </noscript>
+<main class="home-wrap" role="main">
 
-  <div class="bg-shape bg-one"></div>
-  <div class="bg-shape bg-two"></div>
+  <section
+    class="card home-card"
+    aria-labelledby="homeTitle"
+  >
 
-  <main class="home-wrap" role="main">
-    <section class="card home-card" aria-labelledby="homeTitle">
-      <h1 id="homeTitle">欢迎使用 AI 文本检测系统</h1>
-      <p>集成登录、注册、检测与历史查看功能，简单、高效、可信赖。</p>
-      <div class="home-actions">
-        <button id="loginBtn" class="primary" type="button">登录</button>
-        <button id="registerBtn" class="ghost" type="button">注册</button>
+    <!-- Hero -->
+
+    <h1 id="homeTitle">
+      欢迎使用 AI 文本检测系统
+    </h1>
+
+    <p>
+      集成登录、注册、文本检测、
+      检测历史管理等功能，
+      为用户提供高效可靠的
+      AI生成文本识别服务。
+    </p>
+
+    <div class="home-actions">
+
+      <button
+        id="loginBtn"
+        class="primary"
+        type="button">
+        登录
+      </button>
+
+      <button
+        id="registerBtn"
+        class="ghost"
+        type="button">
+        注册
+      </button>
+
+    </div>
+
+    <div
+      class="home-links"
+      aria-label="首页快速链接">
+
+      <button
+        id="goDetectBtn"
+        class="ghost"
+        type="button">
+        直接检测
+      </button>
+
+      <button
+        id="viewHistoryBtn"
+        class="ghost"
+        type="button">
+        历史记录
+      </button>
+
+    </div>
+
+  </section>
+
+
+  <!-- ============================================================
+       System Features
+  ============================================================= -->
+
+  <section class="card feature-card">
+
+    <h2>系统功能</h2>
+
+    <div class="feature-grid">
+
+      <div class="feature-item">
+        <h3>文本检测</h3>
+        <p>
+          支持输入文本进行
+          AI生成内容识别。
+        </p>
       </div>
-      <div class="home-links" aria-label="首页快速链接">
-        <button id="goDetectBtn" class="ghost" type="button">直接检测</button>
-        <button id="viewHistoryBtn" class="ghost" type="button">历史记录</button>
-      </div>
-      <p class="muted home-footer">已支持 TXT、DOC、DOCX 文件上传与 AI 检测历史管理。</p>
-    </section>
-  </main>
 
-  <script src="/static/common.js?v=20260417-6"></script>
-  <script src="/static/app.js?v=20260417-6"></script>
-</body>
-</html>
+      <div class="feature-item">
+        <h3>文件上传</h3>
+        <p>
+          支持 TXT、DOC、DOCX
+          文件上传检测。
+        </p>
+      </div>
+
+      <div class="feature-item">
+        <h3>历史管理</h3>
+        <p>
+          自动保存检测记录，
+          支持历史结果查询。
+        </p>
+      </div>
+
+      <div class="feature-item">
+        <h3>账号安全</h3>
+        <p>
+          基于 JWT 的身份认证机制，
+          提升系统安全性。
+        </p>
+      </div>
+
+    </div>
+
+  </section>
+
+
+  <!-- ============================================================
+       Detection Workflow
+  ============================================================= -->
+
+  <section class="card workflow-card">
+
+    <h2>检测流程</h2>
+
+    <ol class="workflow-list">
+
+      <li>
+        用户登录系统
+      </li>
+
+      <li>
+        输入文本或上传文件
+      </li>
+
+      <li>
+        系统调用检测模型
+      </li>
+
+      <li>
+        返回检测结果与概率分析
+      </li>
+
+      <li>
+        自动保存历史记录
+      </li>
+
+    </ol>
+
+  </section>
+
+
+  <!-- ============================================================
+       Statistics
+  ============================================================= -->
+
+  <section class="card stats-card">
+
+    <h2>系统概览</h2>
+
+    <div class="stats-grid">
+
+      <div class="stat-item">
+        <span class="stat-number">
+          3+
+        </span>
+        <span class="stat-label">
+          支持文件格式
+        </span>
+      </div>
+
+      <div class="stat-item">
+        <span class="stat-number">
+          24h
+        </span>
+        <span class="stat-label">
+          在线服务
+        </span>
+      </div>
+
+      <div class="stat-item">
+        <span class="stat-number">
+          JWT
+        </span>
+        <span class="stat-label">
+          身份认证
+        </span>
+      </div>
+
+    </div>
+
+  </section>
+
+
+  <!-- ============================================================
+       Footer
+  ============================================================= -->
+
+  <section class="card about-card">
+
+    <h2>关于系统</h2>
+
+    <p>
+      本系统基于前后端分离架构开发，
+      实现用户认证、文本检测、
+      文件上传以及历史记录管理等功能，
+      旨在为 AI 生成内容识别研究
+      提供可视化平台支持。
+    </p>
+
+    <p class="muted">
+      Version 1.0.0
+    </p>
+
+  </section>
+
+</main>
