@@ -1,399 +1,232 @@
+"""
+数据访问层模块 (Data Access Layer - SQLite)
+
+"""
+
 import json
+import logging
 import sqlite3
 from contextlib import contextmanager
-from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Iterator, Optional, List, Dict
+from typing import Any, Generator, Optional
 
 from .config import DB_PATH
 
+logger = logging.getLogger(__name__)
 
-# =========================
-# Database Configuration
-# =========================
+# ==========================================
+# 1. 常量与安全基线 (Constants & Baselines)
+# ==========================================
 
-@dataclass(frozen=True)
-class DatabaseConfig:
-    """数据库配置类"""
-    path: Path = Path(DB_PATH)
+# 【安全检测说明】限制单次查询的最大返回条数，防止恶意用户请求海量数据导致内存耗尽 (DoS 攻击)
+MAX_QUERY_LIMIT = 1000
+DEFAULT_QUERY_LIMIT = 50
 
 
-# =========================
-# Connection Manager
-# =========================
+# ==========================================
+# 2. 数据库连接与事务管理 (Connection & Transaction Management)
+# ==========================================
 
 @contextmanager
-def sqlite_connection(config: DatabaseConfig = DatabaseConfig()) -> Iterator[sqlite3.Connection]:
+def get_db() -> Generator[sqlite3.Connection, None, None]:
     """
-    数据库连接上下文管理器，自动处理事务和资源释放
+    获取数据库连接的上下文管理器。
 
-    Args:
-        config: 数据库配置对象
-
-    Yields:
-        SQLite数据库连接对象
+    【安全检测说明】
+    - 自动管理事务的提交与回滚，确保数据一致性。
+    - 使用 finally 块确保连接在任何情况下（包括未捕获异常）都会被关闭，防止文件描述符泄漏。
     """
-    # 确保数据库目录存在
-    config.path.parent.mkdir(parents=True, exist_ok=True)
+    # 确保数据库所在目录存在
+    Path(DB_PATH).parent.mkdir(parents=True, exist_ok=True)
 
-    # 建立连接
-    conn = sqlite3.connect(config.path)
-    conn.row_factory = sqlite3.Row  # 返回字典式行对象
+    conn = sqlite3.connect(str(DB_PATH))
+    conn.row_factory = sqlite3.Row
+
+    # 【安全检测说明】SQLite 默认不启用外键约束，必须显式开启以防止产生孤立数据 (Orphaned Records)
+    conn.execute("PRAGMA foreign_keys = ON")
 
     try:
         yield conn
-        conn.commit()  # 无异常则提交事务
-    except sqlite3.DatabaseError:
-        conn.rollback()  # 发生异常则回滚
+        conn.commit()
+    except Exception as e:
+        conn.rollback()
+        logger.error("Database transaction failed, rolling back: %s", e)
         raise
     finally:
-        conn.close()  # 确保连接被关闭
+        conn.close()
 
 
-# =========================
-# Internal Helpers
-# =========================
+# ==========================================
+# 3. 数据库初始化 (Database Initialization)
+# ==========================================
 
-def _execute(conn: sqlite3.Connection, sql: str, params: tuple[Any, ...]) -> sqlite3.Cursor:
-    """执行SQL语句并返回游标"""
-    return conn.execute(sql, params)
-
-
-def _fetch_one(conn: sqlite3.Connection, sql: str, params: tuple[Any, ...]) -> Optional[sqlite3.Row]:
-    """查询单条记录，返回None表示未找到"""
-    return _execute(conn, sql, params).fetchone()
-
-
-def _fetch_all(conn: sqlite3.Connection, sql: str, params: tuple[Any, ...]) -> list[sqlite3.Row]:
-    """查询多条记录，返回空列表表示无结果"""
-    return _execute(conn, sql, params).fetchall()
-
-
-# =========================
-# Database Initialization
-# =========================
-
-def init_db(config: DatabaseConfig = DatabaseConfig()) -> None:
+def init_db() -> None:
     """
-    初始化数据库表结构
-
-    创建两张表:
-    - users: 用户信息表
-    - detections: 检测记录表
+    初始化数据库表结构。
+    通常在应用启动时调用一次。
     """
-    with sqlite_connection(config) as conn:
-        # 用户表
-        conn.execute("""
-                     CREATE TABLE IF NOT EXISTS users
-                     (
-                         id
-                         INTEGER
-                         PRIMARY
-                         KEY
-                         AUTOINCREMENT,
-                         username
-                         TEXT
-                         UNIQUE
-                         NOT
-                         NULL,
-                         password_hash
-                         TEXT
-                         NOT
-                         NULL,
-                         created_at
-                         TEXT
-                         NOT
-                         NULL
-                     )
-                     """)
+    with get_db() as conn:
+        cur = conn.cursor()
 
-        # 检测记录表，级联删除
-        conn.execute("""
-                     CREATE TABLE IF NOT EXISTS detections
-                     (
-                         id
-                         INTEGER
-                         PRIMARY
-                         KEY
-                         AUTOINCREMENT,
-                         user_id
-                         INTEGER
-                         NOT
-                         NULL,
-                         input_text
-                         TEXT
-                         NOT
-                         NULL,
-                         result_json
-                         TEXT
-                         NOT
-                         NULL,
-                         created_at
-                         TEXT
-                         NOT
-                         NULL,
-                         FOREIGN
-                         KEY
-                     (
-                         user_id
-                     ) REFERENCES users
-                     (
-                         id
-                     ) ON DELETE CASCADE
-                         )
-                     """)
+        # 【安全检测说明】密码字段仅存储哈希值 (password_hash)，严禁存储明文
+        cur.execute(
+            """
+            CREATE TABLE IF NOT EXISTS users (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                username TEXT UNIQUE NOT NULL,
+                password_hash TEXT NOT NULL,
+                created_at TEXT NOT NULL
+            )
+            """
+        )
 
-        # 创建索引优化查询性能
-        conn.execute("CREATE INDEX IF NOT EXISTS idx_detections_user_id ON detections(user_id)")
-        conn.execute("CREATE INDEX IF NOT EXISTS idx_detections_created_at ON detections(created_at)")
+        cur.execute(
+            """
+            CREATE TABLE IF NOT EXISTS detections (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER NOT NULL,
+                input_text TEXT NOT NULL,
+                result_json TEXT NOT NULL,
+                created_at TEXT NOT NULL,
+                FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
+            )
+            """
+        )
+
+        # 为 user_id 添加索引，加速按用户查询检测记录
+        cur.execute(
+            """
+            CREATE INDEX IF NOT EXISTS idx_detections_user_id 
+            ON detections(user_id)
+            """
+        )
 
 
-# =========================
-# User Operations
-# =========================
+# ==========================================
+# 4. 用户管理操作 (User Management)
+# ==========================================
 
-def create_user(username: str, password_hash: str, config: DatabaseConfig = DatabaseConfig()) -> int:
+def create_user(username: str, password_hash: str) -> int:
     """
-    创建新用户
+    创建新用户。
 
     Args:
-        username: 用户名（唯一）
-        password_hash: 加密后的密码
-        config: 数据库配置
+        username: 用户名。
+        password_hash: 经过安全哈希处理后的密码字符串。
 
     Returns:
-        新创建的用户ID
+        新创建的用户 ID。
     """
-    now = datetime.now().isoformat()
-    with sqlite_connection(config) as conn:
-        cur = _execute(
-            conn,
-            "INSERT INTO users(username, password_hash, created_at) VALUES (?, ?, ?)",
+    # 【安全检测说明】使用 UTC 时间，避免服务器时区变更导致的时间错乱
+    now = datetime.now(timezone.utc).isoformat()
+
+    with get_db() as conn:
+        cur = conn.cursor()
+        # 【安全核心】严格使用 ? 参数化查询，防御 SQL 注入
+        cur.execute(
+            "INSERT INTO users (username, password_hash, created_at) VALUES (?, ?, ?)",
             (username, password_hash, now),
         )
-        return cur.lastrowid
+        return int(cur.lastrowid or 0)
 
 
-def get_user_by_username(username: str, config: DatabaseConfig = DatabaseConfig()) -> Optional[sqlite3.Row]:
+def get_user_by_username(username: str) -> Optional[sqlite3.Row]:
+    """根据用户名查询用户"""
+    with get_db() as conn:
+        cur = conn.cursor()
+        cur.execute("SELECT * FROM users WHERE username = ?", (username,))
+        return cur.fetchone()
+
+
+def get_user_by_id(user_id: int) -> Optional[sqlite3.Row]:
+    """根据用户 ID 查询用户"""
+    with get_db() as conn:
+        cur = conn.cursor()
+        cur.execute("SELECT * FROM users WHERE id = ?", (user_id,))
+        return cur.fetchone()
+
+
+# ==========================================
+# 5. 检测记录操作 (Detection Records)
+# ==========================================
+
+def save_detection(user_id: int, input_text: str, result: dict[str, Any]) -> int:
     """
-    根据用户名查询用户
+    保存 AI 文本检测结果。
 
     Args:
-        username: 用户名
-        config: 数据库配置
+        user_id: 关联的用户 ID。
+        input_text: 用户输入的待检测文本。
+        result: 模型返回的检测结果字典。
 
     Returns:
-        用户记录行对象，不存在则返回None
+        新创建的检测记录 ID。
     """
-    with sqlite_connection(config) as conn:
-        return _fetch_one(conn, "SELECT * FROM users WHERE username = ?", (username,))
+    now = datetime.now(timezone.utc).isoformat()
+    result_json = json.dumps(result, ensure_ascii=False)
 
-
-def get_user_by_id(user_id: int, config: DatabaseConfig = DatabaseConfig()) -> Optional[sqlite3.Row]:
-    """
-    根据用户ID查询用户
-
-    Args:
-        user_id: 用户ID
-        config: 数据库配置
-
-    Returns:
-        用户记录行对象，不存在则返回None
-    """
-    with sqlite_connection(config) as conn:
-        return _fetch_one(conn, "SELECT * FROM users WHERE id = ?", (user_id,))
-
-
-def delete_user(user_id: int, config: DatabaseConfig = DatabaseConfig()) -> bool:
-    """
-    删除用户及其所有关联记录
-
-    Args:
-        user_id: 用户ID
-        config: 数据库配置
-
-    Returns:
-        是否删除成功
-    """
-    with sqlite_connection(config) as conn:
-        cur = _execute(conn, "DELETE FROM users WHERE id = ?", (user_id,))
-        return cur.rowcount > 0
-
-
-def update_user_password(user_id: int, new_password_hash: str, config: DatabaseConfig = DatabaseConfig()) -> bool:
-    """
-    更新用户密码
-
-    Args:
-        user_id: 用户ID
-        new_password_hash: 新密码的哈希值
-        config: 数据库配置
-
-    Returns:
-        是否更新成功
-    """
-    with sqlite_connection(config) as conn:
-        cur = _execute(
-            conn,
-            "UPDATE users SET password_hash = ? WHERE id = ?",
-            (new_password_hash, user_id),
+    with get_db() as conn:
+        cur = conn.cursor()
+        cur.execute(
+            "INSERT INTO detections (user_id, input_text, result_json, created_at) VALUES (?, ?, ?, ?)",
+            (user_id, input_text, result_json, now),
         )
-        return cur.rowcount > 0
+        return int(cur.lastrowid or 0)
 
 
-# =========================
-# Detection Operations
-# =========================
-
-def save_detection(user_id: int, input_text: str, result: dict[str, Any],
-                   config: DatabaseConfig = DatabaseConfig()) -> int:
+def list_detections(user_id: int, limit: int = DEFAULT_QUERY_LIMIT) -> list[dict[str, Any]]:
     """
-    保存检测记录
+    获取指定用户的检测记录列表。
 
-    Args:
-        user_id: 用户ID
-        input_text: 原始输入文本
-        result: 检测结果字典
-        config: 数据库配置
-
-    Returns:
-        新创建的检测记录ID
+    【安全检测说明 - DoS 防护】
+    必须对 limit 参数进行上限校验，防止攻击者传入 limit=99999999 导致数据库 OOM 或网络带宽耗尽。
     """
-    now = datetime.now().isoformat()
-    with sqlite_connection(config) as conn:
-        cur = _execute(
-            conn,
-            "INSERT INTO detections(user_id, input_text, result_json, created_at) VALUES (?, ?, ?, ?)",
-            (user_id, input_text, json.dumps(result, ensure_ascii=False), now),
-        )
-        return cur.lastrowid
+    # 防御性校验：限制最大查询条数
+    safe_limit = max(1, min(limit, MAX_QUERY_LIMIT))
 
-
-def get_detection_by_id(detection_id: int, user_id: int, config: DatabaseConfig = DatabaseConfig()) -> Optional[
-    dict[str, Any]]:
-    """
-    根据ID获取单条检测记录（需验证用户权限）
-
-    Args:
-        detection_id: 检测记录ID
-        user_id: 用户ID（用于权限验证）
-        config: 数据库配置
-
-    Returns:
-        检测记录字典，不存在或无权限则返回None
-    """
-    with sqlite_connection(config) as conn:
-        row = _fetch_one(
-            conn,
-            "SELECT id, input_text, result_json, created_at FROM detections WHERE id = ? AND user_id = ?",
-            (detection_id, user_id),
-        )
-        if row is None:
-            return None
-
-        return {
-            "id": row["id"],
-            "input_text": row["input_text"],
-            "result": json.loads(row["result_json"]),
-            "created_at": row["created_at"],
-        }
-
-
-def list_detections(
-        user_id: int,
-        limit: int = 50,
-        offset: int = 0,
-        config: DatabaseConfig = DatabaseConfig()
-) -> List[dict[str, Any]]:
-    """
-    列出用户的检测记录，支持分页
-
-    Args:
-        user_id: 用户ID
-        limit: 返回记录数量限制
-        offset: 偏移量（用于分页）
-        config: 数据库配置
-
-    Returns:
-        检测记录列表
-    """
-    with sqlite_connection(config) as conn:
-        rows = _fetch_all(
-            conn,
+    with get_db() as conn:
+        cur = conn.cursor()
+        cur.execute(
             """
             SELECT id, input_text, result_json, created_at
             FROM detections
             WHERE user_id = ?
-            ORDER BY id DESC LIMIT ?
-            OFFSET ?
+            ORDER BY id DESC
+            LIMIT ?
             """,
-            (user_id, limit, offset),
+            (user_id, safe_limit),
         )
+        rows = cur.fetchall()
 
-    return [
-        {
-            "id": row["id"],
-            "input_text": row["input_text"],
-            "result": json.loads(row["result_json"]),
-            "created_at": row["created_at"],
-        }
-        for row in rows
-    ]
+    results: list[dict[str, Any]] = []
+    for row in rows:
+        try:
+            parsed_result = json.loads(row["result_json"])
+        except json.JSONDecodeError:
+            logger.warning("Failed to parse result_json for detection id=%s", row["id"])
+            parsed_result = {}
+
+        results.append(
+            {
+                "id": row["id"],
+                "input_text": row["input_text"],
+                "result": parsed_result,
+                "created_at": row["created_at"],
+            }
+        )
+    return results
 
 
-def count_detections(user_id: int, config: DatabaseConfig = DatabaseConfig()) -> int:
+def clear_detections(user_id: int) -> int:
     """
-    统计用户的检测记录总数
-
-    Args:
-        user_id: 用户ID
-        config: 数据库配置
+    清空指定用户的所有检测记录。
 
     Returns:
-        检测记录总数
+        被删除的记录条数。
     """
-    with sqlite_connection(config) as conn:
-        row = _fetch_one(
-            conn,
-            "SELECT COUNT(*) as count FROM detections WHERE user_id = ?",
-            (user_id,),
-        )
-        return row["count"] if row else 0
-
-
-def clear_detections(user_id: int, config: DatabaseConfig = DatabaseConfig()) -> int:
-    """
-    清空用户的检测记录
-
-    Args:
-        user_id: 用户ID
-        config: 数据库配置
-
-    Returns:
-        删除的记录条数
-    """
-    with sqlite_connection(config) as conn:
-        cur = _execute(conn, "DELETE FROM detections WHERE user_id = ?", (user_id,))
-        return cur.rowcount
-
-
-def delete_detection_by_id(detection_id: int, user_id: int, config: DatabaseConfig = DatabaseConfig()) -> bool:
-    """
-    删除单条检测记录（需验证用户权限）
-
-    Args:
-        detection_id: 检测记录ID
-        user_id: 用户ID（用于权限验证）
-        config: 数据库配置
-
-    Returns:
-        是否删除成功
-    """
-    with sqlite_connection(config) as conn:
-        cur = _execute(
-            conn,
-            "DELETE FROM detections WHERE id = ? AND user_id = ?",
-            (detection_id, user_id),
-        )
-        return cur.rowcount > 0
+    with get_db() as conn:
+        cur = conn.cursor()
+        # 【安全核心】必须带有 WHERE 条件，严禁执行无条件的 DELETE 导致全表数据丢失
+        cur.execute("DELETE FROM detections WHERE user_id = ?", (user_id,))
+        return int(cur.rowcount)
