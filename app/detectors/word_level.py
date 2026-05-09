@@ -31,6 +31,8 @@ from .utils import split_sentences, tokenize_with_spans
 logger = logging.getLogger(__name__)
 
 
+deberta_HASH = "8ccc9b6f36199bec6961081d44eb72fb3f7353f3"
+
 # ---------------------------------------------------------------------------
 # 常量与枚举
 # ---------------------------------------------------------------------------
@@ -240,11 +242,11 @@ class WordLevelDetector:
 
         self._torch = torch
         self._infer_fn = infer_document_with_sliding_windows
-        self.tokenizer = AutoTokenizer.from_pretrained(WORD_MODEL_NAME)
+        self.tokenizer = AutoTokenizer.from_pretrained(WORD_MODEL_NAME, revision=deberta_HASH)
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.model = DeBERTaCRFTagger(WORD_MODEL_NAME, self.NUM_LABELS).to(self.device)
 
-        ckpt = torch.load(WORD_MODEL_PATH, map_location=self.device, weights_only=False)
+        ckpt = torch.load(WORD_MODEL_PATH, map_location=self.device, weights_only=True)
         state = ckpt.get("model_state_dict", ckpt)
         self.model.load_state_dict(state)
         self.model.eval()
@@ -647,7 +649,7 @@ class WordLevelDetector:
                 encoding="utf-8",
                 errors="ignore",
                 timeout=self.BACKEND_TIMEOUT_SECONDS,
-            )
+            )# nosec B603
             payload = json.loads(completed.stdout.strip())
             boundary_idx = int(payload.get("boundary_idx", 0))
             logger.debug("External backend returned boundary_idx=%d", boundary_idx)

@@ -52,6 +52,7 @@ IGNORE_INDEX: int = -100
 PAD_LABEL: int = 0
 DEFAULT_DROPOUT: float = 0.1
 
+deberta_HASH = "8ccc9b6f36199bec6961081d44eb72fb3f7353f3"
 
 # ======================== 配置 ========================
 
@@ -129,7 +130,7 @@ class DeBERTaCRFTagger(nn.Module):
             raise ValueError(f"dropout_rate must be in [0, 1), got {dropout_rate}")
 
         self.num_labels: int = num_labels
-        self.deberta: AutoModel = AutoModel.from_pretrained(model_name)
+        self.deberta: AutoModel = AutoModel.from_pretrained(model_name, revision=deberta_HASH)
         self.dropout: nn.Dropout = nn.Dropout(dropout_rate)
 
         hidden_size: int = self.deberta.config.hidden_size
@@ -264,8 +265,8 @@ def decode_window_word_predictions(
     word_ids: list[int | None] | None = None
     try:
         word_ids = encoding.word_ids(batch_index=0)
-    except (AttributeError, TypeError, IndexError) as exc:
-        logger.debug("word_ids() unavailable, falling back to special_tokens_mask: %s", exc)
+    except (AttributeError, TypeError, IndexError) :
+        logger.debug("word_ids() unavailable, falling back to special_tokens_mask")
 
     # ---- 回退方案 ----
     if word_ids is None:

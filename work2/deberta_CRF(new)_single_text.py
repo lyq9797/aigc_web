@@ -29,6 +29,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+deberta_HASH = "8ccc9b6f36199bec6961081d44eb72fb3f7353f3"
 
 @dataclass
 class InferenceConfig:
@@ -280,14 +281,14 @@ class InferenceEngine:
 
 def load_model_and_tokenizer(config: InferenceConfig, device: torch.device) -> Tuple[DeBERTaCRFTagger, AutoTokenizer]:
     """Initializes and loads the model and tokenizer."""
-    tokenizer = AutoTokenizer.from_pretrained(config.model_name)
+    tokenizer = AutoTokenizer.from_pretrained(config.model_name, revision=deberta_HASH)
     model = DeBERTaCRFTagger(config).to(device)
 
     if not os.path.exists(config.best_model_path):
         raise FileNotFoundError(f"Model checkpoint not found at {config.best_model_path}")
 
     logger.info(f"Loading model weights from {config.best_model_path}")
-    ckpt = torch.load(config.best_model_path, map_location=device, weights_only=False)
+    ckpt = torch.load(config.best_model_path, map_location=device, weights_only=True)
     state_dict = ckpt.get("model_state_dict", ckpt)
     model.load_state_dict(state_dict)
 
