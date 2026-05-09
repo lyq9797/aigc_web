@@ -2,39 +2,118 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="description" content="AI文本检测系统登录 - 安全访问您的检测记录" />
+  <meta name="theme-color" content="#0f7d6b" />
   <title>登录 - AI 文本检测系统</title>
   <link rel="preload" href="/static/styles.css?v=20260420-4" as="style" />
   <link rel="stylesheet" href="/static/styles.css?v=20260420-4" />
+  <link rel="icon" type="image/x-icon" href="/static/favicon.ico" />
 </head>
 <body>
   <noscript>
-    <div style="padding:16px;background:#ffefef;color:#802020;text-align:center;">本页面依赖 JavaScript，建议启用后继续使用。</div>
+    <div class="noscript-warning">
+      ⚠️ 本页面依赖 JavaScript，请启用后继续使用。
+    </div>
   </noscript>
 
+  <!-- Background decoration -->
   <div class="bg-shape bg-one"></div>
   <div class="bg-shape bg-two"></div>
 
+  <!-- ========================================================================
+       Main Content - Login Page
+    ======================================================================= -->
+
   <main class="auth-wrap" role="main">
     <section class="card auth-box" aria-labelledby="loginTitle">
-      <h1 id="loginTitle" class="auth-title">用户登录</h1>
-      <p class="muted auth-subtitle">请输入您的用户名与密码</p>
-      <form id="loginForm" class="auth-form" novalidate>
-        <label for="username">用户名</label>
-        <input id="username" name="username" type="text" autocomplete="username" placeholder="用户名" required />
 
-        <label for="password">密码</label>
-        <div class="password-input-wrap">
-          <input id="password" name="password" type="password" autocomplete="current-password" placeholder="请输入密码" required />
-          <button id="togglePasswordBtn" type="button" class="password-eye" aria-label="显示或隐藏密码" title="显示/隐藏密码"></button>
+      <!-- Logo / Header -->
+      <div class="auth-logo">
+        <span class="logo-icon">🤖</span>
+      </div>
+      <h1 id="loginTitle" class="auth-title">欢迎回来</h1>
+      <p class="auth-subtitle">请登录您的账号继续使用</p>
+
+      <!-- Login Form -->
+      <form id="loginForm" class="auth-form" novalidate>
+        <div class="form-field">
+          <label for="username">
+            <span class="field-icon">👤</span> 用户名
+          </label>
+          <input
+            id="username"
+            name="username"
+            type="text"
+            autocomplete="username"
+            placeholder="请输入用户名"
+            required
+          />
         </div>
 
-        <button id="loginBtn" class="primary big" type="submit">登录</button>
+        <div class="form-field">
+          <label for="password">
+            <span class="field-icon">🔒</span> 密码
+          </label>
+          <div class="password-input-wrap">
+            <input
+              id="password"
+              name="password"
+              type="password"
+              autocomplete="current-password"
+              placeholder="请输入密码"
+              required
+            />
+            <button
+              id="togglePasswordBtn"
+              type="button"
+              class="password-eye"
+              aria-label="显示或隐藏密码"
+              title="显示/隐藏密码"
+            >
+              👁️
+            </button>
+          </div>
+        </div>
+
+        <div class="form-options">
+          <label class="checkbox-label">
+            <input type="checkbox" id="rememberMe" />
+            <span>记住我</span>
+          </label>
+          <a href="#" class="forgot-link">忘记密码？</a>
+        </div>
+
+        <button id="loginBtn" class="btn-primary btn-lg" type="submit">
+          🔓 登录
+        </button>
       </form>
-      <button id="goRegisterBtn" class="ghost big" type="button">没有账号？去注册</button>
-      <p id="msg" class="msg" aria-live="polite"></p>
+
+      <!-- Register link -->
+      <div class="auth-footer">
+        <p class="muted">还没有账号？</p>
+        <button id="goRegisterBtn" class="btn-link" type="button">
+          立即注册 →
+        </button>
+      </div>
+
+      <!-- Message area -->
+      <div id="msg" class="msg" aria-live="polite"></div>
+
     </section>
   </main>
+
+  <!-- Loading overlay -->
+  <div id="loadingOverlay" class="loading-overlay hidden">
+    <div class="loading-spinner">
+      <div class="spinner"></div>
+      <p>登录中...</p>
+    </div>
+  </div>
+
+  <!-- ========================================================================
+       Scripts
+    ======================================================================== -->
 
   <script src="/static/common.js?v=20260417-6"></script>
   <script src="/static/login.js?v=20260417-6"></script>
