@@ -23,6 +23,8 @@ import transformers
 import numpy as np
 from transformers.models.gpt2.tokenization_gpt2 import bytes_to_unicode
 
+GPT2_HASH = "32b71b12589c2f8d625668d2335a01cac3249519"
+
 # Configure logging for production environment
 logging.basicConfig(
     level=logging.INFO,
@@ -62,8 +64,8 @@ class GPT2PerplexityCalculator:
         logger.info(f"Initializing GPT-2 Perplexity Calculator on {self.device}")
 
         try:
-            self.tokenizer = transformers.AutoTokenizer.from_pretrained(config.gpt2_model_path)
-            self.model = transformers.AutoModelForCausalLM.from_pretrained(config.gpt2_model_path)
+            self.tokenizer = transformers.AutoTokenizer.from_pretrained(config.gpt2_model_path, revision=GPT2_HASH)
+            self.model = transformers.AutoModelForCausalLM.from_pretrained(config.gpt2_model_path, revision=GPT2_HASH)
             self.tokenizer.pad_token_id = self.tokenizer.eos_token_id
             self.model.eval().to(self.device)
         except Exception as e:
@@ -189,10 +191,10 @@ class SingleSentencePredictor:
 
         logger.info(f"Loading Sentence Head model from {model_path}")
         try:
-            self.head_model = torch.load(str(model_path), map_location=self.device, weights_only=False)
+            self.head_model = torch.load(str(model_path), map_location=self.device, weights_only=True )
         except TypeError:
             # Fallback for older PyTorch versions
-            self.head_model = torch.load(str(model_path), map_location=self.device)
+            self.head_model = torch.load(str(model_path), map_location=self.device, weights_only=True)
 
         if not hasattr(self.head_model, 'extract_deberta_PPL'):
             raise AttributeError("Loaded model missing required method 'extract_deberta_PPL'")

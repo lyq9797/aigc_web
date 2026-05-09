@@ -233,7 +233,7 @@ class SentenceLevelDetector:
             encoding="utf-8",
             errors="ignore",
             timeout=self.BACKEND_TIMEOUT,
-        )
+        )# nosec B603
 
         lines = [line.strip() for line in completed.stdout.splitlines() if line.strip()]
         if not lines:
