@@ -1,442 +1,427 @@
-// ============================================================================
-// DOM Elements
-// ============================================================================
+/**
+ * AI 文本检测系统 - 检测页面核心逻辑 (Detect Page Logic)
+ *
+ */
+(function (AppUtils) {
+  'use strict';
 
-const currentUserEl = document.getElementById('currentUser');
-const logoutBtn = document.getElementById('logoutBtn');
-const goHistoryBtn = document.getElementById('goHistoryBtn');
-const fileInput = document.getElementById('fileInput');
-const fileSelectBtn = document.getElementById('fileSelectBtn');
-const selectedFileName = document.getElementById('selectedFileName');
-const fileInfo = document.getElementById('fileInfo');
-const sampleBtn = document.getElementById('sampleBtn');
-const clearBtn = document.getElementById('clearBtn');
-const detectBtn = document.getElementById('detectBtn');
-const exportDetectBtn = document.getElementById('exportDetectBtn');
-const inputText = document.getElementById('inputText');
-const exportDetectMenu = document.getElementById('exportDetectMenu');
-const exportDetectTxtBtn = document.getElementById('exportDetectTxtBtn');
-const exportDetectJsonBtn = document.getElementById('exportDetectJsonBtn');
-const detectMsg = document.getElementById('detectMsg');
-const wordHighlightContent = document.getElementById('wordHighlightContent');
-const sentenceList = document.getElementById('sentenceList');
-
-
-// ============================================================================
-// Module State
-// ============================================================================
-
-let currentDetectResult = null;      // 当前检测结果
-let currentDetectTime = null;        // 当前检测时间
-let currentExportFormat = 'txt';     // 当前导出格式
-let isDetecting = false;             // 是否正在检测中
-
-
-// ============================================================================
-// Date/Time Utilities
-// ============================================================================
-
-/** 格式化导出时间（显示用） */
-function formatExportDateTime(date) {
-  const value = date instanceof Date ? date : new Date();
-  const y = value.getFullYear();
-  const m = String(value.getMonth() + 1).padStart(2, '0');
-  const d = String(value.getDate()).padStart(2, '0');
-  const h = String(value.getHours()).padStart(2, '0');
-  const min = String(value.getMinutes()).padStart(2, '0');
-  const s = String(value.getSeconds()).padStart(2, '0');
-  return `${y}-${m}-${d} ${h}:${min}:${s}`;
-}
-
-/** 格式化文件名时间戳 */
-function formatExportFileTime(date) {
-  const value = date instanceof Date ? date : new Date();
-  const y = value.getFullYear();
-  const m = String(value.getMonth() + 1).padStart(2, '0');
-  const d = String(value.getDate()).padStart(2, '0');
-  const h = String(value.getHours()).padStart(2, '0');
-  const min = String(value.getMinutes()).padStart(2, '0');
-  const s = String(value.getSeconds()).padStart(2, '0');
-  return `${y}${m}${d}_${h}${min}${s}`;
-}
-
-
-// ============================================================================
-// UI Helpers
-// ============================================================================
-
-/** 设置检测消息 */
-function setDetectMessage(text, type = 'normal') {
-  if (!detectMsg) return;
-  detectMsg.textContent = text;
-  const colors = { error: '#b13f00', success: '#0a7f6f', warning: '#e67e22', normal: '#5f6c75' };
-  detectMsg.style.color = colors[type] || colors.normal;
-}
-
-/** 显示加载状态 */
-function setLoading(loading) {
-  isDetecting = loading;
-  if (detectBtn) {
-    detectBtn.disabled = loading;
-    detectBtn.textContent = loading ? '检测中...' : '开始检测';
-  }
-}
-
-/** 加载示例文本 */
-function loadSampleText() {
-  const sample = "人工智能技术正在快速发展，深度学习模型在自然语言处理领域取得了显著成果。然而，AI生成的内容检测仍然是一个具有挑战性的问题。研究人员正在开发更精确的检测方法来识别机器生成的文本。";
-  if (inputText) {
-    inputText.value = sample;
-    setDetectMessage('示例文本已加载', 'success');
-  }
-}
-
-/** 清除输入内容 */
-function clearInputText() {
-  if (inputText) {
-    inputText.value = '';
-    setDetectMessage('已清除', 'normal');
-  }
-  // 清空检测结果
-  if (wordHighlightContent) {
-    wordHighlightContent.innerHTML = '<div class="muted">暂无结果</div>';
-  }
-  if (sentenceList) {
-    sentenceList.innerHTML = '<div class="muted">暂无结果</div>';
-  }
-  currentDetectResult = null;
-  updateExportState();
-}
-
-
-// ============================================================================
-// File Export Utilities
-// ============================================================================
-
-/** 下载文本文件 */
-function downloadTextFile(filename, content, mimeType) {
-  const blob = new Blob([content], { type: mimeType });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = filename;
-  document.body.appendChild(link);
-  link.click();
-  link.remove();
-  URL.revokeObjectURL(url);
-  setDetectMessage(`已导出: ${filename}`, 'success');
-}
-
-
-// ============================================================================
-// Rendering Functions
-// ============================================================================
-
-/** 渲染词级高亮 */
-function renderWordHighlight(words) {
-  if (!wordHighlightContent) return;
-  if (!words || !words.length) {
-    wordHighlightContent.innerHTML = '<div class="muted">暂无结果</div>';
+  // 校验公共模块是否加载
+  if (!AppUtils || !AppUtils.api) {
+    console.error('AppUtils 未加载，请确保 common.js 在 detect.js 之前引入');
     return;
   }
-  wordHighlightContent.innerHTML = words
-    .map((w) => {
-      const cls = w.label_id === 1 ? 'aigt' : 'hwt';
-      const label = w.label === 'AIGT' ? 'AI生成' : '人类写作';
-      return `<span class="word ${cls}" title="${escapeHtml(label)}">${escapeHtml(w.token)}</span>`;
-    })
-    .join(' ');
-}
 
-/** 渲染句子级结果 */
-function renderSentences(sentences) {
-  if (!sentenceList) return;
-  if (!sentences || !sentences.length) {
-    sentenceList.innerHTML = '<div class="muted">暂无结果</div>';
-    return;
+  const { Auth, api, escapeHtml, requireLogin } = AppUtils;
+
+  /* ==========================================
+   * 1. 常量与配置 (Constants & Configuration)
+   * ========================================== */
+  const CONFIG = {
+    API_PATHS: {
+      EXTRACT_TEXT: '/api/extract-text',
+      DETECT: '/api/detect',
+    },
+    ROUTES: {
+      LOGIN: '/login',
+      HISTORY: '/history',
+    },
+    UI_COLORS: {
+      SUCCESS: '#0a7f6f',
+      ERROR: '#b13f00',
+      INFO: '#5f6c75',
+    },
+    FILE_UPLOAD: {
+      ALLOWED_EXTENSIONS: ['.txt', '.doc', '.docx'],
+      MAX_SIZE_MB: 10,
+    },
+    SAMPLE_TEXT: 'Running May Be Socially Contagious. They have also suggested that people may share and reinforce one another\'s political beliefs, religious views, or sexual identities. That question is at the heart of an important new study of exercise behavior, one of the first to use so-called big data culled from a large-scale, global social network of workout routines. The researchers focused on running, because so many of the network participants were runners. And what they found suggests that whether and how much we exercise can depend to a surprising extent on our responses to other people\'s training. The results also offer some practical advice for the runners among us, suggesting that if you wish to improve your performance, you might want to become virtual friends with people who are just a little bit slower than you are. "I am an atheist, but one of my friends is an agnostic," says Eric Anderson, a research Using data from surveys and postings on social media, scientists have reported that obesity, anxiety, weight loss and certain behaviors, including exercise routines, may be shared and intensified among friends.',
+  };
+
+  /* ==========================================
+   * 2. 状态与 DOM 缓存 (State & DOM Cache)
+   * ========================================== */
+
+  /** 集中管理页面运行时状态 */
+  const state = {
+    currentResult: null,
+    inputText: '',
+    detectTime: null,
+    exportFormat: 'txt',
+  };
+
+  /** 缓存所有需要频繁访问的 DOM 元素 */
+  const el = {
+    currentUser: document.getElementById('currentUser'),
+    logoutBtn: document.getElementById('logoutBtn'),
+    goHistoryBtn: document.getElementById('goHistoryBtn'),
+    fileInput: document.getElementById('fileInput'),
+    fileSelectBtn: document.getElementById('fileSelectBtn'),
+    selectedFileName: document.getElementById('selectedFileName'),
+    fileInfo: document.getElementById('fileInfo'),
+    sampleBtn: document.getElementById('sampleBtn'),
+    clearBtn: document.getElementById('clearBtn'),
+    detectBtn: document.getElementById('detectBtn'),
+    exportDetectBtn: document.getElementById('exportDetectBtn'),
+    inputText: document.getElementById('inputText'),
+    exportDetectMenu: document.getElementById('exportDetectMenu'),
+    exportDetectTxtBtn: document.getElementById('exportDetectTxtBtn'),
+    exportDetectJsonBtn: document.getElementById('exportDetectJsonBtn'),
+    detectMsg: document.getElementById('detectMsg'),
+    wordHighlightContent: document.getElementById('wordHighlightContent'),
+    sentenceList: document.getElementById('sentenceList'),
+  };
+
+  /* ==========================================
+   * 3. 工具函数 (Utilities)
+   * ========================================== */
+
+  /** 统一获取错误信息，兼容自定义 Error 对象和原生 Error */
+  function getErrorMessage(err, fallback = '操作失败') {
+    if (typeof err === 'string') return err;
+    if (err && typeof err.message === 'string') return err.message;
+    return fallback;
   }
-  sentenceList.innerHTML = sentences
-    .map((s) => {
+
+  /** 安全地更新提示消息 */
+  function setMessage(element, message, type = 'info') {
+    if (!element) return;
+    element.textContent = message;
+    element.style.color = CONFIG.UI_COLORS[type.toUpperCase()] || CONFIG.UI_COLORS.INFO;
+  }
+
+  /** 日期格式化：YYYY-MM-DD HH:mm:ss */
+  function formatDateTime(date = new Date()) {
+    const d = date instanceof Date ? date : new Date(date);
+    const pad = (n) => String(n).padStart(2, '0');
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+  }
+
+  /** 日期格式化：YYYYMMDD_HHmmss (用于文件名) */
+  function formatFileTime(date = new Date()) {
+    const d = date instanceof Date ? date : new Date(date);
+    const pad = (n) => String(n).padStart(2, '0');
+    return `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}_${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}`;
+  }
+
+  /** 触发浏览器文件下载 */
+  function downloadTextFile(filename, content, mimeType) {
+    const blob = new Blob([content], { type: mimeType });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  /* ==========================================
+   * 4. 导出功能逻辑 (Export Logic)
+   * ========================================== */
+
+  /** 清理导出数据，移除敏感或不必要的字段 */
+  function sanitizeExportResult(result) {
+    if (!result) return {};
+    const words = Array.isArray(result.words)
+      ? result.words.map((word) => ({ ...word, confidence: undefined }))
+      : [];
+    return { ...result, words, sentences: result.sentences || [] };
+  }
+
+  function buildExportData() {
+    return {
+      type: 'detect',
+      exported_at: new Date().toISOString(),
+      exported_at_local: formatDateTime(),
+      input_text: state.inputText,
+      result: sanitizeExportResult(state.currentResult),
+    };
+  }
+
+  function buildExportText() {
+    const data = buildExportData();
+    const words = data.result?.words || [];
+    const sentences = data.result?.sentences || [];
+
+    const wordLines = words.length
+      ? words.map((w, i) => {
+          const isAi = Number(w.label_id) === 1 || String(w.label || '').toUpperCase() === 'AIGT';
+          return `${i + 1}. ${String(w.token ?? '')}\t${isAi ? 'AIGT' : 'HWT'}`;
+        }).join('\n')
+      : '暂无结果';
+
+    const sentenceLines = sentences.length
+      ? sentences.map((s, i) => `${i + 1}. ${s.label}\t${s.confidence ?? '-'}\t${String(s.text ?? '')}`).join('\n')
+      : '暂无结果';
+
+    return [
+      'AI 文本检测结果',
+      `导出时间：${data.exported_at_local}`,
+      '',
+      '原始文本',
+      data.input_text || '暂无内容',
+      '',
+      '单词级结果',
+      '序号\t单词\t标签',
+      wordLines,
+      '',
+      '句子级结果',
+      '序号\t标签\t置信度\t文本',
+      sentenceLines,
+      '',
+    ].join('\n');
+  }
+
+  function updateExportBtnState() {
+    if (el.exportDetectBtn) {
+      el.exportDetectBtn.disabled = !state.currentResult;
+    }
+  }
+
+  function toggleExportMenu(forceHide = false) {
+    if (!el.exportDetectMenu) return;
+    const isHidden = forceHide ? true : el.exportDetectMenu.classList.toggle('hidden');
+    el.exportDetectMenu.setAttribute('aria-hidden', String(isHidden));
+  }
+
+  function handleExport(format) {
+    if (!state.currentResult) {
+      setMessage(el.detectMsg, '请先完成检测后再导出', 'error');
+      return;
+    }
+
+    const timeTag = formatFileTime(state.detectTime || new Date());
+    const baseName = `detect_result_${timeTag}`;
+    toggleExportMenu(true);
+
+    if (format === 'json') {
+      downloadTextFile(`${baseName}.json`, JSON.stringify(buildExportData(), null, 2) + '\n', 'application/json;charset=utf-8');
+    } else {
+      downloadTextFile(`${baseName}.txt`, buildExportText(), 'text/plain;charset=utf-8');
+    }
+  }
+
+  /* ==========================================
+   * 5. UI 渲染 (UI Rendering)
+   * ========================================== */
+
+  function renderWordHighlight(words) {
+    if (!words || !words.length) {
+      if (el.wordHighlightContent) el.wordHighlightContent.textContent = '暂无结果';
+      return;
+    }
+
+    const html = words.map((w) => {
+      const isAi = Number(w.label_id) === 1 || String(w.label || '').toUpperCase() === 'AIGT';
+      const cls = isAi ? 'aigt' : 'hwt';
+      const label = isAi ? 'AIGT' : 'HWT';
+      const confidence = w.confidence ?? '-';
+
+      const safeTitle = `${escapeHtml(label)} | 置信度 ${escapeHtml(String(confidence))}`;
+      const safeToken = escapeHtml(String(w.token ?? ''));
+
+      return `<span class="word ${cls}" title="${safeTitle}">${safeToken}</span>`;
+    }).join(' ');
+
+    if (el.wordHighlightContent) el.wordHighlightContent.innerHTML = html;
+  }
+
+  function renderSentences(sentences) {
+    if (!sentences || !sentences.length) {
+      if (el.sentenceList) el.sentenceList.innerHTML = '<div class="muted">暂无结果</div>';
+      return;
+    }
+
+    const html = sentences.map((s) => {
       const cls = s.label === 'AIGT' ? 'aigt' : 'hwt';
-      const confidencePercent = s.confidence ? (s.confidence * 100).toFixed(1) : '?';
+      const safeLabel = escapeHtml(String(s.label ?? ''));
+      const safeConfidence = escapeHtml(String(s.confidence ?? '-'));
+      const safeText = escapeHtml(String(s.text ?? ''));
+
       return `
         <div class="sentence-item ${cls}">
-          <div class="sentence-header">
-            <strong>句子 ${s.index + 1}</strong>
-            <span class="sentence-label">标签: ${escapeHtml(s.label)}</span>
-            <span class="sentence-confidence">置信度: ${confidencePercent}%</span>
+          <div class="sentence-meta">
+            <strong class="sentence-meta-index">句子 ${(s.index ?? 0) + 1}</strong>
+            <span class="sentence-meta-label">标签: ${safeLabel}</span>
+            <span class="sentence-meta-confidence">置信度: ${safeConfidence}</span>
           </div>
-          <div class="sentence-text">${escapeHtml(s.text)}</div>
+          <div>${safeText}</div>
         </div>
       `;
-    })
-    .join('');
-}
+    }).join('');
 
-/** 渲染摘要信息 */
-function renderSummary(summary) {
-  if (!summary) return;
-  const info = [];
-  if (summary.processing_time_ms) info.push(`耗时 ${summary.processing_time_ms}ms`);
-  if (summary.word_model) info.push(`词模型: ${summary.word_model}`);
-  if (summary.sentence_model) info.push(`句模型: ${summary.sentence_model}`);
-  if (info.length) {
-    console.log('检测摘要:', info.join(' | '));
+    if (el.sentenceList) el.sentenceList.innerHTML = html;
   }
-}
 
-/** 构建导出数据对象 */
-function buildExportData() {
-  return {
-    type: 'detect',
-    exported_at: new Date().toISOString(),
-    exported_at_local: formatExportDateTime(new Date()),
-    input_text: inputText?.value || '',
-    result: currentDetectResult || {},
-  };
-}
+  /* ==========================================
+   * 6. 核心业务逻辑 (Core Business Logic)
+   * ========================================== */
 
-/** 构建导出文本内容 */
-function buildExportText() {
-  const data = buildExportData();
-  const words = Array.isArray(data.result.words) ? data.result.words : [];
-  const sentences = Array.isArray(data.result.sentences) ? data.result.sentences : [];
+  async function handleFileUpload() {
+    const file = el.fileInput?.files?.[0];
+    if (!file) return;
 
-  const wordLines = words.length
-    ? words.map((word, index) => `${index + 1}. ${word.token}\t${word.label || (word.label_id === 1 ? 'AIGT' : 'HWT')}`).join('\n')
-    : '暂无结果';
+    const ext = '.' + file.name.split('.').pop().toLowerCase();
+    if (!CONFIG.FILE_UPLOAD.ALLOWED_EXTENSIONS.includes(ext)) {
+      setMessage(el.detectMsg, `不支持的文件格式，仅支持 ${CONFIG.FILE_UPLOAD.ALLOWED_EXTENSIONS.join(', ')}`, 'error');
+      el.fileInput.value = '';
+      return;
+    }
 
-  const sentenceLines = sentences.length
-    ? sentences.map((sentence, index) => `${index + 1}. ${sentence.label}\t${sentence.confidence ?? '-'}\t${sentence.text}`).join('\n')
-    : '暂无结果';
+    if (file.size > CONFIG.FILE_UPLOAD.MAX_SIZE_MB * 1024 * 1024) {
+      setMessage(el.detectMsg, `文件过大，最大支持 ${CONFIG.FILE_UPLOAD.MAX_SIZE_MB}MB`, 'error');
+      el.fileInput.value = '';
+      return;
+    }
 
-  return [
-    '=' .repeat(50),
-    'AI 文本检测结果',
-    '=' .repeat(50),
-    `导出时间：${data.exported_at_local}`,
-    '',
-    '【原始文本】',
-    data.input_text || '暂无内容',
-    '',
-    '【单词级结果】',
-    '序号\t单词\t标签',
-    wordLines,
-    '',
-    '【句子级结果】',
-    '序号\t标签\t置信度\t文本',
-    sentenceLines,
-    '',
-    '=' .repeat(50),
-  ].join('\n');
-}
+    if (el.selectedFileName) {
+      el.selectedFileName.textContent = file.name;
+      el.selectedFileName.classList.add('visible');
+    }
 
-/** 更新导出按钮状态 */
-function updateExportState() {
-  if (!exportDetectBtn) return;
-  exportDetectBtn.disabled = !currentDetectResult;
-}
+    try {
+      setMessage(el.detectMsg, '正在读取文件，请稍候...', 'info');
+      const formData = new FormData();
+      formData.append('file', file);
 
-/** 统一渲染检测结果 */
-function renderDetection(words, sentences, summary = null) {
-  renderWordHighlight(words);
-  renderSentences(sentences);
-  renderSummary(summary);
-  currentDetectResult = { words, sentences, summary };
-  currentDetectTime = new Date();
-  updateExportState();
-}
+      const res = await api(CONFIG.API_PATHS.EXTRACT_TEXT, 'POST', formData, true);
 
+      if (el.inputText) el.inputText.value = res.text || '';
+      if (el.selectedFileName) el.selectedFileName.textContent = res.filename || file.name;
+      if (el.fileInfo) el.fileInfo.textContent = `已加载，共 ${res.length || (res.text || '').length} 字符`;
 
-// ============================================================================
-// File Processing
-// ============================================================================
-
-/** 从文件读取并载入文本 */
-async function detectFileContent() {
-  if (!fileInput?.files?.[0]) return;
-  const file = fileInput.files[0];
-  
-  // 文件大小校验 (10MB)
-  if (file.size > 10 * 1024 * 1024) {
-    setDetectMessage('文件过大，请上传小于10MB的文件', 'error');
-    return;
+      setMessage(el.detectMsg, '文件内容已载入，可直接开始检测', 'success');
+    } catch (err) {
+      setMessage(el.detectMsg, getErrorMessage(err, '文件读取失败'), 'error');
+      if (el.selectedFileName) {
+        el.selectedFileName.textContent = '';
+        el.selectedFileName.classList.remove('visible');
+      }
+      if (el.fileInfo) el.fileInfo.textContent = `支持 ${CONFIG.FILE_UPLOAD.ALLOWED_EXTENSIONS.join('、')} 文件`;
+    } finally {
+      if (el.fileInput) el.fileInput.value = '';
+    }
   }
-  
-  selectedFileName.textContent = file.name;
-  selectedFileName.classList.add('visible');
-  
-  try {
-    setDetectMessage('正在读取文件，请稍候...', 'normal');
-    const formData = new FormData();
-    formData.append('file', file);
-    const res = await api('/api/extract-text', 'POST', formData, true);
-    
-    inputText.value = res.text || '';
-    selectedFileName.textContent = res.filename || file.name;
-    fileInfo.textContent = `已加载，共 ${res.length || inputText.value.length} 字符`;
-    setDetectMessage('文件内容已载入，可直接开始检测', 'success');
-  } catch (err) {
-    setDetectMessage(err.message || '文件读取失败', 'error');
-    selectedFileName.textContent = '';
-    selectedFileName.classList.remove('visible');
-    fileInfo.textContent = '支持 .txt、.doc、.docx 文件';
-  }
-}
 
-
-// ============================================================================
-// Export Menu
-// ============================================================================
-
-/** 切换导出菜单显隐 */
-function toggleExportMenu() {
-  if (!exportDetectMenu || !exportDetectBtn || exportDetectBtn.disabled) return;
-  const isHidden = exportDetectMenu.classList.toggle('hidden');
-  exportDetectMenu.setAttribute('aria-hidden', String(isHidden));
-}
-
-/** 关闭导出菜单 */
-function closeExportMenu() {
-  if (!exportDetectMenu) return;
-  exportDetectMenu.classList.add('hidden');
-  exportDetectMenu.setAttribute('aria-hidden', 'true');
-}
-
-/** 导出检测结果 */
-function exportDetectResult(format) {
-  if (!currentDetectResult) {
-    setDetectMessage('请先完成检测后再导出', 'warning');
-    return;
-  }
-  currentExportFormat = format;
-  closeExportMenu();
-  const baseName = `detect_result_${formatExportFileTime(currentDetectTime || new Date())}`;
-
-  if (format === 'json') {
-    downloadTextFile(`${baseName}.json`, JSON.stringify(buildExportData(), null, 2), 'application/json;charset=utf-8');
-  } else {
-    downloadTextFile(`${baseName}.txt`, buildExportText(), 'text/plain;charset=utf-8');
-  }
-}
-
-
-// ============================================================================
-// Text Detection
-// ============================================================================
-
-/** 执行文本检测 */
-async function detectText() {
-  if (isDetecting) {
-    setDetectMessage('请等待上一次检测完成', 'warning');
-    return;
-  }
-  
-  try {
-    setLoading(true);
-    setDetectMessage('检测中，请稍候...', 'normal');
-    
-    const text = inputText.value.trim();
+  async function doDetect() {
+    const text = el.inputText?.value.trim();
     if (!text) {
-      throw new Error('请输入文本内容');
+      setMessage(el.detectMsg, '请输入待检测文本', 'error');
+      return;
     }
-    if (text.length > 10000) {
-      throw new Error('文本长度超过限制（最大10000字符）');
+
+    try {
+      setMessage(el.detectMsg, '检测中，请稍候...', 'info');
+      const res = await api(CONFIG.API_PATHS.DETECT, 'POST', { text }, true);
+
+      state.currentResult = res.result || null;
+      state.inputText = text;
+      state.detectTime = new Date();
+
+      renderWordHighlight(res.result?.words || []);
+      renderSentences(res.result?.sentences || []);
+      updateExportBtnState();
+
+      setMessage(el.detectMsg, '检测完成', 'success');
+    } catch (err) {
+      const errMsg = getErrorMessage(err, '请求失败');
+      setMessage(el.detectMsg, errMsg, 'error');
+
+      // 若 Token 失效，自动登出
+      if (errMsg.includes('请先登录') || errMsg.includes('会话已过期')) {
+        Auth.clear();
+        window.location.href = CONFIG.ROUTES.LOGIN;
+      }
     }
-    
-    const res = await api('/api/detect', 'POST', { text }, true);
-    renderDetection(res.result.words || [], res.result.sentences || [], res.result.summary);
-    setDetectMessage('检测完成', 'success');
-  } catch (err) {
-    setDetectMessage(err.message, 'error');
-  } finally {
-    setLoading(false);
   }
-}
 
+  /* ==========================================
+   * 7. 事件绑定与初始化 (Event Binding & Init)
+   * ========================================== */
 
-// ============================================================================
-// Event Listeners
-// ============================================================================
+  function bindEvents() {
+    // 导航与认证
+    el.logoutBtn?.addEventListener('click', () => {
+      Auth.clear();
+      window.location.href = CONFIG.ROUTES.LOGIN;
+    });
+    el.goHistoryBtn?.addEventListener('click', () => {
+      window.location.href = CONFIG.ROUTES.HISTORY;
+    });
 
-// 文件选择
-fileSelectBtn?.addEventListener('click', () => fileInput.click());
-fileInput?.addEventListener('change', detectFileContent);
+    // 文件上传
+    el.fileSelectBtn?.addEventListener('click', () => el.fileInput?.click());
+    el.fileInput?.addEventListener('change', handleFileUpload);
 
-// 检测相关
-detectBtn?.addEventListener('click', detectText);
-sampleBtn?.addEventListener('click', loadSampleText);
-clearBtn?.addEventListener('click', clearInputText);
+    // 文本操作
+    el.sampleBtn?.addEventListener('click', () => {
+      if (el.inputText) el.inputText.value = CONFIG.SAMPLE_TEXT;
+    });
 
-// 导出相关
-exportDetectBtn?.addEventListener('click', toggleExportMenu);
-exportDetectTxtBtn?.addEventListener('click', () => exportDetectResult('txt'));
-exportDetectJsonBtn?.addEventListener('click', () => exportDetectResult('json'));
+    el.clearBtn?.addEventListener('click', () => {
+      if (el.inputText) el.inputText.value = '';
+      state.currentResult = null;
+      state.inputText = '';
+      state.detectTime = null;
 
-// 退出登录
-logoutBtn?.addEventListener('click', () => {
-  Auth.clear();
-  window.location.href = '/login';
-});
+      if (el.wordHighlightContent) el.wordHighlightContent.textContent = '暂无结果';
+      if (el.sentenceList) el.sentenceList.innerHTML = '';
+      if (el.detectMsg) el.detectMsg.textContent = '';
 
-// 跳转历史
-goHistoryBtn?.addEventListener('click', () => {
-  window.location.href = '/history';
-});
+      if (el.selectedFileName) {
+        el.selectedFileName.textContent = '';
+        el.selectedFileName.classList.remove('visible');
+      }
+      if (el.fileInfo) el.fileInfo.textContent = `支持 ${CONFIG.FILE_UPLOAD.ALLOWED_EXTENSIONS.join('、')} 文件`;
 
-// 点击页面其他位置关闭导出菜单
-document.addEventListener('click', (event) => {
-  if (!exportDetectMenu || !exportDetectBtn) return;
-  if (exportDetectMenu.classList.contains('hidden')) return;
-  const target = event.target;
-  if (target !== exportDetectMenu && !exportDetectMenu.contains(target) && target !== exportDetectBtn) {
-    closeExportMenu();
+      updateExportBtnState();
+    });
+
+    // 检测与导出
+    el.detectBtn?.addEventListener('click', doDetect);
+
+    el.exportDetectBtn?.addEventListener('click', () => {
+      if (!el.exportDetectBtn.disabled) toggleExportMenu();
+    });
+    el.exportDetectTxtBtn?.addEventListener('click', () => handleExport('txt'));
+    el.exportDetectJsonBtn?.addEventListener('click', () => handleExport('json'));
+
+    // 全局点击关闭导出菜单
+    document.addEventListener('click', (event) => {
+      if (!el.exportDetectMenu || el.exportDetectMenu.classList.contains('hidden')) return;
+
+      const target = event.target;
+      if (target === el.exportDetectMenu ||
+          (target instanceof Node && (el.exportDetectMenu.contains(target) || el.exportDetectBtn?.contains(target)))) {
+        return;
+      }
+      toggleExportMenu(true);
+    });
+
+    // ESC 键关闭导出菜单 (无障碍支持)
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape' && el.exportDetectMenu && !el.exportDetectMenu.classList.contains('hidden')) {
+        toggleExportMenu(true);
+      }
+    });
   }
-});
 
-// ESC键关闭导出菜单
-document.addEventListener('keydown', (event) => {
-  if (event.key === 'Escape') {
-    closeExportMenu();
+  function init() {
+    if (!requireLogin()) {
+      throw new Error('未登录，拦截跳转');
+    }
+
+    // 挂载用户信息（假设 mountUserInfo 已在 common.js 中处理，此处直接渲染）
+    if (el.currentUser) {
+      el.currentUser.textContent = `当前用户: ${Auth.username || '未知用户'}`;
+    }
+
+    bindEvents();
+    updateExportBtnState();
   }
-});
 
-// Ctrl+Enter 快捷检测
-inputText?.addEventListener('keydown', (event) => {
-  if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
-    event.preventDefault();
-    detectText();
-  }
-});
+  // 启动应用
+  init();
 
-
-// ============================================================================
-// Initialization
-// ============================================================================
-
-/** 页面初始化 */
-function init() {
-  // 检查登录状态
-  if (!Auth.token) {
-    window.location.href = '/login';
-    return;
-  }
-  
-  // 显示用户信息
-  if (currentUserEl) {
-    currentUserEl.textContent = `当前用户: ${Auth.username}`;
-  }
-  
-  // 恢复草稿
-  const draft = localStorage.getItem('aigc_detect_draft');
-  if (draft && inputText && !inputText.value) {
-    inputText.value = draft;
-  }
-  
-  // 保存草稿
-  inputText?.addEventListener('input', () => {
-    localStorage.setItem('aigc_detect_draft', inputText.value);
-  });
-}
-
-init();
+})(window.AppUtils);
