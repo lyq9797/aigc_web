@@ -1,0 +1,692 @@
+
+
++===========================================================================================================================================================================================+
+
+
+DEPRECATED: this command (`check`) has been DEPRECATED, and will be unsupported beyond 01 June 2024.
+
+
+We highly encourage switching to the new `scan` command which is easier to use, more powerful, and can be set up to mimic the deprecated command if required.
+
+
++===========================================================================================================================================================================================+
+
+
+{
+    "report_meta": {
+        "scan_target": "files",
+        "scanned": [
+            "requirements.txt"
+        ],
+        "scanned_full_path": [
+            "C:\\learn_codes\\code-python\\aigc_web\\requirements.txt"
+        ],
+        "target_languages": [
+            "python"
+        ],
+        "policy_file": null,
+        "policy_file_source": "local",
+        "audit_and_monitor": false,
+        "api_key": false,
+        "account": "",
+        "local_database_path": null,
+        "safety_version": "3.8.1",
+        "timestamp": "2026-06-05 18:40:50",
+        "packages_found": 29,
+        "vulnerabilities_found": 2,
+        "vulnerabilities_ignored": 0,
+        "remediations_recommended": 0,
+        "telemetry": {
+            "safety_options": {
+                "files": {
+                    "-r": 1
+                },
+                "output": {
+                    "--output": 1
+                }
+            },
+            "safety_version": "3.8.1",
+            "safety_source": "cli",
+            "os_type": "Windows",
+            "os_release": "10",
+            "os_description": "Windows-10-10.0.26200-SP0",
+            "python_version": "3.10.20",
+            "safety_command": "check"
+        },
+        "git": {
+            "branch": "main",
+            "tag": "",
+            "commit": "4bc71a73aa0ba0462c339c3c5eda6bb98cf56ce4",
+            "dirty": "False",
+            "origin": "https://github.com/lyq9797/aigc_web.git"
+        },
+        "project": null,
+        "json_version": "1.1",
+        "remediations_attempted": 0,
+        "remediations_completed": 0,
+        "remediation_mode": "NON_INTERACTIVE"
+    },
+    "scanned_packages": {
+        "accelerate": {
+            "name": "accelerate",
+            "version": "1.12.0",
+            "requirements": [
+                {
+                    "raw": "accelerate==1.12.0",
+                    "extras": [],
+                    "marker": null,
+                    "name": "accelerate",
+                    "specifier": "==1.12.0",
+                    "url": null,
+                    "found": "C:\\learn_codes\\code-python\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "datasets": {
+            "name": "datasets",
+            "version": "4.4.1",
+            "requirements": [
+                {
+                    "raw": "datasets==4.4.1",
+                    "extras": [],
+                    "marker": null,
+                    "name": "datasets",
+                    "specifier": "==4.4.1",
+                    "url": null,
+                    "found": "C:\\learn_codes\\code-python\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "defusedxml": {
+            "name": "defusedxml",
+            "version": "0.7.1",
+            "requirements": [
+                {
+                    "raw": "defusedxml==0.7.1",
+                    "extras": [],
+                    "marker": null,
+                    "name": "defusedxml",
+                    "specifier": "==0.7.1",
+                    "url": null,
+                    "found": "C:\\learn_codes\\code-python\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "docx": {
+            "name": "docx",
+            "version": "0.2.4",
+            "requirements": [
+                {
+                    "raw": "docx==0.2.4",
+                    "extras": [],
+                    "marker": null,
+                    "name": "docx",
+                    "specifier": "==0.2.4",
+                    "url": null,
+                    "found": "C:\\learn_codes\\code-python\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "evaluate": {
+            "name": "evaluate",
+            "version": "0.4.6",
+            "requirements": [
+                {
+                    "raw": "evaluate==0.4.6",
+                    "extras": [],
+                    "marker": null,
+                    "name": "evaluate",
+                    "specifier": "==0.4.6",
+                    "url": null,
+                    "found": "C:\\learn_codes\\code-python\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "torch": {
+            "name": "torch",
+            "version": "2.6.0+cu124",
+            "requirements": [
+                {
+                    "raw": "torch==2.6.0+cu124",
+                    "extras": [],
+                    "marker": null,
+                    "name": "torch",
+                    "specifier": "==2.6.0+cu124",
+                    "url": null,
+                    "found": "C:\\learn_codes\\code-python\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "torchaudio": {
+            "name": "torchaudio",
+            "version": "2.6.0+cu124",
+            "requirements": [
+                {
+                    "raw": "torchaudio==2.6.0+cu124",
+                    "extras": [],
+                    "marker": null,
+                    "name": "torchaudio",
+                    "specifier": "==2.6.0+cu124",
+                    "url": null,
+                    "found": "C:\\learn_codes\\code-python\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "torchvision": {
+            "name": "torchvision",
+            "version": "0.21.0+cu124",
+            "requirements": [
+                {
+                    "raw": "torchvision==0.21.0+cu124",
+                    "extras": [],
+                    "marker": null,
+                    "name": "torchvision",
+                    "specifier": "==0.21.0+cu124",
+                    "url": null,
+                    "found": "C:\\learn_codes\\code-python\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "transformers": {
+            "name": "transformers",
+            "version": "5.8.1",
+            "requirements": [
+                {
+                    "raw": "transformers==5.8.1",
+                    "extras": [],
+                    "marker": null,
+                    "name": "transformers",
+                    "specifier": "==5.8.1",
+                    "url": null,
+                    "found": "C:\\learn_codes\\code-python\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "huggingface-hub": {
+            "name": "huggingface-hub",
+            "version": "0.34.4",
+            "requirements": [
+                {
+                    "raw": "huggingface_hub==0.34.4",
+                    "extras": [],
+                    "marker": null,
+                    "name": "huggingface_hub",
+                    "specifier": "==0.34.4",
+                    "url": null,
+                    "found": "C:\\learn_codes\\code-python\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "pydantic": {
+            "name": "pydantic",
+            "version": "2.13.4",
+            "requirements": [
+                {
+                    "raw": "pydantic==2.13.4",
+                    "extras": [],
+                    "marker": null,
+                    "name": "pydantic",
+                    "specifier": "==2.13.4",
+                    "url": null,
+                    "found": "C:\\learn_codes\\code-python\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "pywin32": {
+            "name": "pywin32",
+            "version": "311",
+            "requirements": [
+                {
+                    "raw": "pywin32==311",
+                    "extras": [],
+                    "marker": null,
+                    "name": "pywin32",
+                    "specifier": "==311",
+                    "url": null,
+                    "found": "C:\\learn_codes\\code-python\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "pytorch-crf": {
+            "name": "pytorch-crf",
+            "version": "0.7.2",
+            "requirements": [
+                {
+                    "raw": "pytorch-crf==0.7.2",
+                    "extras": [],
+                    "marker": null,
+                    "name": "pytorch-crf",
+                    "specifier": "==0.7.2",
+                    "url": null,
+                    "found": "C:\\learn_codes\\code-python\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "sentencepiece": {
+            "name": "sentencepiece",
+            "version": "0.2.1",
+            "requirements": [
+                {
+                    "raw": "sentencepiece==0.2.1",
+                    "extras": [],
+                    "marker": null,
+                    "name": "sentencepiece",
+                    "specifier": "==0.2.1",
+                    "url": null,
+                    "found": "C:\\learn_codes\\code-python\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "fastapi": {
+            "name": "fastapi",
+            "version": "0.128.0",
+            "requirements": [
+                {
+                    "raw": "fastapi==0.128.0",
+                    "extras": [],
+                    "marker": null,
+                    "name": "fastapi",
+                    "specifier": "==0.128.0",
+                    "url": null,
+                    "found": "C:\\learn_codes\\code-python\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "uvicorn": {
+            "name": "uvicorn",
+            "version": "0.40.0",
+            "requirements": [
+                {
+                    "raw": "uvicorn==0.40.0",
+                    "extras": [],
+                    "marker": null,
+                    "name": "uvicorn",
+                    "specifier": "==0.40.0",
+                    "url": null,
+                    "found": "C:\\learn_codes\\code-python\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "openai": {
+            "name": "openai",
+            "version": "2.14.0",
+            "requirements": [
+                {
+                    "raw": "openai==2.14.0",
+                    "extras": [],
+                    "marker": null,
+                    "name": "openai",
+                    "specifier": "==2.14.0",
+                    "url": null,
+                    "found": "C:\\learn_codes\\code-python\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "pandas": {
+            "name": "pandas",
+            "version": "2.3.3",
+            "requirements": [
+                {
+                    "raw": "pandas==2.3.3",
+                    "extras": [],
+                    "marker": null,
+                    "name": "pandas",
+                    "specifier": "==2.3.3",
+                    "url": null,
+                    "found": "C:\\learn_codes\\code-python\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "numpy": {
+            "name": "numpy",
+            "version": "2.0.1",
+            "requirements": [
+                {
+                    "raw": "numpy==2.0.1",
+                    "extras": [],
+                    "marker": null,
+                    "name": "numpy",
+                    "specifier": "==2.0.1",
+                    "url": null,
+                    "found": "C:\\learn_codes\\code-python\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "scikit-learn": {
+            "name": "scikit-learn",
+            "version": "1.7.1",
+            "requirements": [
+                {
+                    "raw": "scikit-learn==1.7.1",
+                    "extras": [],
+                    "marker": null,
+                    "name": "scikit-learn",
+                    "specifier": "==1.7.1",
+                    "url": null,
+                    "found": "C:\\learn_codes\\code-python\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "scipy": {
+            "name": "scipy",
+            "version": "1.16.0",
+            "requirements": [
+                {
+                    "raw": "scipy==1.16.0",
+                    "extras": [],
+                    "marker": null,
+                    "name": "scipy",
+                    "specifier": "==1.16.0",
+                    "url": null,
+                    "found": "C:\\learn_codes\\code-python\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "matplotlib": {
+            "name": "matplotlib",
+            "version": "3.10.8",
+            "requirements": [
+                {
+                    "raw": "matplotlib==3.10.8",
+                    "extras": [],
+                    "marker": null,
+                    "name": "matplotlib",
+                    "specifier": "==3.10.8",
+                    "url": null,
+                    "found": "C:\\learn_codes\\code-python\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "seaborn": {
+            "name": "seaborn",
+            "version": "0.13.2",
+            "requirements": [
+                {
+                    "raw": "seaborn==0.13.2",
+                    "extras": [],
+                    "marker": null,
+                    "name": "seaborn",
+                    "specifier": "==0.13.2",
+                    "url": null,
+                    "found": "C:\\learn_codes\\code-python\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "nltk": {
+            "name": "nltk",
+            "version": "3.9.4",
+            "requirements": [
+                {
+                    "raw": "nltk==3.9.4",
+                    "extras": [],
+                    "marker": null,
+                    "name": "nltk",
+                    "specifier": "==3.9.4",
+                    "url": null,
+                    "found": "C:\\learn_codes\\code-python\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "python-docx": {
+            "name": "python-docx",
+            "version": "1.2.0",
+            "requirements": [
+                {
+                    "raw": "python-docx==1.2.0",
+                    "extras": [],
+                    "marker": null,
+                    "name": "python-docx",
+                    "specifier": "==1.2.0",
+                    "url": null,
+                    "found": "C:\\learn_codes\\code-python\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "pyqt6": {
+            "name": "pyqt6",
+            "version": "6.9.1",
+            "requirements": [
+                {
+                    "raw": "PyQt6==6.9.1",
+                    "extras": [],
+                    "marker": null,
+                    "name": "PyQt6",
+                    "specifier": "==6.9.1",
+                    "url": null,
+                    "found": "C:\\learn_codes\\code-python\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "cookiecutter": {
+            "name": "cookiecutter",
+            "version": "2.6.0",
+            "requirements": [
+                {
+                    "raw": "cookiecutter==2.6.0",
+                    "extras": [],
+                    "marker": null,
+                    "name": "cookiecutter",
+                    "specifier": "==2.6.0",
+                    "url": null,
+                    "found": "C:\\learn_codes\\code-python\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "pipreqs": {
+            "name": "pipreqs",
+            "version": "0.5.0",
+            "requirements": [
+                {
+                    "raw": "pipreqs==0.5.0",
+                    "extras": [],
+                    "marker": null,
+                    "name": "pipreqs",
+                    "specifier": "==0.5.0",
+                    "url": null,
+                    "found": "C:\\learn_codes\\code-python\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "beautifulsoup4": {
+            "name": "beautifulsoup4",
+            "version": "4.14.3",
+            "requirements": [
+                {
+                    "raw": "beautifulsoup4==4.14.3",
+                    "extras": [],
+                    "marker": null,
+                    "name": "beautifulsoup4",
+                    "specifier": "==4.14.3",
+                    "url": null,
+                    "found": "C:\\learn_codes\\code-python\\aigc_web\\requirements.txt"
+                }
+            ]
+        }
+    },
+    "affected_packages": {
+        "torch": {
+            "name": "torch",
+            "version": "2.6.0+cu124",
+            "requirements": [
+                {
+                    "raw": "torch==2.6.0+cu124",
+                    "extras": [],
+                    "marker": null,
+                    "name": "torch",
+                    "specifier": "==2.6.0+cu124",
+                    "url": null,
+                    "found": "C:\\learn_codes\\code-python\\aigc_web\\requirements.txt"
+                }
+            ],
+            "found": null,
+            "insecure_versions": [
+                "1.0.0",
+                "1.0.1",
+                "1.1.0",
+                "1.2.0",
+                "1.3.0",
+                "1.3.1",
+                "1.4.0",
+                "1.5.0",
+                "1.5.1",
+                "1.6.0",
+                "1.7.0",
+                "1.7.1",
+                "1.8.0",
+                "1.8.1",
+                "1.9.0",
+                "1.9.1",
+                "1.10.0",
+                "1.10.1",
+                "1.10.2",
+                "1.11.0",
+                "1.12.0",
+                "1.12.1",
+                "1.13.0",
+                "1.13.1",
+                "2.0.0",
+                "2.0.1",
+                "2.1.0",
+                "2.1.1",
+                "2.1.2",
+                "2.2.0",
+                "2.2.1",
+                "2.2.2",
+                "2.3.0",
+                "2.3.1",
+                "2.4.0",
+                "2.4.1",
+                "2.5.0",
+                "2.5.1",
+                "2.6.0",
+                "2.7.0",
+                "2.7.1"
+            ],
+            "secure_versions": [
+                "2.12.0",
+                "2.11.0",
+                "2.10.0",
+                "2.9.1",
+                "2.9.0",
+                "2.8.0"
+            ],
+            "latest_version_without_known_vulnerabilities": "2.12.0",
+            "latest_version": "2.12.0",
+            "more_info_url": "https://getsafety.com/p/pypi/torch/97c/"
+        }
+    },
+    "announcements": [],
+    "vulnerabilities": [
+        {
+            "vulnerability_id": "76769",
+            "package_name": "torch",
+            "ignored": {},
+            "ignored_reason": null,
+            "ignored_expires": null,
+            "vulnerable_spec": [
+                "<2.8.0"
+            ],
+            "all_vulnerable_specs": [
+                "<2.8.0"
+            ],
+            "analyzed_version": "2.6.0+cu124",
+            "analyzed_requirement": {
+                "raw": "torch==2.6.0+cu124",
+                "extras": [],
+                "marker": null,
+                "name": "torch",
+                "specifier": "==2.6.0+cu124",
+                "url": null,
+                "found": "C:\\learn_codes\\code-python\\aigc_web\\requirements.txt"
+            },
+            "advisory": "*Disputed* A vulnerability, which was classified as problematic, was found in PyTorch 2.6.0. Affected is the function torch.nn.functional.ctc_loss of the file aten/src/ATen/native/LossCTC.cpp. The manipulation leads to denial of service. An attack has to be approached locally. The exploit has been disclosed to the public and may be used. The name of the patch is 46fc5d8e360127361211cb237d5f9eef0223e567. It is recommended to apply a patch to fix this issue.",
+            "is_transitive": false,
+            "published_date": null,
+            "fixed_versions": [],
+            "closest_versions_without_known_vulnerabilities": [],
+            "resources": [],
+            "CVE": "CVE-2025-3730",
+            "severity": null,
+            "affected_versions": [],
+            "more_info_url": "https://getsafety.com/v/76769/97c"
+        },
+        {
+            "vulnerability_id": "78828",
+            "package_name": "torch",
+            "ignored": {},
+            "ignored_reason": null,
+            "ignored_expires": null,
+            "vulnerable_spec": [
+                "<2.7.1-rc1"
+            ],
+            "all_vulnerable_specs": [
+                "<2.7.1-rc1"
+            ],
+            "analyzed_version": "2.6.0+cu124",
+            "analyzed_requirement": {
+                "raw": "torch==2.6.0+cu124",
+                "extras": [],
+                "marker": null,
+                "name": "torch",
+                "specifier": "==2.6.0+cu124",
+                "url": null,
+                "found": "C:\\learn_codes\\code-python\\aigc_web\\requirements.txt"
+            },
+            "advisory": "Affected versions of the PyTorch package are vulnerable to Denial of Service (DoS) due to improper handling in the MKLDNN pooling implementation. The torch.mkldnn_max_pool2d function fails to properly validate input parameters, allowing crafted inputs to trigger resource exhaustion or crashes in the underlying MKLDNN library. An attacker with local access can exploit this vulnerability by passing specially crafted tensor dimensions or parameters to the max pooling function, causing the application to become unresponsive or crash.",
+            "is_transitive": false,
+            "published_date": null,
+            "fixed_versions": [],
+            "closest_versions_without_known_vulnerabilities": [],
+            "resources": [],
+            "CVE": "CVE-2025-2953",
+            "severity": null,
+            "affected_versions": [],
+            "more_info_url": "https://getsafety.com/v/78828/97c"
+        }
+    ],
+    "ignored_vulnerabilities": [],
+    "remediations": {
+        "torch": {
+            "requirements": {
+                "==2.6.0+cu124": {
+                    "vulnerabilities_found": 2,
+                    "version": "2.6.0+cu124",
+                    "requirement": {
+                        "raw": "torch==2.6.0+cu124",
+                        "extras": [],
+                        "marker": null,
+                        "name": "torch",
+                        "specifier": "==2.6.0+cu124",
+                        "url": null,
+                        "found": "C:\\learn_codes\\code-python\\aigc_web\\requirements.txt"
+                    },
+                    "more_info_url": "https://getsafety.com/p/pypi/torch/97c/"
+                }
+            },
+            "current_version": null,
+            "vulnerabilities_found": null,
+            "recommended_version": null,
+            "other_recommended_versions": [],
+            "more_info_url": null
+        }
+    },
+    "remediations_results": {
+        "vulnerabilities_fixed": [],
+        "remediations_applied": {},
+        "remediations_skipped": {}
+    }
+}
+
+
++===========================================================================================================================================================================================+
+
+
+DEPRECATED: this command (`check`) has been DEPRECATED, and will be unsupported beyond 01 June 2024.
+
+
+We highly encourage switching to the new `scan` command which is easier to use, more powerful, and can be set up to mimic the deprecated command if required.
+
+
++===========================================================================================================================================================================================+
+
+
