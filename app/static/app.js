@@ -1,501 +1,355 @@
-// ============================================================================
-// Application State
-// ============================================================================
+/**
+ * AI 文本检测系统 - 核心应用逻辑
+ *
+ */
+(function () {
+  'use strict';
 
-const App = {
-  state: {
-    token: localStorage.getItem('aigc_token') || '',
-    username: localStorage.getItem('aigc_user') || '',
-    historyRows: [],
-    currentDetectResult: null,
-    loading: false,
-  },
-  elements: {
-    currentUser: document.getElementById('currentUser'),
-    loginForm: document.getElementById('loginPanel'),
-    registerForm: document.getElementById('registerPanel'),
+  /* ==========================================
+   * 1. 常量与配置 (Constants & Configuration)
+   * ========================================== */
+  const CONFIG = {
+    STORAGE_KEYS: {
+      TOKEN: 'aigc_token',
+      USER: 'aigc_user',
+    },
+    API_PATHS: {
+      REGISTER: '/api/register',
+      LOGIN: '/api/login',
+      DETECT: '/api/detect',
+      HISTORY: '/api/history',
+    },
+    UI_COLORS: {
+      SUCCESS: '#0a7f6f',
+      ERROR: '#b13f00',
+      INFO: '#5f6c75',
+    },
+    SAMPLE_TEXT: 'This is an interesting paper on how to handle reparameterization in VAEs when you have discrete variables. They propose a new architecture called Discrete Variational Autoencoders (DVAEs) which combines an undirected discrete component and a directed hierarchical continuous component. This allows them to learn both the class of objects in an image as well as their specific realization in pixels. They show that DVAEs outperform other state-of-the-art methods on several benchmark datasets.',
+  };
+
+  /* ==========================================
+   * 2. 状态与 DOM 缓存 (State & DOM Cache)
+   * ========================================== */
+
+  /** @type {{ token: string, username: string }} */
+  const state = {
+    token: localStorage.getItem(CONFIG.STORAGE_KEYS.TOKEN) ?? '',
+    username: localStorage.getItem(CONFIG.STORAGE_KEYS.USER) ?? '',
+  };
+
+  /** 缓存所有需要频繁访问的 DOM 元素，避免重复查询 */
+  const el = {
+    // 认证模块
+    tabLogin: document.getElementById('tabLogin'),
+    tabRegister: document.getElementById('tabRegister'),
+    loginPanel: document.getElementById('loginPanel'),
+    registerPanel: document.getElementById('registerPanel'),
+    authMsg: document.getElementById('authMsg'),
     loginUsername: document.getElementById('loginUsername'),
     loginPassword: document.getElementById('loginPassword'),
     registerUsername: document.getElementById('registerUsername'),
     registerPassword: document.getElementById('registerPassword'),
-    registerConfirm: document.getElementById('registerConfirmPassword'),
-    authMsg: document.getElementById('authMsg'),
-    detectBtn: document.getElementById('detectBtn'),
+    loginBtn: document.getElementById('loginBtn'),
+    registerBtn: document.getElementById('registerBtn'),
+    logoutBtn: document.getElementById('logoutBtn'),
+    currentUser: document.getElementById('currentUser'),
+    // 检测模块
     inputText: document.getElementById('inputText'),
+    sampleBtn: document.getElementById('sampleBtn'),
+    clearBtn: document.getElementById('clearBtn'),
+    detectBtn: document.getElementById('detectBtn'),
     detectMsg: document.getElementById('detectMsg'),
+    // 结果展示模块
     wordHighlight: document.getElementById('wordHighlight'),
     sentenceList: document.getElementById('sentenceList'),
+    switchInfo: document.getElementById('switchInfo'),
+    // 历史记录模块
+    refreshHistoryBtn: document.getElementById('refreshHistoryBtn'),
     historyList: document.getElementById('historyList'),
-    loadingOverlay: document.getElementById('loadingOverlay'),
-  },
-};
+  };
 
+  /* ==========================================
+   * 3. 工具与安全函数 (Utilities & Security)
+   * ========================================== */
 
-// ============================================================================
-// Utility Functions
-// ============================================================================
+  function escapeHtml(str) {
+    if (typeof str !== 'string') return '';
+    const map = {
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#39;',
+    };
+    return str.replace(/[&<>"']/g, (char) => map[char]);
+  }
 
-App.utils = {
-  /** 转义HTML特殊字符，防止XSS攻击 */
-  escapeHtml(value) {
-    return String(value || '')
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&#39;');
-  },
+  function setMessage(element, message, type = 'info') {
+    if (!element) return;
+    // 【安全说明】此处使用 textContent 而非 innerHTML，从根本上免疫 XSS 注入
+    element.textContent = message;
+    element.style.color = CONFIG.UI_COLORS[type.toUpperCase()] || CONFIG.UI_COLORS.INFO;
+  }
 
-  /** 格式化日期时间 */
-  formatDateTime(isoString) {
-    if (!isoString) return '未知时间';
-    const date = new Date(isoString);
-    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
-  },
+  /* ==========================================
+   * 4. 认证状态管理 (Auth State Management)
+   * ========================================== */
 
-  /** 显示加载状态 */
-  showLoading(show) {
-    App.state.loading = show;
-    if (App.elements.loadingOverlay) {
-      App.elements.loadingOverlay.classList.toggle('hidden', !show);
+  function saveAuth(token, username) {
+    state.token = token;
+    state.username = username;
+    localStorage.setItem(CONFIG.STORAGE_KEYS.TOKEN, token);
+    localStorage.setItem(CONFIG.STORAGE_KEYS.USER, username);
+    updateAuthUI();
+  }
+
+  function clearAuth() {
+    state.token = '';
+    state.username = '';
+    localStorage.removeItem(CONFIG.STORAGE_KEYS.TOKEN);
+    localStorage.removeItem(CONFIG.STORAGE_KEYS.USER);
+    updateAuthUI();
+  }
+
+  function updateAuthUI() {
+    if (el.currentUser) {
+      el.currentUser.textContent = state.token ? `当前用户: ${state.username}` : '未登录';
     }
-    // 禁用检测按钮
-    if (App.elements.detectBtn) {
-      App.elements.detectBtn.disabled = show;
-    }
-  },
+  }
 
-  /** 封装HTTP请求，支持超时和重试 */
-  async request(path, method = 'GET', body = null, secure = false, retries = 1) {
-    const headers = {};
-    if (secure) {
-      if (!App.state.token) {
-        throw new Error('请先登录');
-      }
-      headers['Authorization'] = `Bearer ${App.state.token}`;
-    }
-    if (body && !(body instanceof FormData)) {
-      headers['Content-Type'] = 'application/json';
+  function showAuthTab(mode) {
+    const isLogin = mode === 'login';
+    el.loginPanel?.classList.toggle('hidden', !isLogin);
+    el.registerPanel?.classList.toggle('hidden', isLogin);
+    el.tabLogin?.classList.toggle('active', isLogin);
+    el.tabRegister?.classList.toggle('active', !isLogin);
+
+    // 更新 ARIA 属性以支持无障碍访问
+    if (el.tabLogin) el.tabLogin.setAttribute('aria-selected', String(isLogin));
+    if (el.tabRegister) el.tabRegister.setAttribute('aria-selected', String(!isLogin));
+  }
+
+  /* ==========================================
+   * 5. 网络请求封装 (API Request Wrapper)
+   * ========================================== */
+
+  /**
+   * 统一的 API 请求封装
+   * @param {string} path - API 路径
+   * @param {'GET' | 'POST' | 'PUT' | 'DELETE'} method - HTTP 方法
+   * @param {Object|null} body - 请求体数据
+   * @param {boolean} needAuth - 是否需要携带认证 Token
+   * @returns {Promise<any>} 解析后的 JSON 数据
+   */
+  async function api(path, method = 'GET', body = null, needAuth = false) {
+    const headers = { 'Content-Type': 'application/json' };
+
+    if (needAuth) {
+      if (!state.token) throw new Error('会话已过期，请重新登录');
+      headers['Authorization'] = `Bearer ${state.token}`;
     }
 
-    const makeRequest = async () => {
-      const response = await fetch(path, {
+    try {
+      const resp = await fetch(path, {
         method,
         headers,
-        body: body instanceof FormData ? body : body ? JSON.stringify(body) : null,
+        body: body ? JSON.stringify(body) : null,
+        // 【安全说明】明确指定 credentials，若后端使用 Cookie 认证需设为 'include'
+        credentials: 'same-origin',
       });
-      const data = await response.json().catch(() => ({}));
-      if (!response.ok) {
-        throw new Error(data.detail || '请求失败');
+
+      // 尝试解析 JSON，若响应非 JSON 格式则回退为空对象
+      const data = await resp.json().catch(() => ({}));
+
+      if (!resp.ok) {
+        // 优先使用后端返回的详细错误信息，否则使用 HTTP 状态文本
+        throw new Error(data.detail || data.message || resp.statusText || '请求失败');
       }
+
       return data;
-    };
-
-    for (let i = 0; i <= retries; i++) {
-      try {
-        return await makeRequest();
-      } catch (error) {
-        if (i === retries) throw error;
-        await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1)));
-      }
-    }
-  },
-
-  /** 设置提示消息 */
-  setMessage(element, text, type = 'normal') {
-    if (!element) return;
-    element.textContent = text;
-    const colors = { error: '#b13f00', success: '#0a7f6f', warning: '#e67e22', normal: '#5f6c75' };
-    element.style.color = colors[type] || colors.normal;
-    // 3秒后自动清除普通消息
-    if (type === 'normal' && text) {
-      setTimeout(() => {
-        if (element.textContent === text) element.textContent = '';
-      }, 3000);
-    }
-  },
-
-  /** 防抖函数 */
-  debounce(func, delay) {
-    let timer;
-    return function(...args) {
-      clearTimeout(timer);
-      timer = setTimeout(() => func.apply(this, args), delay);
-    };
-  },
-};
-
-
-// ============================================================================
-// Core Actions
-// ============================================================================
-
-App.actions = {
-  /** 更新用户显示信息 */
-  updateUserDisplay() {
-    if (!App.elements.currentUser) return;
-    App.elements.currentUser.textContent = App.state.token 
-      ? `👤 ${App.state.username}` 
-      : '未登录';
-  },
-
-  /** 保存登录会话 */
-  saveSession(token, username) {
-    App.state.token = token;
-    App.state.username = username;
-    localStorage.setItem('aigc_token', token);
-    localStorage.setItem('aigc_user', username);
-    App.actions.updateUserDisplay();
-  },
-
-  /** 清除登录会话 */
-  clearSession() {
-    App.state.token = '';
-    App.state.username = '';
-    localStorage.removeItem('aigc_token');
-    localStorage.removeItem('aigc_user');
-    App.actions.updateUserDisplay();
-    window.location.href = '/login';
-  },
-
-  /** 切换认证面板 */
-  setActiveAuthPanel(type) {
-    const isLogin = type === 'login';
-    if (App.elements.loginForm) {
-      App.elements.loginForm.classList.toggle('hidden', !isLogin);
-    }
-    if (App.elements.registerForm) {
-      App.elements.registerForm.classList.toggle('hidden', isLogin);
-    }
-    // 清空表单和消息
-    if (App.elements.authMsg) App.elements.authMsg.textContent = '';
-  },
-
-  /** 清空表单 */
-  clearForms() {
-    if (App.elements.loginUsername) App.elements.loginUsername.value = '';
-    if (App.elements.loginPassword) App.elements.loginPassword.value = '';
-    if (App.elements.registerUsername) App.elements.registerUsername.value = '';
-    if (App.elements.registerPassword) App.elements.registerPassword.value = '';
-    if (App.elements.registerConfirm) App.elements.registerConfirm.value = '';
-    if (App.elements.inputText) App.elements.inputText.value = '';
-  },
-
-  /** 用户登录 */
-  async login() {
-    try {
-      App.utils.setMessage(App.elements.authMsg, '登录中...');
-      const username = App.elements.loginUsername.value.trim();
-      const password = App.elements.loginPassword.value;
-      
-      if (!username || !password) {
-        throw new Error('用户名和密码不能为空');
-      }
-      if (username.length < 3 || username.length > 50) {
-        throw new Error('用户名长度应为3-50字符');
-      }
-      
-      const result = await App.utils.request('/api/login', 'POST', { username, password }, false);
-      App.actions.saveSession(result.token, result.username);
-      App.utils.setMessage(App.elements.authMsg, '登录成功，正在跳转...', 'success');
-      
-      setTimeout(() => {
-        window.location.href = '/detect';
-      }, 1000);
     } catch (error) {
-      App.utils.setMessage(App.elements.authMsg, error.message, 'error');
+      // 区分网络层异常（如断网）和业务层异常
+      if (error instanceof TypeError && error.message.includes('fetch')) {
+        throw new Error('网络连接失败，请检查您的网络设置');
+      }
+      throw error;
     }
-  },
+  }
 
-  /** 用户注册 */
-  async register() {
+  /* ==========================================
+   * 6. 业务逻辑与渲染 (Business Logic & Rendering)
+   * ========================================== */
+
+  async function doRegister() {
     try {
-      App.utils.setMessage(App.elements.authMsg, '注册中...');
-      const username = App.elements.registerUsername.value.trim();
-      const password = App.elements.registerPassword.value;
-      const confirm = App.elements.registerConfirm.value;
-      
-      if (!username || !password || !confirm) {
-        throw new Error('请填写完整信息');
-      }
-      if (username.length < 3 || username.length > 50) {
-        throw new Error('用户名长度应为3-50字符');
-      }
-      if (password.length < 6) {
-        throw new Error('密码长度至少6位');
-      }
-      if (password !== confirm) {
-        throw new Error('两次密码输入不一致');
-      }
-      
-      await App.utils.request('/api/register', 'POST', { username, password }, false);
-      App.utils.setMessage(App.elements.authMsg, '注册成功，请登录', 'success');
-      
-      setTimeout(() => {
-        App.actions.setActiveAuthPanel('login');
-        App.actions.clearForms();
-      }, 1500);
-    } catch (error) {
-      App.utils.setMessage(App.elements.authMsg, error.message, 'error');
-    }
-  },
+      const username = el.registerUsername.value.trim();
+      const password = el.registerPassword.value;
 
-  /** 渲染检测结果 */
-  renderDetectResults(words, sentences, summary = null) {
-    // 渲染词级高亮
-    if (App.elements.wordHighlight) {
-      if (Array.isArray(words) && words.length) {
-        const wordHtml = words.map((item) => `
-          <span class="word ${item.label_id === 1 ? 'aigt' : 'hwt'}" 
-                title="标签: ${App.utils.escapeHtml(item.label)}">
-            ${App.utils.escapeHtml(item.token)}
-          </span>
-        `).join(' ');
-        App.elements.wordHighlight.innerHTML = wordHtml;
-      } else {
-        App.elements.wordHighlight.innerHTML = '<div class="muted">暂无结果</div>';
-      }
+      // 密码通过 HTTPS 传输，前端不应记录或打印明文密码
+      const res = await api(CONFIG.API_PATHS.REGISTER, 'POST', { username, password });
+      saveAuth(res.token, res.username);
+      setMessage(el.authMsg, '注册成功，已自动登录', 'success');
+      await loadHistory();
+    } catch (err) {
+      setMessage(el.authMsg, err.message, 'error');
     }
-    
-    // 渲染句子级结果
-    if (App.elements.sentenceList) {
-      if (Array.isArray(sentences) && sentences.length) {
-        const sentenceHtml = sentences.map((item) => `
-          <div class="sentence-item ${item.label === 'AIGT' ? 'aigt' : 'hwt'}">
-            <div class="sentence-header">
-              <strong>句子 ${item.index + 1}</strong>
-              <span class="sentence-label">标签: ${App.utils.escapeHtml(item.label)}</span>
-              ${item.confidence ? `<span class="sentence-confidence">置信度: ${(item.confidence * 100).toFixed(1)}%</span>` : ''}
-            </div>
-            <div class="sentence-text">${App.utils.escapeHtml(item.text)}</div>
-          </div>
-        `).join('');
-        App.elements.sentenceList.innerHTML = sentenceHtml;
-      } else {
-        App.elements.sentenceList.innerHTML = '<div class="muted">暂无结果</div>';
-      }
-    }
-    
-    // 显示摘要信息
-    if (summary && App.elements.detectMsg) {
-      const timeMsg = summary.processing_time_ms ? ` (耗时 ${summary.processing_time_ms}ms)` : '';
-      App.utils.setMessage(App.elements.detectMsg, `检测完成${timeMsg}`, 'success');
-    }
-  },
+  }
 
-  /** 加载示例文本 */
-  loadSampleText() {
-    const sample = "人工智能技术正在快速发展，深度学习模型在自然语言处理领域取得了显著成果。然而，AI生成的内容检测仍然是一个具有挑战性的问题。研究人员正在开发更精确的检测方法来识别机器生成的文本。";
-    if (App.elements.inputText) {
-      App.elements.inputText.value = sample;
-      App.utils.setMessage(App.elements.detectMsg, '示例文本已加载', 'success');
-    }
-  },
-
-  /** 清除输入文本 */
-  clearInputText() {
-    if (App.elements.inputText) {
-      App.elements.inputText.value = '';
-      App.utils.setMessage(App.elements.detectMsg, '已清除', 'normal');
-    }
-    // 清空检测结果
-    if (App.elements.wordHighlight) {
-      App.elements.wordHighlight.innerHTML = '<div class="muted">暂无结果</div>';
-    }
-    if (App.elements.sentenceList) {
-      App.elements.sentenceList.innerHTML = '<div class="muted">暂无结果</div>';
-    }
-  },
-
-  /** 执行文本检测 */
-  async detect() {
-    if (App.state.loading) {
-      App.utils.setMessage(App.elements.detectMsg, '请等待上一次检测完成', 'warning');
-      return;
-    }
-    
+  async function doLogin() {
     try {
-      App.utils.showLoading(true);
-      App.utils.setMessage(App.elements.detectMsg, '检测中，请稍候...');
-      
-      const text = App.elements.inputText.value.trim();
+      const username = el.loginUsername.value.trim();
+      const password = el.loginPassword.value;
+
+      const res = await api(CONFIG.API_PATHS.LOGIN, 'POST', { username, password });
+      saveAuth(res.token, res.username);
+      setMessage(el.authMsg, '登录成功', 'success');
+      await loadHistory();
+    } catch (err) {
+      setMessage(el.authMsg, err.message, 'error');
+    }
+  }
+
+  async function doDetect() {
+    try {
+      setMessage(el.detectMsg, '检测中，请稍候...', 'info');
+      const text = el.inputText.value.trim();
+
       if (!text) {
-        throw new Error('请输入要检测的文本');
+        throw new Error('请输入待检测的文本');
       }
-      if (text.length > 10000) {
-        throw new Error('文本长度超过限制（最大10000字符）');
-      }
-      
-      const data = await App.utils.request('/api/detect', 'POST', { text }, true);
-      App.state.currentDetectResult = data.result;
-      App.actions.renderDetectResults(
-        data.result.words || [], 
-        data.result.sentences || [],
-        data.result.summary
-      );
-      
-      // 刷新历史记录
-      await App.actions.loadHistory();
-    } catch (error) {
-      App.utils.setMessage(App.elements.detectMsg, error.message, 'error');
-    } finally {
-      App.utils.showLoading(false);
-    }
-  },
 
-  /** 加载历史记录 */
-  async loadHistory() {
-    if (!App.state.token) {
-      if (App.elements.historyList) {
-        App.elements.historyList.innerHTML = '<div class="muted">请先登录查看历史记录</div>';
-      }
+      const res = await api(CONFIG.API_PATHS.DETECT, 'POST', { text }, true);
+
+      renderSwitch(res.result?.summary);
+      renderWordHighlight(res.result?.words);
+      renderSentences(res.result?.sentences);
+
+      setMessage(el.detectMsg, '检测完成', 'success');
+      await loadHistory();
+    } catch (err) {
+      setMessage(el.detectMsg, err.message, 'error');
+    }
+  }
+
+  async function loadHistory() {
+    if (!state.token) {
+      if (el.historyList) el.historyList.innerHTML = '<div class="muted">请先登录</div>';
       return;
     }
-    
+
     try {
-      const rows = await App.utils.request('/api/history', 'GET', null, true);
-      App.state.historyRows = rows;
-      
-      if (App.elements.historyList) {
-        if (!rows || rows.length === 0) {
-          App.elements.historyList.innerHTML = '<div class="muted">暂无检测记录</div>';
-        } else {
-          App.elements.historyList.innerHTML = rows.map((item) => `
-            <div class="history-item" data-id="${item.id}">
-              <div class="history-time">${App.utils.formatDateTime(item.created_at)}</div>
-              <div class="history-text">${App.utils.escapeHtml((item.input_text || '').slice(0, 80))}${(item.input_text || '').length > 80 ? '...' : ''}</div>
-            </div>
-          `).join('');
-        }
-      }
-    } catch (error) {
-      if (App.elements.historyList) {
-        App.elements.historyList.innerHTML = `<div class="muted">加载失败：${App.utils.escapeHtml(error.message)}</div>`;
-      }
-    }
-  },
+      const rows = await api(CONFIG.API_PATHS.HISTORY, 'GET', null, true);
 
-  /** 清空历史记录 */
-  async clearHistory() {
-    if (!confirm('确定要清空所有历史记录吗？此操作不可恢复。')) return;
-    
-    try {
-      const result = await App.utils.request('/api/history', 'DELETE', null, true);
-      App.utils.setMessage(App.elements.detectMsg, `已清空 ${result.deleted} 条记录`, 'success');
-      await App.actions.loadHistory();
-    } catch (error) {
-      App.utils.setMessage(App.elements.detectMsg, error.message, 'error');
-    }
-  },
-};
-
-
-// ============================================================================
-// Event Binding
-// ============================================================================
-
-App.bindEvents = function () {
-  // 标签页切换
-  const tabLogin = document.getElementById('tabLogin');
-  const tabRegister = document.getElementById('tabRegister');
-  tabLogin?.addEventListener('click', () => App.actions.setActiveAuthPanel('login'));
-  tabRegister?.addEventListener('click', () => App.actions.setActiveAuthPanel('register'));
-  
-  // 按钮事件
-  const loginBtn = document.getElementById('loginBtn');
-  const registerBtn = document.getElementById('registerBtn');
-  const detectBtn = document.getElementById('detectBtn');
-  const sampleBtn = document.getElementById('sampleBtn');
-  const clearBtn = document.getElementById('clearBtn');
-  const logoutBtn = document.getElementById('logoutBtn');
-  const clearHistoryBtn = document.getElementById('clearHistoryBtn');
-  
-  loginBtn?.addEventListener('click', () => App.actions.login());
-  registerBtn?.addEventListener('click', () => App.actions.register());
-  detectBtn?.addEventListener('click', () => App.actions.detect());
-  sampleBtn?.addEventListener('click', () => App.actions.loadSampleText());
-  clearBtn?.addEventListener('click', () => App.actions.clearInputText());
-  logoutBtn?.addEventListener('click', () => App.actions.clearSession());
-  clearHistoryBtn?.addEventListener('click', () => App.actions.clearHistory());
-  
-  // 历史记录点击查看详情
-  const historyList = document.getElementById('historyList');
-  historyList?.addEventListener('click', (event) => {
-    const item = event.target.closest('.history-item');
-    if (item && item.dataset.id) {
-      const record = App.state.historyRows.find(r => r.id === parseInt(item.dataset.id));
-      if (record) {
-        App.actions.renderDetectResults(
-          record.result?.words || [],
-          record.result?.sentences || []
-        );
-        if (App.elements.inputText) {
-          App.elements.inputText.value = record.input_text;
-        }
-        App.utils.setMessage(App.elements.detectMsg, `已加载历史记录 #${record.id}`, 'success');
+      if (!rows || !rows.length) {
+        el.historyList.innerHTML = '<div class="muted">暂无历史记录</div>';
+        return;
       }
-    }
-  });
-  
-  // 键盘快捷提交
-  document.addEventListener('keydown', (event) => {
-    if (event.key === 'Enter') {
-      if (document.activeElement === App.elements.loginPassword) {
-        event.preventDefault();
-        App.actions.login();
-      } else if (document.activeElement === App.elements.registerConfirm) {
-        event.preventDefault();
-        App.actions.register();
-      } else if (document.activeElement === App.elements.inputText && (event.ctrlKey || event.metaKey)) {
-        event.preventDefault();
-        App.actions.detect();
-      }
-    }
-  });
-  
-  // 输入框防抖自动保存
-  const inputText = App.elements.inputText;
-  if (inputText) {
-    const saveDraft = App.utils.debounce(() => {
-      localStorage.setItem('aigc_draft', inputText.value);
-    }, 500);
-    inputText.addEventListener('input', saveDraft);
-    
-    // 恢复草稿
-    const draft = localStorage.getItem('aigc_draft');
-    if (draft && !inputText.value) {
-      inputText.value = draft;
+
+      // 使用 escapeHtml 处理所有动态数据，防止存储型 XSS 通过历史记录回显攻击
+      el.historyList.innerHTML = rows.map((r) => {
+        const summary = r.result?.summary ?? {};
+        const rawText = r.input_text ?? '';
+        const preview = rawText.slice(0, 100);
+        const hasMore = rawText.length > 100;
+
+        return `
+          <div class="history-item">
+            <div class="time">${escapeHtml(r.created_at)}</div>
+            <div>切换词位: ${Number(summary.switch_word_index ?? 0) + 1} | 切换句位: ${Number(summary.switch_sentence_index ?? 0) + 1}</div>
+            <div>${escapeHtml(preview)}${hasMore ? '...' : ''}</div>
+          </div>
+        `;
+      }).join('');
+    } catch (err) {
+      el.historyList.innerHTML = `<div class="muted">加载失败: ${escapeHtml(err.message)}</div>`;
     }
   }
-};
 
-
-// ============================================================================
-// Application Initialization
-// ============================================================================
-
-App.init = function () {
-  App.actions.updateUserDisplay();
-  App.actions.setActiveAuthPanel('login');
-  App.bindEvents();
-  
-  if (App.state.token) {
-    App.actions.loadHistory();
-    // 如果当前在检测页面，加载草稿
-    if (window.location.pathname === '/detect') {
-      const draft = localStorage.getItem('aigc_draft');
-      if (draft && App.elements.inputText) {
-        App.elements.inputText.value = draft;
-      }
+  function renderWordHighlight(words) {
+    if (!words || !words.length) {
+      el.wordHighlight.textContent = '暂无结果';
+      return;
     }
-  }
-};
 
-// 页面可见性变化时刷新历史
-document.addEventListener('visibilitychange', () => {
-  if (!document.hidden && App.state.token && window.location.pathname === '/detect') {
-    App.actions.loadHistory();
-  }
-});
+    const html = words.map((w) => {
+      const cls = w.label_id === 1 ? 'aigt' : 'hwt';
+      // 对 title 属性中的动态数据也进行转义，防止属性注入
+      const title = `${escapeHtml(w.label)} | 置信度 ${escapeHtml(String(w.confidence))}`;
+      return `<span class="word ${cls}" title="${title}">${escapeHtml(w.token)}</span>`;
+    }).join(' ');
 
-App.init();
+    el.wordHighlight.innerHTML = html;
+  }
+
+  function renderSentences(sentences) {
+    if (!sentences || !sentences.length) {
+      el.sentenceList.innerHTML = '<div class="muted">暂无结果</div>';
+      return;
+    }
+
+    el.sentenceList.innerHTML = sentences.map((s) => {
+      const cls = s.label === 'AIGT' ? 'aigt' : 'hwt';
+      return `
+        <div class="sentence-item ${cls}">
+          <div><strong>句子 ${s.index + 1}</strong> | 标签: ${escapeHtml(s.label)} | 置信度: ${escapeHtml(String(s.confidence))}</div>
+          <div>${escapeHtml(s.text)}</div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  function renderSwitch(summary) {
+    if (!summary) {
+      el.switchInfo.textContent = '切换点：暂无';
+      return;
+    }
+
+    const wordPos = Number(summary.switch_word_index ?? 0) + 1;
+    const sentPos = Number(summary.switch_sentence_index ?? 0) + 1;
+    el.switchInfo.textContent = `检测到的切换点位于第 ${wordPos} 个词 / 第 ${sentPos} 个句子`;
+  }
+
+  /* ==========================================
+   * 7. 事件绑定与初始化 (Event Binding & Init)
+   * ========================================== */
+
+  function bindEvents() {
+    // 认证相关
+    el.tabLogin?.addEventListener('click', () => showAuthTab('login'));
+    el.tabRegister?.addEventListener('click', () => showAuthTab('register'));
+    el.registerBtn?.addEventListener('click', doRegister);
+    el.loginBtn?.addEventListener('click', doLogin);
+
+    el.logoutBtn?.addEventListener('click', () => {
+      clearAuth();
+      if (el.authMsg) el.authMsg.textContent = '';
+      if (el.detectMsg) el.detectMsg.textContent = '';
+      if (el.historyList) el.historyList.innerHTML = '<div class="muted">请先登录</div>';
+    });
+
+    // 检测相关
+    el.sampleBtn?.addEventListener('click', () => {
+      if (el.inputText) el.inputText.value = CONFIG.SAMPLE_TEXT;
+    });
+
+    el.clearBtn?.addEventListener('click', () => {
+      if (el.inputText) el.inputText.value = '';
+      if (el.wordHighlight) el.wordHighlight.textContent = '暂无结果';
+      if (el.sentenceList) el.sentenceList.innerHTML = '';
+      if (el.switchInfo) el.switchInfo.textContent = '切换点：暂无';
+      if (el.detectMsg) el.detectMsg.textContent = '';
+    });
+
+    el.detectBtn?.addEventListener('click', doDetect);
+    el.refreshHistoryBtn?.addEventListener('click', loadHistory);
+  }
+
+  function init() {
+    updateAuthUI();
+    bindEvents();
+    loadHistory();
+  }
+
+  // 启动应用
+  init();
+})();
