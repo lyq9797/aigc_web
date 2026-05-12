@@ -2,45 +2,150 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="description" content="注册AI文本检测系统账号 - 开始使用智能检测服务" />
+  <meta name="theme-color" content="#0f7d6b" />
   <title>注册 - AI 文本检测系统</title>
   <link rel="preload" href="/static/styles.css?v=20260420-4" as="style" />
   <link rel="stylesheet" href="/static/styles.css?v=20260420-4" />
+  <link rel="icon" type="image/x-icon" href="/static/favicon.ico" />
 </head>
 <body>
   <noscript>
-    <div style="padding:16px;background:#ffefef;color:#802020;text-align:center;">本页面依赖 JavaScript，建议启用后继续使用。</div>
+    <div class="noscript-warning">
+      ⚠️ 本页面依赖 JavaScript，请启用后继续使用。
+    </div>
   </noscript>
 
+  <!-- Background decoration -->
   <div class="bg-shape bg-one"></div>
   <div class="bg-shape bg-two"></div>
 
+  <!-- ========================================================================
+       Main Content - Registration Page
+    ======================================================================= -->
+
   <main class="auth-wrap" role="main">
     <section class="card auth-box" aria-labelledby="registerTitle">
-      <h1 id="registerTitle" class="auth-title">用户注册</h1>
-      <p class="muted auth-subtitle">注册成功后返回登录页面</p>
+
+      <!-- Logo / Header -->
+      <div class="auth-logo">
+        <span class="logo-icon">✨</span>
+      </div>
+      <h1 id="registerTitle" class="auth-title">创建账号</h1>
+      <p class="auth-subtitle">开始使用 AI 文本检测服务</p>
+
+      <!-- Registration Form -->
       <form id="registerForm" class="auth-form" novalidate>
-        <label for="username">用户名</label>
-        <input id="username" name="username" type="text" autocomplete="username" placeholder="3-50 字符" required />
 
-        <label for="password">密码</label>
-        <div class="password-input-wrap">
-          <input id="password" name="password" type="password" autocomplete="new-password" placeholder="至少 6 位" required />
-          <button id="togglePasswordBtn" type="button" class="password-eye" aria-label="显示或隐藏密码" title="显示/隐藏密码"></button>
+        <!-- Username field -->
+        <div class="form-field">
+          <label for="username">
+            <span class="field-icon">👤</span> 用户名
+          </label>
+          <input
+            id="username"
+            name="username"
+            type="text"
+            autocomplete="username"
+            placeholder="3-50 个字符"
+            required
+          />
+          <div class="field-hint">支持字母、数字、下划线或中文</div>
         </div>
 
-        <label for="passwordConfirm">确认密码</label>
-        <div class="password-input-wrap">
-          <input id="passwordConfirm" name="passwordConfirm" type="password" placeholder="请再次输入密码" required />
-          <button id="togglePasswordConfirmBtn" type="button" class="password-eye" aria-label="显示或隐藏确认密码" title="显示/隐藏确认密码"></button>
+        <!-- Password field -->
+        <div class="form-field">
+          <label for="password">
+            <span class="field-icon">🔒</span> 密码
+          </label>
+          <div class="password-input-wrap">
+            <input
+              id="password"
+              name="password"
+              type="password"
+              autocomplete="new-password"
+              placeholder="至少 6 位"
+              required
+            />
+            <button
+              id="togglePasswordBtn"
+              type="button"
+              class="password-eye"
+              aria-label="显示或隐藏密码"
+              title="显示/隐藏密码"
+            >
+              👁️
+            </button>
+          </div>
+          <div class="password-strength" id="passwordStrength"></div>
+          <div class="field-hint">密码长度 6-128 字符，建议包含字母和数字</div>
         </div>
 
-        <button id="registerBtn" class="primary big" type="submit">注册</button>
+        <!-- Confirm password field -->
+        <div class="form-field">
+          <label for="passwordConfirm">
+            <span class="field-icon">✓</span> 确认密码
+          </label>
+          <div class="password-input-wrap">
+            <input
+              id="passwordConfirm"
+              name="passwordConfirm"
+              type="password"
+              placeholder="请再次输入密码"
+              required
+            />
+            <button
+              id="togglePasswordConfirmBtn"
+              type="button"
+              class="password-eye"
+              aria-label="显示或隐藏确认密码"
+              title="显示/隐藏确认密码"
+            >
+              👁️
+            </button>
+          </div>
+          <div class="password-match" id="passwordMatch"></div>
+        </div>
+
+        <!-- Terms agreement -->
+        <div class="terms-checkbox">
+          <label class="checkbox-label">
+            <input type="checkbox" id="agreeTerms" checked />
+            <span>我已阅读并同意 <a href="#" class="terms-link">《用户协议》</a> 和 <a href="#" class="terms-link">《隐私政策》</a></span>
+          </label>
+        </div>
+
+        <button id="registerBtn" class="btn-primary btn-lg" type="submit">
+          📝 注册
+        </button>
       </form>
-      <button id="goLoginBtn" class="ghost big" type="button">已有账号？去登录</button>
-      <p id="msg" class="msg" aria-live="polite"></p>
+
+      <!-- Login link -->
+      <div class="auth-footer">
+        <p class="muted">已有账号？</p>
+        <button id="goLoginBtn" class="btn-link" type="button">
+          立即登录 →
+        </button>
+      </div>
+
+      <!-- Message area -->
+      <div id="msg" class="msg" aria-live="polite"></div>
+
     </section>
   </main>
+
+  <!-- Loading overlay -->
+  <div id="loadingOverlay" class="loading-overlay hidden">
+    <div class="loading-spinner">
+      <div class="spinner"></div>
+      <p>注册中...</p>
+    </div>
+  </div>
+
+  <!-- ========================================================================
+       Scripts
+    ======================================================================== -->
 
   <script src="/static/common.js?v=20260417-6"></script>
   <script src="/static/register.js?v=20260417-6"></script>
