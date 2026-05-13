@@ -1,228 +1,176 @@
-// ============================================================================
-// Authentication Module
-// ============================================================================
+/**
+ * AI 文本检测系统 - 公共工具与核心模块 (Common Utilities)
+ */
+(function (global) {
+  'use strict';
 
-const Auth = {
-  // =========================
-  // Getters
-  // =========================
-  
-  /** 获取存储的认证令牌 */
-  get token() {
-    return localStorage.getItem('aigc_token') || '';
-  },
-  
-  /** 获取存储的用户名 */
-  get username() {
-    return localStorage.getItem('aigc_user') || '';
-  },
-  
-  /** 检查是否已登录 */
-  get isLoggedIn() {
-    return !!this.token;
-  },
-  
-  // =========================
-  // Setters
-  // =========================
-  
-  /** 保存认证信息 */
-  set(token, username) {
-    if (token) {
-      localStorage.setItem('aigc_token', token);
-    }
-    if (username) {
-      localStorage.setItem('aigc_user', username);
-    }
-  },
-  
-  /** 清除所有认证信息 */
-  clear() {
-    localStorage.removeItem('aigc_token');
-    localStorage.removeItem('aigc_user');
-  },
-  
-  // =========================
-  // Token Management
-  // =========================
-  
-  /** 获取Token过期时间（从JWT解析） */
-  getTokenExpiry() {
-    const token = this.token;
-    if (!token) return null;
-    
-    try {
-      const payload = token.split('.')[1];
-      const decoded = JSON.parse(atob(payload));
-      return decoded.exp ? decoded.exp * 1000 : null;
-    } catch {
-      return null;
-    }
-  },
-  
-  /** 检查Token是否即将过期（5分钟内） */
-  isTokenExpiringSoon() {
-    const expiry = this.getTokenExpiry();
-    if (!expiry) return false;
-    const fiveMinutes = 5 * 60 * 1000;
-    return (expiry - Date.now()) < fiveMinutes;
-  },
-};
-
-
-// ============================================================================
-// HTML escaping
-// ============================================================================
-
-/** 转义HTML特殊字符，防止XSS攻击 */
-function escapeHtml(value) {
-  return String(value || '')
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
-}
-
-
-// ============================================================================
-// HTTP Request Helpers
-// ============================================================================
-
-/** 构建请求头 */
-function buildHeaders(needAuth) {
-  const headers = {
-    'Accept': 'application/json',
+  /* ==========================================
+   * 1. 常量与配置 (Constants & Configuration)
+   * ========================================== */
+  const CONFIG = {
+    STORAGE_KEYS: {
+      TOKEN: 'aigc_token',
+      USER: 'aigc_user',
+    },
+    ROUTES: {
+      LOGIN: '/login',
+    },
   };
-  if (needAuth) {
-    if (!Auth.token) {
-      throw new Error('请先登录');
+
+  /* ==========================================
+   * 2. 认证状态管理 (Auth State Management)
+   * ========================================== */
+
+  const Auth = {
+    get token() {
+      return localStorage.getItem(CONFIG.STORAGE_KEYS.TOKEN) ?? '';
+    },
+    get username() {
+      return localStorage.getItem(CONFIG.STORAGE_KEYS.USER) ?? '';
+    },
+
+    /**
+     * 保存认证凭证
+     */
+    set(token, username) {
+      localStorage.setItem(CONFIG.STORAGE_KEYS.TOKEN, token);
+      localStorage.setItem(CONFIG.STORAGE_KEYS.USER, username);
+    },
+
+    clear() {
+      localStorage.removeItem(CONFIG.STORAGE_KEYS.TOKEN);
+      localStorage.removeItem(CONFIG.STORAGE_KEYS.USER);
+    },
+  };
+
+  /* ==========================================
+   * 3. 安全与工具函数 (Security & Utilities)
+   * ========================================== */
+
+  function escapeHtml(str) {
+    if (str === null || str === undefined) return '';
+    const map = {
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#39;',
+    };
+    return String(str).replace(/[&<>"']/g, (char) => map[char]);
+  }
+
+  /* ==========================================
+   * 4. 网络请求封装 (API Request Wrapper)
+   * ========================================== */
+
+  /**
+   * 统一的 API 请求封装
+   * @param {string} path - API 路径
+   * @param {'GET' | 'POST' | 'PUT' | 'DELETE'} method - HTTP 方法
+   * @param {Object|FormData|null} body - 请求体数据
+   * @param {boolean} needAuth - 是否需要携带认证 Token
+   * @returns {Promise<any>} 解析后的 JSON 数据
+   */
+  async function api(path, method = 'GET', body = null, needAuth = false) {
+    const headers = {};
+
+    // 处理认证头
+    if (needAuth) {
+      if (!Auth.token) {
+        throw new Error('会话已过期，请重新登录');
+      }
+      headers['Authorization'] = `Bearer ${Auth.token}`;
     }
-    headers['Authorization'] = `Bearer ${Auth.token}`;
-  }
-  return headers;
-}
 
+    let requestBody = null;
 
-/** 封装的API请求函数，支持超时控制 */
-async function api(path, method = 'GET', body = null, needAuth = false, timeoutMs = 15000) {
-  const headers = buildHeaders(needAuth);
-  let requestBody = null;
+    // 处理请求体与 Content-Type
+    if (body instanceof FormData) {
+      requestBody = body;
+      // 【关键修复】FormData 必须交由浏览器自动设置 Content-Type 及 Boundary，手动设置会导致请求失败
+    } else if (body !== null && body !== undefined) {
+      headers['Content-Type'] = 'application/json';
+      requestBody = JSON.stringify(body);
+    }
 
-  if (body instanceof FormData) {
-    requestBody = body;
-  } else if (body !== null && body !== undefined) {
-    headers['Content-Type'] = 'application/json';
-    requestBody = JSON.stringify(body);
-  }
-
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), timeoutMs);
-
-  const response = await fetch(path, {
-    method,
-    headers,
-    body: requestBody,
-    signal: controller.signal,
-  }).finally(() => clearTimeout(timeout));
-
-  const data = await response.json().catch(() => ({}));
-  if (!response.ok) {
-    const error = new Error(data.detail || '请求失败');
-    error.detail = data.detail;
-    error.status = response.status;
-    throw error;
-  }
-  return data;
-}
-
-
-/** 带重试的API请求 */
-async function apiWithRetry(path, method = 'GET', body = null, needAuth = false, retries = 2) {
-  let lastError;
-  for (let i = 0; i <= retries; i++) {
     try {
-      return await api(path, method, body, needAuth);
+      const resp = await fetch(path, {
+        method,
+        headers,
+        body: requestBody,
+        // 【安全说明】明确指定 credentials，若后端使用 Cookie 认证需设为 'include'
+        credentials: 'same-origin',
+      });
+
+      // 尝试解析 JSON，若响应非 JSON 格式则回退为空对象
+      const data = await resp.json().catch(() => ({}));
+
+      if (!resp.ok) {
+        const error = new Error(data.detail || data.message || '请求失败');
+        error.detail = data.detail;
+        error.status = resp.status;
+        throw error;
+      }
+
+      return data;
     } catch (error) {
-      lastError = error;
-      if (i < retries && error.status !== 401) {
-        await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1)));
+      // 区分网络层异常（如断网）和业务层异常
+      if (error instanceof TypeError && error.message.includes('fetch')) {
+        throw new Error('网络连接失败，请检查您的网络设置');
       }
+      throw error;
     }
   }
-  throw lastError;
-}
 
+  /* ==========================================
+   * 5. 路由与 UI 交互 (Routing & UI Interaction)
+   * ========================================== */
 
-// ============================================================================
-// Authentication Guards
-// ============================================================================
-
-/** 要求用户已登录，否则跳转到登录页 */
-function requireLogin() {
-  if (!Auth.token) {
-    window.location.href = '/login';
-    return false;
+  function requireLogin() {
+    if (!Auth.token) {
+      // 使用相对路径重定向，避免开放重定向 (Open Redirect) 风险
+      window.location.href = CONFIG.ROUTES.LOGIN;
+      return false;
+    }
+    return true;
   }
-  return true;
-}
 
+  /**
+   * 挂载用户信息与退出逻辑
+   * 【关键修复】原代码在挂载时会立即执行 onLogout 回调，现已修正为事件绑定模式。
+   *
+   * @param {HTMLElement} elUser - 显示用户名的 DOM 元素
+   * @param {HTMLElement} elLogoutBtn - 退出按钮 DOM 元素
+   * @param {Function} onLogoutCallback - 点击退出后执行的清理回调函数
+   */
+  function mountUserInfo(elUser, elLogoutBtn, onLogoutCallback) {
+    // 渲染用户信息
+    if (elUser) {
+      elUser.textContent = `当前用户: ${Auth.username || '未知用户'}`;
+    }
 
-/** 要求用户未登录，否则跳转到检测页 */
-function requireGuest() {
-  if (Auth.token) {
-    window.location.href = '/detect';
-    return false;
+    // 绑定退出事件
+    if (elLogoutBtn && typeof onLogoutCallback === 'function') {
+      elLogoutBtn.addEventListener('click', () => {
+        Auth.clear();
+        onLogoutCallback();
+        // 退出后重定向到登录页
+        window.location.href = CONFIG.ROUTES.LOGIN;
+      });
+    }
   }
-  return true;
-}
 
+  /* ==========================================
+   * 6. 模块导出 (Module Export)
+   * ========================================== */
 
-// ============================================================================
-// User Interface Helpers
-// ============================================================================
-
-/** 挂载用户信息到指定元素 */
-function mountUserInfo(elUser, onLogout) {
-  if (!elUser) return;
-  elUser.textContent = Auth.username ? `当前用户: ${Auth.username}` : '未登录';
-  if (typeof onLogout === 'function') {
-    onLogout();
-  }
-}
-
-
-/** 显示提示消息 */
-function showMessage(element, message, type = 'info') {
-  if (!element) return;
-  element.textContent = message;
-  const colors = {
-    error: '#b13f00',
-    success: '#0a7f6f',
-    warning: '#e67e22',
-    info: '#5f6c75'
+  // 将公共 API 挂载到全局对象，供其他页面脚本调用
+  global.AppUtils = {
+    Auth,
+    escapeHtml,
+    api,
+    requireLogin,
+    mountUserInfo,
   };
-  element.style.color = colors[type] || colors.info;
-  
-  if (type !== 'error') {
-    setTimeout(() => {
-      if (element.textContent === message) {
-        element.textContent = '';
-      }
-    }, 3000);
-  }
-}
 
-
-/** 显示加载状态 */
-function showLoading(button, isLoading, originalText = null) {
-  if (!button) return;
-  if (isLoading) {
-    button.dataset.originalText = originalText || button.textContent;
-    button.textContent = '处理中...';
-    button.disabled = true;
-  } else {
-    button.textContent = button.dataset.originalText || button.textContent;
-    button.disabled = false;
-  }
-}
+})(window);
