@@ -1,186 +1,107 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
+  <!-- 页面元信息 -->
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <meta name="description" content="AI文本检测系统 - 智能识别AI生成内容与人类写作内容" />
-  <meta name="theme-color" content="#0f7d6b" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>文本检测 - AI 文本检测系统</title>
-  <link rel="preload" href="/static/styles.css?v=20260420-4" as="style" />
-  <link rel="stylesheet" href="/static/styles.css?v=20260420-4" />
-  <link rel="icon" type="image/x-icon" href="/static/favicon.ico" />
+
+  <!-- 样式资源 -->
+  <!-- 使用版本号控制缓存：v=20260420-1 -->
+  <link rel="stylesheet" href="/static/styles.css?v=20260420-1" />
 </head>
 <body>
-  <noscript>
-    <div class="noscript-warning">
-      ⚠️ 本页面依赖 JavaScript，请启用后继续使用。
-    </div>
-  </noscript>
-
-  <!-- Background decoration -->
+  <!-- 背景装饰元素 -->
   <div class="bg-shape bg-one"></div>
   <div class="bg-shape bg-two"></div>
 
-  <!-- ========================================================================
-       Header / Navigation
-    ======================================================================= -->
-
+  <!-- 顶部导航栏 -->
   <header class="topbar centered-topbar" role="banner">
-    <div class="logo-area">
-      <span class="logo-icon">🤖</span>
-      <h1>AI 文本检测系统</h1>
+    <h1>AI 文本检测系统</h1>
+
+    <!-- 用户操作面板 -->
+    <div class="user-panel" aria-label="用户操作">
+      <span id="currentUser" class="muted"></span>
+      <button id="goHistoryBtn" class="ghost">查看历史记录</button>
+      <button id="logoutBtn" class="ghost">退出登录</button>
     </div>
-    <nav class="user-panel" aria-label="用户操作">
-      <span id="currentUser" class="user-name" aria-live="polite"></span>
-      <button id="goHistoryBtn" class="btn-secondary btn-sm" type="button">
-        📋 历史记录
-      </button>
-      <button id="logoutBtn" class="btn-secondary btn-sm" type="button">
-        🚪 退出登录
-      </button>
-    </nav>
   </header>
 
-  <!-- ========================================================================
-       Main Content - Text Detection
-    ======================================================================= -->
-
+  <!-- 主内容区域 -->
   <main class="layout-single" role="main">
-    <section class="card detect-card-full" aria-labelledby="detectTitle">
+    <section class="card detect-card-full">
+      <!-- 操作控制栏 -->
+      <div class="control-row" aria-label="操作控制">
+        <button id="sampleBtn" class="ghost">加载示例文本</button>
+        <button id="clearBtn" class="ghost">清除内容</button>
 
-      <!-- Control row with action buttons -->
-      <div class="control-row">
-        <div class="control-group">
-          <button id="sampleBtn" class="btn-secondary btn-sm" type="button">
-            📄 加载示例
-          </button>
-          <button id="clearBtn" class="btn-secondary btn-sm" type="button">
-            🗑️ 清除内容
-          </button>
-        </div>
-
-        <!-- Export dropdown -->
+        <!-- 结果导出菜单 -->
         <div class="export-control-wrap">
-          <button id="exportDetectBtn" class="btn-secondary btn-sm export-trigger" type="button" disabled aria-haspopup="true" aria-expanded="false">
-            📎 结果导出
+          <button id="exportDetectBtn" class="ghost export-trigger" type="button" disabled>
+            结果导出
           </button>
-          <div id="exportDetectMenu" class="export-menu hidden" aria-hidden="true" aria-label="导出菜单">
+          <div id="exportDetectMenu" class="export-menu hidden" aria-hidden="true">
             <div class="export-menu-panel" role="dialog" aria-modal="true" aria-label="检测结果导出格式选择">
-              <div class="export-menu-title">📥 选择导出格式</div>
-              <button id="exportDetectTxtBtn" class="export-menu-item" type="button">
-                📄 导出为 TXT
-              </button>
-              <button id="exportDetectJsonBtn" class="export-menu-item" type="button">
-                📋 导出为 JSON
-              </button>
+              <div class="export-menu-title">选择导出格式</div>
+              <button id="exportDetectTxtBtn" class="export-menu-item" type="button">导出为 TXT</button>
+              <button id="exportDetectJsonBtn" class="export-menu-item" type="button">导出为 JSON</button>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Text input area -->
-      <div class="input-section">
-        <h2 id="detectTitle">
-          <span class="section-icon">✏️</span> 检测文本内容
-        </h2>
-        <textarea
-          id="inputText"
-          rows="10"
-          placeholder="在这里粘贴或输入待检测文本...&#10;&#10;支持中英文混合文本，建议每段不超过2000字符"
-          aria-label="检测文本输入区"
-          spellcheck="false"
-        ></textarea>
-        <div class="char-counter">
-          <span id="charCount">0</span> 字符
+      <!-- 文本输入区域 -->
+      <textarea
+        id="inputText"
+        rows="10"
+        placeholder="在这里粘贴或输入待检测文本..."
+        aria-label="待检测文本输入框"
+      ></textarea>
+
+      <!-- 文件上传区域 -->
+      <div class="file-row">
+        <!-- 隐藏的文件输入控件 -->
+        <input
+          id="fileInput"
+          class="hidden-file-input"
+          type="file"
+          accept=".txt,.docx,.doc"
+          aria-label="文件选择输入框"
+        />
+        <button id="fileSelectBtn" class="ghost" type="button">选择文件</button>
+        <span id="selectedFileName" class="selected-file-name" aria-live="polite"></span>
+      </div>
+      <div id="fileInfo" class="file-info muted">支持 .txt、.doc、.docx文件</div>
+
+      <!-- 检测操作按钮 -->
+      <button id="detectBtn" class="primary big detect-action-btn">开始检测</button>
+      <p id="detectMsg" class="msg" aria-live="polite"></p>
+
+      <!-- 单词级高亮区域 -->
+      <h3>单词级高亮</h3>
+      <div id="wordHighlight" class="highlight-box highlight-box-with-legend">
+        <div class="word-legend legend-floating" aria-label="单词级标签图例">
+          <span class="legend-item legend-human">HWT（人类）</span>
+          <span class="legend-item legend-ai">AIGT（AI）</span>
         </div>
+        <div id="wordHighlightContent">暂无结果</div>
       </div>
 
-      <!-- File upload section -->
-      <div class="file-upload-section">
-        <div class="file-row">
-          <input
-            id="fileInput"
-            class="hidden-file-input"
-            type="file"
-            accept=".txt,.docx,.doc"
-            aria-label="上传文件进行检测"
-          />
-          <button id="fileSelectBtn" class="btn-secondary" type="button">
-            📁 选择文件
-          </button>
-          <span id="selectedFileName" class="selected-file-name" aria-live="polite"></span>
-        </div>
-        <div id="fileInfo" class="file-info muted">
-          💡 支持 .txt、.doc、.docx 文件，最大 10MB
-        </div>
-      </div>
-
-      <!-- Detection button and message -->
-      <div class="detect-action">
-        <button id="detectBtn" class="btn-primary btn-lg detect-action-btn" type="button">
-          🔍 开始检测
-        </button>
-        <p id="detectMsg" class="msg" aria-live="polite"></p>
-      </div>
-
-      <!-- =====================================================================
-           Detection Results
-        ===================================================================== -->
-
-      <!-- Word-level highlighting -->
-      <section aria-labelledby="wordHighlightTitle" class="result-section highlight-panel">
-        <div class="section-header">
-          <h3 id="wordHighlightTitle">
-            <span class="section-icon">🔤</span> 单词级高亮
-          </h3>
-          <div class="word-legend" aria-label="单词级标签图例">
-            <span class="legend-item legend-human">✍️ HWT（人类写作）</span>
-            <span class="legend-item legend-ai">🤖 AIGT（AI生成）</span>
-          </div>
-        </div>
-        <div
-          id="wordHighlight"
-          class="highlight-box"
-          aria-live="polite"
-          aria-label="单词级检测结果"
-        >
-          <div id="wordHighlightContent" class="word-container">
-            <div class="muted">✨ 暂无检测结果，请输入文本后点击"开始检测"</div>
-          </div>
-        </div>
-      </section>
-
-      <!-- Sentence-level results -->
-      <section aria-labelledby="sentenceListTitle" class="result-section sentence-panel">
-        <div class="section-header">
-          <h3 id="sentenceListTitle">
-            <span class="section-icon">📝</span> 句子级结果
-          </h3>
-        </div>
-        <div class="sentence-help-text">
-          💡 置信度说明：数值越接近 1 表示越像 AI 生成，越接近 0 表示越像人类写作
-        </div>
-        <div id="sentenceList" class="sentence-list">
-          <div class="muted">✨ 暂无检测结果</div>
-        </div>
-      </section>
-
+      <!-- 句子级结果区域 -->
+      <h3>句子级结果</h3>
+      <p class="sentence-help-text">
+        置信度是模型对【文本是 AI 生成还是人类撰写】的概率判断与可信程度。
+        越接近 1 表示模型越确定这段文本由 AI 生成，越接近 0 表示模型越确定这段文本由人类书写，
+        落在 0.5 左右表明模型难以明确区分
+      </p>
+      <div id="sentenceList" class="sentence-list"></div>
     </section>
   </main>
 
-  <!-- Loading overlay -->
-  <div id="loadingOverlay" class="loading-overlay hidden">
-    <div class="loading-spinner">
-      <div class="spinner"></div>
-      <p>检测中，请稍候...</p>
-    </div>
-  </div>
-
-  <!-- ========================================================================
-       Scripts
-    ======================================================================== -->
-
-  <script src="/static/common.js?v=20260417-6"></script>
-  <script src="/static/detect.js?v=20260420-4"></script>
+  <!-- 脚本资源 -->
+  <!-- 公共脚本：v=20260417-3 -->
+  <script src="/static/common.js?v=20260417-3"></script>
+  <!-- 检测功能脚本：v=20260420-1 -->
+  <script src="/static/detect.js?v=20260420-1"></script>
 </body>
 </html>
