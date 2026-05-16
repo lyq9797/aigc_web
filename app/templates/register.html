@@ -1,153 +1,105 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
+  <!-- 页面元信息 -->
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <meta name="description" content="注册AI文本检测系统账号 - 开始使用智能检测服务" />
-  <meta name="theme-color" content="#0f7d6b" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="AI 文本检测系统 - 用户安全注册入口" />
   <title>注册 - AI 文本检测系统</title>
-  <link rel="preload" href="/static/styles.css?v=20260420-4" as="style" />
-  <link rel="stylesheet" href="/static/styles.css?v=20260420-4" />
-  <link rel="icon" type="image/x-icon" href="/static/favicon.ico" />
+
+  <!-- 样式资源 -->
+  <link rel="stylesheet" href="/static/styles.css" />
 </head>
 <body>
-  <noscript>
-    <div class="noscript-warning">
-      ⚠️ 本页面依赖 JavaScript，请启用后继续使用。
-    </div>
-  </noscript>
+  <!-- 背景装饰元素 (纯视觉，对屏幕阅读器隐藏) -->
+  <div class="bg-shape bg-one" aria-hidden="true"></div>
+  <div class="bg-shape bg-two" aria-hidden="true"></div>
 
-  <!-- Background decoration -->
-  <div class="bg-shape bg-one"></div>
-  <div class="bg-shape bg-two"></div>
-
-  <!-- ========================================================================
-       Main Content - Registration Page
-    ======================================================================= -->
-
+  <!-- 主内容区域 -->
   <main class="auth-wrap" role="main">
-    <section class="card auth-box" aria-labelledby="registerTitle">
+    <section class="card auth-box" aria-labelledby="authTitle">
+      <h1 id="authTitle" class="auth-title">用户注册</h1>
+      <p class="muted auth-subtitle">注册成功后返回登录页面</p>
 
-      <!-- Logo / Header -->
-      <div class="auth-logo">
-        <span class="logo-icon">✨</span>
-      </div>
-      <h1 id="registerTitle" class="auth-title">创建账号</h1>
-      <p class="auth-subtitle">开始使用 AI 文本检测服务</p>
-
-      <!-- Registration Form -->
+      <!--
+        1. 使用 <form> 标签包裹以支持浏览器密码管理器的自动填充和回车键提交。
+        2. 添加 novalidate 属性禁用浏览器默认校验 UI，由前端 JS 统一处理校验逻辑与错误提示。
+        3. JS 中必须监听 submit 事件并调用 e.preventDefault() 以防止页面刷新。
+      -->
       <form id="registerForm" class="auth-form" novalidate>
 
-        <!-- Username field -->
-        <div class="form-field">
-          <label for="username">
-            <span class="field-icon">👤</span> 用户名
-          </label>
+        <!-- 用户名输入区 -->
+        <label for="username">用户名</label>
+        <input
+          id="username"
+          name="username"
+          type="text"
+          placeholder="3-50 字符"
+          autocomplete="username"
+          minlength="3"
+          maxlength="50"
+          required
+        />
+
+        <!-- 密码输入区 -->
+        <label for="password">密码</label>
+        <div class="password-input-wrap">
           <input
-            id="username"
-            name="username"
-            type="text"
-            autocomplete="username"
-            placeholder="3-50 个字符"
+            id="password"
+            name="password"
+            type="password"
+            placeholder="至少 6 位"
+            autocomplete="new-password"
+            minlength="6"
             required
           />
-          <div class="field-hint">支持字母、数字、下划线或中文</div>
+          <!-- 密码可见性切换按钮 -->
+          <button
+            id="togglePasswordBtn"
+            type="button"
+            class="password-eye"
+            aria-label="显示或隐藏密码"
+            aria-pressed="false"
+            title="显示/隐藏密码"
+          ></button>
         </div>
 
-        <!-- Password field -->
-        <div class="form-field">
-          <label for="password">
-            <span class="field-icon">🔒</span> 密码
-          </label>
-          <div class="password-input-wrap">
-            <input
-              id="password"
-              name="password"
-              type="password"
-              autocomplete="new-password"
-              placeholder="至少 6 位"
-              required
-            />
-            <button
-              id="togglePasswordBtn"
-              type="button"
-              class="password-eye"
-              aria-label="显示或隐藏密码"
-              title="显示/隐藏密码"
-            >
-              👁️
-            </button>
-          </div>
-          <div class="password-strength" id="passwordStrength"></div>
-          <div class="field-hint">密码长度 6-128 字符，建议包含字母和数字</div>
+        <!-- 确认密码输入区 -->
+        <label for="passwordConfirm">确认密码</label>
+        <div class="password-input-wrap">
+          <input
+            id="passwordConfirm"
+            name="passwordConfirm"
+            type="password"
+            placeholder="请再次输入密码"
+            autocomplete="new-password"
+            minlength="6"
+            required
+          />
+          <!-- 确认密码可见性切换按钮 -->
+          <button
+            id="togglePasswordConfirmBtn"
+            type="button"
+            class="password-eye"
+            aria-label="显示或隐藏确认密码"
+            aria-pressed="false"
+            title="显示/隐藏确认密码"
+          ></button>
         </div>
 
-        <!-- Confirm password field -->
-        <div class="form-field">
-          <label for="passwordConfirm">
-            <span class="field-icon">✓</span> 确认密码
-          </label>
-          <div class="password-input-wrap">
-            <input
-              id="passwordConfirm"
-              name="passwordConfirm"
-              type="password"
-              placeholder="请再次输入密码"
-              required
-            />
-            <button
-              id="togglePasswordConfirmBtn"
-              type="button"
-              class="password-eye"
-              aria-label="显示或隐藏确认密码"
-              title="显示/隐藏确认密码"
-            >
-              👁️
-            </button>
-          </div>
-          <div class="password-match" id="passwordMatch"></div>
-        </div>
+        <!-- 操作按钮区 -->
+        <button id="registerBtn" type="submit" class="primary big">注册</button>
+        <button id="goLoginBtn" type="button" class="ghost big">已有账号？去登录</button>
 
-        <!-- Terms agreement -->
-        <div class="terms-checkbox">
-          <label class="checkbox-label">
-            <input type="checkbox" id="agreeTerms" checked />
-            <span>我已阅读并同意 <a href="#" class="terms-link">《用户协议》</a> 和 <a href="#" class="terms-link">《隐私政策》</a></span>
-          </label>
-        </div>
+        <!-- 消息提示区 -->
+        <p id="msg" class="msg" role="alert" aria-live="assertive"></p>
 
-        <button id="registerBtn" class="btn-primary btn-lg" type="submit">
-          📝 注册
-        </button>
       </form>
-
-      <!-- Login link -->
-      <div class="auth-footer">
-        <p class="muted">已有账号？</p>
-        <button id="goLoginBtn" class="btn-link" type="button">
-          立即登录 →
-        </button>
-      </div>
-
-      <!-- Message area -->
-      <div id="msg" class="msg" aria-live="polite"></div>
-
     </section>
   </main>
 
-  <!-- Loading overlay -->
-  <div id="loadingOverlay" class="loading-overlay hidden">
-    <div class="loading-spinner">
-      <div class="spinner"></div>
-      <p>注册中...</p>
-    </div>
-  </div>
-
-  <!-- ========================================================================
-       Scripts
-    ======================================================================== -->
-
-  <script src="/static/common.js?v=20260417-6"></script>
-  <script src="/static/register.js?v=20260417-6"></script>
+  <!-- 脚本资源 -->
+  <script src="/static/common.js?v=20260416-4"></script>
+  <script src="/static/register.js?v=20260416-4"></script>
 </body>
 </html>
