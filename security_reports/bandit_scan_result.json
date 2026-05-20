@@ -1,6 +1,6 @@
 {
   "errors": [],
-  "generated_at": "2026-06-05T10:34:52Z",
+  "generated_at": "2026-06-05T13:29:46Z",
   "metrics": {
     ".\\app\\__init__.py": {
       "CONFIDENCE.HIGH": 0,
@@ -68,17 +68,17 @@
       "skipped_tests": 0
     },
     ".\\app\\detectors\\sentence_level.py": {
-      "CONFIDENCE.HIGH": 2,
+      "CONFIDENCE.HIGH": 1,
       "CONFIDENCE.LOW": 0,
       "CONFIDENCE.MEDIUM": 0,
       "CONFIDENCE.UNDEFINED": 0,
       "SEVERITY.HIGH": 0,
-      "SEVERITY.LOW": 2,
+      "SEVERITY.LOW": 1,
       "SEVERITY.MEDIUM": 0,
       "SEVERITY.UNDEFINED": 0,
       "loc": 378,
       "nosec": 0,
-      "skipped_tests": 0
+      "skipped_tests": 1
     },
     ".\\app\\detectors\\utils.py": {
       "CONFIDENCE.HIGH": 0,
@@ -94,28 +94,28 @@
       "skipped_tests": 0
     },
     ".\\app\\detectors\\word_level.py": {
-      "CONFIDENCE.HIGH": 4,
-      "CONFIDENCE.LOW": 0,
-      "CONFIDENCE.MEDIUM": 0,
-      "CONFIDENCE.UNDEFINED": 0,
-      "SEVERITY.HIGH": 0,
-      "SEVERITY.LOW": 2,
-      "SEVERITY.MEDIUM": 2,
-      "SEVERITY.UNDEFINED": 0,
-      "loc": 580,
-      "nosec": 0,
-      "skipped_tests": 0
-    },
-    ".\\app\\detectors\\word_model_runtime.py": {
       "CONFIDENCE.HIGH": 1,
       "CONFIDENCE.LOW": 0,
       "CONFIDENCE.MEDIUM": 0,
       "CONFIDENCE.UNDEFINED": 0,
       "SEVERITY.HIGH": 0,
-      "SEVERITY.LOW": 0,
-      "SEVERITY.MEDIUM": 1,
+      "SEVERITY.LOW": 1,
+      "SEVERITY.MEDIUM": 0,
       "SEVERITY.UNDEFINED": 0,
-      "loc": 454,
+      "loc": 581,
+      "nosec": 0,
+      "skipped_tests": 1
+    },
+    ".\\app\\detectors\\word_model_runtime.py": {
+      "CONFIDENCE.HIGH": 0,
+      "CONFIDENCE.LOW": 0,
+      "CONFIDENCE.MEDIUM": 0,
+      "CONFIDENCE.UNDEFINED": 0,
+      "SEVERITY.HIGH": 0,
+      "SEVERITY.LOW": 0,
+      "SEVERITY.MEDIUM": 0,
+      "SEVERITY.UNDEFINED": 0,
+      "loc": 455,
       "nosec": 0,
       "skipped_tests": 0
     },
@@ -172,43 +172,43 @@
       "skipped_tests": 0
     },
     ".\\work1\\test_single_text.py": {
-      "CONFIDENCE.HIGH": 4,
+      "CONFIDENCE.HIGH": 0,
       "CONFIDENCE.LOW": 0,
       "CONFIDENCE.MEDIUM": 0,
       "CONFIDENCE.UNDEFINED": 0,
       "SEVERITY.HIGH": 0,
       "SEVERITY.LOW": 0,
-      "SEVERITY.MEDIUM": 4,
+      "SEVERITY.MEDIUM": 0,
       "SEVERITY.UNDEFINED": 0,
-      "loc": 255,
+      "loc": 256,
       "nosec": 0,
       "skipped_tests": 0
     },
     ".\\work2\\deberta_CRF(new)_single_text.py": {
+      "CONFIDENCE.HIGH": 1,
+      "CONFIDENCE.LOW": 0,
+      "CONFIDENCE.MEDIUM": 0,
+      "CONFIDENCE.UNDEFINED": 0,
+      "SEVERITY.HIGH": 0,
+      "SEVERITY.LOW": 0,
+      "SEVERITY.MEDIUM": 1,
+      "SEVERITY.UNDEFINED": 0,
+      "loc": 270,
+      "nosec": 0,
+      "skipped_tests": 0
+    },
+    "_totals": {
       "CONFIDENCE.HIGH": 3,
       "CONFIDENCE.LOW": 0,
       "CONFIDENCE.MEDIUM": 0,
       "CONFIDENCE.UNDEFINED": 0,
       "SEVERITY.HIGH": 0,
-      "SEVERITY.LOW": 0,
-      "SEVERITY.MEDIUM": 3,
+      "SEVERITY.LOW": 2,
+      "SEVERITY.MEDIUM": 1,
       "SEVERITY.UNDEFINED": 0,
-      "loc": 269,
+      "loc": 2968,
       "nosec": 0,
-      "skipped_tests": 0
-    },
-    "_totals": {
-      "CONFIDENCE.HIGH": 14,
-      "CONFIDENCE.LOW": 0,
-      "CONFIDENCE.MEDIUM": 0,
-      "CONFIDENCE.UNDEFINED": 0,
-      "SEVERITY.HIGH": 0,
-      "SEVERITY.LOW": 4,
-      "SEVERITY.MEDIUM": 10,
-      "SEVERITY.UNDEFINED": 0,
-      "loc": 2964,
-      "nosec": 0,
-      "skipped_tests": 0
+      "skipped_tests": 2
     }
   },
   "results": [
@@ -233,34 +233,6 @@
       "test_name": "blacklist"
     },
     {
-      "code": "227         \"\"\"\n228         completed = subprocess.run(\n229             cmd,\n230             check=True,\n231             capture_output=True,\n232             text=True,\n233             encoding=\"utf-8\",\n234             errors=\"ignore\",\n235             timeout=self.BACKEND_TIMEOUT,\n236         )\n237 \n",
-      "col_offset": 20,
-      "end_col_offset": 9,
-      "filename": ".\\app\\detectors\\sentence_level.py",
-      "issue_confidence": "HIGH",
-      "issue_cwe": {
-        "id": 78,
-        "link": "https://cwe.mitre.org/data/definitions/78.html"
-      },
-      "issue_severity": "LOW",
-      "issue_text": "subprocess call - check for execution of untrusted input.",
-      "line_number": 228,
-      "line_range": [
-        228,
-        229,
-        230,
-        231,
-        232,
-        233,
-        234,
-        235,
-        236
-      ],
-      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b603_subprocess_without_shell_equals_true.html",
-      "test_id": "B603",
-      "test_name": "subprocess_without_shell_equals_true"
-    },
-    {
       "code": "18 import os\n19 import subprocess\n20 import sys\n",
       "col_offset": 0,
       "end_col_offset": 17,
@@ -281,175 +253,7 @@
       "test_name": "blacklist"
     },
     {
-      "code": "242         self._infer_fn = infer_document_with_sliding_windows\n243         self.tokenizer = AutoTokenizer.from_pretrained(WORD_MODEL_NAME)\n244         self.device = torch.device(\"cuda\" if torch.cuda.is_available() else \"cpu\")\n",
-      "col_offset": 25,
-      "end_col_offset": 71,
-      "filename": ".\\app\\detectors\\word_level.py",
-      "issue_confidence": "HIGH",
-      "issue_cwe": {
-        "id": 494,
-        "link": "https://cwe.mitre.org/data/definitions/494.html"
-      },
-      "issue_severity": "MEDIUM",
-      "issue_text": "Unsafe Hugging Face Hub download without revision pinning in from_pretrained()",
-      "line_number": 243,
-      "line_range": [
-        243
-      ],
-      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b615_huggingface_unsafe_download.html",
-      "test_id": "B615",
-      "test_name": "huggingface_unsafe_download"
-    },
-    {
-      "code": "246 \n247         ckpt = torch.load(WORD_MODEL_PATH, map_location=self.device, weights_only=False)\n248         state = ckpt.get(\"model_state_dict\", ckpt)\n",
-      "col_offset": 15,
-      "end_col_offset": 88,
-      "filename": ".\\app\\detectors\\word_level.py",
-      "issue_confidence": "HIGH",
-      "issue_cwe": {
-        "id": 502,
-        "link": "https://cwe.mitre.org/data/definitions/502.html"
-      },
-      "issue_severity": "MEDIUM",
-      "issue_text": "Use of unsafe PyTorch load",
-      "line_number": 247,
-      "line_range": [
-        247
-      ],
-      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b614_pytorch_load.html",
-      "test_id": "B614",
-      "test_name": "pytorch_load"
-    },
-    {
-      "code": "641         try:\n642             completed = subprocess.run(\n643                 cmd,\n644                 check=True,\n645                 capture_output=True,\n646                 text=True,\n647                 encoding=\"utf-8\",\n648                 errors=\"ignore\",\n649                 timeout=self.BACKEND_TIMEOUT_SECONDS,\n650             )\n651             payload = json.loads(completed.stdout.strip())\n",
-      "col_offset": 24,
-      "end_col_offset": 13,
-      "filename": ".\\app\\detectors\\word_level.py",
-      "issue_confidence": "HIGH",
-      "issue_cwe": {
-        "id": 78,
-        "link": "https://cwe.mitre.org/data/definitions/78.html"
-      },
-      "issue_severity": "LOW",
-      "issue_text": "subprocess call - check for execution of untrusted input.",
-      "line_number": 642,
-      "line_range": [
-        642,
-        643,
-        644,
-        645,
-        646,
-        647,
-        648,
-        649,
-        650
-      ],
-      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b603_subprocess_without_shell_equals_true.html",
-      "test_id": "B603",
-      "test_name": "subprocess_without_shell_equals_true"
-    },
-    {
-      "code": "131         self.num_labels: int = num_labels\n132         self.deberta: AutoModel = AutoModel.from_pretrained(model_name)\n133         self.dropout: nn.Dropout = nn.Dropout(dropout_rate)\n",
-      "col_offset": 34,
-      "end_col_offset": 71,
-      "filename": ".\\app\\detectors\\word_model_runtime.py",
-      "issue_confidence": "HIGH",
-      "issue_cwe": {
-        "id": 494,
-        "link": "https://cwe.mitre.org/data/definitions/494.html"
-      },
-      "issue_severity": "MEDIUM",
-      "issue_text": "Unsafe Hugging Face Hub download without revision pinning in from_pretrained()",
-      "line_number": 132,
-      "line_range": [
-        132
-      ],
-      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b615_huggingface_unsafe_download.html",
-      "test_id": "B615",
-      "test_name": "huggingface_unsafe_download"
-    },
-    {
-      "code": "64         try:\n65             self.tokenizer = transformers.AutoTokenizer.from_pretrained(config.gpt2_model_path)\n66             self.model = transformers.AutoModelForCausalLM.from_pretrained(config.gpt2_model_path)\n",
-      "col_offset": 29,
-      "end_col_offset": 95,
-      "filename": ".\\work1\\test_single_text.py",
-      "issue_confidence": "HIGH",
-      "issue_cwe": {
-        "id": 494,
-        "link": "https://cwe.mitre.org/data/definitions/494.html"
-      },
-      "issue_severity": "MEDIUM",
-      "issue_text": "Unsafe Hugging Face Hub download without revision pinning in from_pretrained()",
-      "line_number": 65,
-      "line_range": [
-        65
-      ],
-      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b615_huggingface_unsafe_download.html",
-      "test_id": "B615",
-      "test_name": "huggingface_unsafe_download"
-    },
-    {
-      "code": "65             self.tokenizer = transformers.AutoTokenizer.from_pretrained(config.gpt2_model_path)\n66             self.model = transformers.AutoModelForCausalLM.from_pretrained(config.gpt2_model_path)\n67             self.tokenizer.pad_token_id = self.tokenizer.eos_token_id\n",
-      "col_offset": 25,
-      "end_col_offset": 98,
-      "filename": ".\\work1\\test_single_text.py",
-      "issue_confidence": "HIGH",
-      "issue_cwe": {
-        "id": 494,
-        "link": "https://cwe.mitre.org/data/definitions/494.html"
-      },
-      "issue_severity": "MEDIUM",
-      "issue_text": "Unsafe Hugging Face Hub download without revision pinning in from_pretrained()",
-      "line_number": 66,
-      "line_range": [
-        66
-      ],
-      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b615_huggingface_unsafe_download.html",
-      "test_id": "B615",
-      "test_name": "huggingface_unsafe_download"
-    },
-    {
-      "code": "191         try:\n192             self.head_model = torch.load(str(model_path), map_location=self.device, weights_only=False)\n193         except TypeError:\n",
-      "col_offset": 30,
-      "end_col_offset": 103,
-      "filename": ".\\work1\\test_single_text.py",
-      "issue_confidence": "HIGH",
-      "issue_cwe": {
-        "id": 502,
-        "link": "https://cwe.mitre.org/data/definitions/502.html"
-      },
-      "issue_severity": "MEDIUM",
-      "issue_text": "Use of unsafe PyTorch load",
-      "line_number": 192,
-      "line_range": [
-        192
-      ],
-      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b614_pytorch_load.html",
-      "test_id": "B614",
-      "test_name": "pytorch_load"
-    },
-    {
-      "code": "194             # Fallback for older PyTorch versions\n195             self.head_model = torch.load(str(model_path), map_location=self.device)\n196 \n",
-      "col_offset": 30,
-      "end_col_offset": 83,
-      "filename": ".\\work1\\test_single_text.py",
-      "issue_confidence": "HIGH",
-      "issue_cwe": {
-        "id": 502,
-        "link": "https://cwe.mitre.org/data/definitions/502.html"
-      },
-      "issue_severity": "MEDIUM",
-      "issue_text": "Use of unsafe PyTorch load",
-      "line_number": 195,
-      "line_range": [
-        195
-      ],
-      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b614_pytorch_load.html",
-      "test_id": "B614",
-      "test_name": "pytorch_load"
-    },
-    {
-      "code": "62         self.num_labels = config.num_labels\n63         self.deberta = AutoModel.from_pretrained(config.model_name)\n64         self.dropout = nn.Dropout(dropout_rate)\n",
+      "code": "63         self.num_labels = config.num_labels\n64         self.deberta = AutoModel.from_pretrained(config.model_name)\n65         self.dropout = nn.Dropout(dropout_rate)\n",
       "col_offset": 23,
       "end_col_offset": 67,
       "filename": ".\\work2\\deberta_CRF(new)_single_text.py",
@@ -460,53 +264,13 @@
       },
       "issue_severity": "MEDIUM",
       "issue_text": "Unsafe Hugging Face Hub download without revision pinning in from_pretrained()",
-      "line_number": 63,
+      "line_number": 64,
       "line_range": [
-        63
+        64
       ],
       "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b615_huggingface_unsafe_download.html",
       "test_id": "B615",
       "test_name": "huggingface_unsafe_download"
-    },
-    {
-      "code": "282     \"\"\"Initializes and loads the model and tokenizer.\"\"\"\n283     tokenizer = AutoTokenizer.from_pretrained(config.model_name)\n284     model = DeBERTaCRFTagger(config).to(device)\n",
-      "col_offset": 16,
-      "end_col_offset": 64,
-      "filename": ".\\work2\\deberta_CRF(new)_single_text.py",
-      "issue_confidence": "HIGH",
-      "issue_cwe": {
-        "id": 494,
-        "link": "https://cwe.mitre.org/data/definitions/494.html"
-      },
-      "issue_severity": "MEDIUM",
-      "issue_text": "Unsafe Hugging Face Hub download without revision pinning in from_pretrained()",
-      "line_number": 283,
-      "line_range": [
-        283
-      ],
-      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b615_huggingface_unsafe_download.html",
-      "test_id": "B615",
-      "test_name": "huggingface_unsafe_download"
-    },
-    {
-      "code": "289     logger.info(f\"Loading model weights from {config.best_model_path}\")\n290     ckpt = torch.load(config.best_model_path, map_location=device, weights_only=False)\n291     state_dict = ckpt.get(\"model_state_dict\", ckpt)\n",
-      "col_offset": 11,
-      "end_col_offset": 86,
-      "filename": ".\\work2\\deberta_CRF(new)_single_text.py",
-      "issue_confidence": "HIGH",
-      "issue_cwe": {
-        "id": 502,
-        "link": "https://cwe.mitre.org/data/definitions/502.html"
-      },
-      "issue_severity": "MEDIUM",
-      "issue_text": "Use of unsafe PyTorch load",
-      "line_number": 290,
-      "line_range": [
-        290
-      ],
-      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b614_pytorch_load.html",
-      "test_id": "B614",
-      "test_name": "pytorch_load"
     }
   ]
 }
