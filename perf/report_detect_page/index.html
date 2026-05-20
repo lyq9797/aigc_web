@@ -10,26 +10,52 @@
 
     <title>AIGC Web 性能测试报告 - 检测页</title>
 
+    <!-- ==================== CSS 样式引入 ==================== -->
     <!-- Bootstrap Core CSS -->
     <link href="sbadmin2-1.0.7/bower_components/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- MetisMenu CSS -->
     <link href="sbadmin2-1.0.7/bower_components/metisMenu/dist/metisMenu.min.css" rel="stylesheet">
-    <!-- Custom CSS -->
+    <!-- SB Admin 2 Custom CSS -->
     <link href="sbadmin2-1.0.7/dist/css/sb-admin-2.css" rel="stylesheet">
-    <!-- Dashboard css -->
+    <!-- JMeter Dashboard CSS -->
     <link href="content/css/dashboard.css" rel="stylesheet">
-    <!-- Table sorter -->
+    <!-- Table Sorter Theme -->
     <link href="content/css/theme.blue.css" rel="stylesheet">
-    <!-- icon -->
-    <link rel="icon" type="image/png" href="content/pages/icon-apache.png" />
-    <!-- Custom Fonts -->
+    <!-- Font Awesome Icons -->
     <link href="sbadmin2-1.0.7/bower_components/font-awesome/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="content/pages/icon-apache.png" />
+
+    <!-- ==================== 自定义覆盖样式 ==================== -->
+    <style>
+        /* 统一面板标题居中样式，替代内联 style */
+        .panel-heading-center {
+            text-align: center;
+        }
+        /* 图表容器固定高度 */
+        .chart-container {
+            height: 200px;
+        }
+        /* 导航栏底部间距微调 */
+        .navbar-static-top {
+            margin-bottom: 0;
+        }
+        /* 表格内容左对齐优化，提升数据可读性 */
+        #generalInfos td:first-child {
+            font-weight: bold;
+            text-align: right;
+            width: 30%;
+        }
+    </style>
 </head>
 
 <body>
     <div id="wrapper">
-        <!-- 顶部与侧边栏导航 -->
-        <nav class="navbar navbar-default navbar-static-top" role="navigation" style="margin-bottom: 0">
+
+        <!-- ==================== 顶部与侧边栏导航区域 ==================== -->
+        <nav class="navbar navbar-default navbar-static-top" role="navigation">
+            <!-- 顶部品牌与移动端折叠按钮 -->
             <div class="navbar-header">
                 <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
                     <span class="sr-only">切换导航</span>
@@ -39,6 +65,8 @@
                 </button>
                 <a class="navbar-brand" href="index.html">AIGC 性能测试报告</a>
             </div>
+
+            <!-- 侧边栏菜单 -->
             <div class="navbar-default sidebar" role="navigation">
                 <div class="sidebar-nav navbar-collapse">
                     <ul class="nav" id="side-menu">
@@ -64,14 +92,15 @@
             </div>
         </nav>
 
-        <!-- 页面主体内容 -->
+        <!-- ==================== 页面主体内容区域 ==================== -->
         <div id="page-wrapper">
-            <!-- 测试基础信息 -->
+
+            <!-- 1. 测试基础信息面板 -->
             <div class="row">
                 <div class="col-lg-12">
-                     <div class="panel panel-default">
-                        <div class="panel-heading" style="text-align:center;">
-                           <p class="dashboard-title">测试与报告信息</p>
+                    <div class="panel panel-default">
+                        <div class="panel-heading panel-heading-center">
+                            <p class="dashboard-title">测试与报告信息</p>
                         </div>
                         <div class="panel-body">
                             <table id="generalInfos" class="table table-bordered table-condensed">
@@ -85,12 +114,15 @@
                 </div>
             </div>
 
-            <!-- APDEX 与 请求摘要 -->
+            <!-- 2. APDEX 与 请求摘要面板 (双列布局) -->
             <div class="row">
+                <!-- APDEX 指数 -->
                 <div class="col-lg-6">
-                    <div class="panel panel-default" style="text-align:center;">
+                    <div class="panel panel-default panel-heading-center">
                         <div class="panel-heading">
-                           <p class="dashboard-title"><a href="https://en.wikipedia.org/wiki/Apdex" target="_blank">APDEX (应用性能指数)</a></p>
+                            <p class="dashboard-title">
+                                <a href="https://en.wikipedia.org/wiki/Apdex" target="_blank">APDEX (应用性能指数)</a>
+                            </p>
                         </div>
                         <div class="panel-body">
                             <section id="apdex" class="col-md-12 table-responsive">
@@ -99,25 +131,25 @@
                         </div>
                     </div>
                 </div>
+                <!-- 请求摘要饼图 -->
                 <div class="col-lg-6">
-                    <div class="panel panel-default" style="text-align:center;">
+                    <div class="panel panel-default panel-heading-center">
                         <div class="panel-heading">
-                           <p class="dashboard-title">请求摘要</p>
+                            <p class="dashboard-title">请求摘要</p>
                         </div>
                         <div class="panel-body">
-                            <div class="flot-chart" style="height:200px;">
-                                <!-- 修复了原代码中 div 标签错误自闭合的问题 -->
-                                <div class="flot-chart-content" id="flot-requests-summary" style="height:200px;"></div>
+                            <div class="flot-chart chart-container">
+                                <div class="flot-chart-content" id="flot-requests-summary"></div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- 统计数据 -->
+            <!-- 3. 核心统计数据面板 (全宽) -->
             <div class="row">
                 <div class="col-lg-12">
-                    <div class="panel panel-default" style="text-align:center;">
+                    <div class="panel panel-default panel-heading-center">
                         <div class="panel-heading">
                             <p class="dashboard-title">统计数据</p>
                         </div>
@@ -130,10 +162,10 @@
                 </div>
             </div>
 
-            <!-- 错误信息 -->
+            <!-- 4. 错误信息面板 (全宽) -->
             <div class="row">
                 <div class="col-lg-12">
-                    <div class="panel panel-default" style="text-align:center;">
+                    <div class="panel panel-default panel-heading-center">
                         <div class="panel-heading">
                             <p class="dashboard-title">错误信息</p>
                         </div>
@@ -146,10 +178,10 @@
                 </div>
             </div>
 
-            <!-- 前5大错误 -->
+            <!-- 5. 前5大错误统计面板 (全宽) -->
             <div class="row">
                 <div class="col-lg-12">
-                    <div class="panel panel-default" style="text-align:center;">
+                    <div class="panel panel-default panel-heading-center">
                         <div class="panel-heading">
                             <p class="dashboard-title">按采样器统计的前5大错误</p>
                         </div>
@@ -161,14 +193,20 @@
                     </div>
                 </div>
             </div>
-        </div>
-    </div>
 
-    <!-- jQuery -->
+        </div>
+        <!-- /#page-wrapper -->
+    </div>
+    <!-- /#wrapper -->
+
+    <!-- ==================== JavaScript 脚本引入 ==================== -->
+    <!-- jQuery 核心库 -->
     <script src="sbadmin2-1.0.7/bower_components/jquery/dist/jquery.min.js"></script>
-    <!-- Bootstrap Core JavaScript -->
+
+    <!-- Bootstrap 核心脚本 -->
     <script src="sbadmin2-1.0.7/bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
-    <!-- Flot Charts -->
+
+    <!-- Flot 图表库及其插件 -->
     <script src="sbadmin2-1.0.7/bower_components/flot/excanvas.min.js"></script>
     <script src="sbadmin2-1.0.7/bower_components/flot/jquery.flot.js"></script>
     <script src="sbadmin2-1.0.7/bower_components/flot/jquery.flot.pie.js"></script>
@@ -176,13 +214,17 @@
     <script src="sbadmin2-1.0.7/bower_components/flot/jquery.flot.time.js"></script>
     <script src="sbadmin2-1.0.7/bower_components/flot.tooltip/js/jquery.flot.tooltip.min.js"></script>
     <script src="sbadmin2-1.0.7/bower_components/flot-axislabels/jquery.flot.axislabels.js"></script>
-    <!-- Metis Menu Plugin -->
+
+    <!-- MetisMenu 折叠菜单插件 -->
     <script src="sbadmin2-1.0.7/bower_components/metisMenu/dist/metisMenu.min.js"></script>
-    <!-- Dashboard JS -->
+
+    <!-- JMeter Dashboard 业务逻辑脚本 -->
     <script src="content/js/dashboard-commons.js"></script>
     <script src="content/js/dashboard.js"></script>
-    <!-- Custom Theme & Table Sorter -->
+
+    <!-- SB Admin 2 主题脚本与表格排序插件 -->
     <script src="sbadmin2-1.0.7/dist/js/sb-admin-2.js"></script>
     <script type="text/javascript" src="content/js/jquery.tablesorter.min.js"></script>
+
 </body>
 </html>
