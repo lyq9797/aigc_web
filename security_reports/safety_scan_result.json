@@ -31,7 +31,7 @@ We highly encourage switching to the new `scan` command which is easier to use, 
         "account": "",
         "local_database_path": null,
         "safety_version": "3.8.1",
-        "timestamp": "2026-06-05 18:40:50",
+        "timestamp": "2026-06-05 21:30:47",
         "packages_found": 29,
         "vulnerabilities_found": 2,
         "vulnerabilities_ignored": 0,
@@ -56,8 +56,8 @@ We highly encourage switching to the new `scan` command which is easier to use, 
         "git": {
             "branch": "main",
             "tag": "",
-            "commit": "4bc71a73aa0ba0462c339c3c5eda6bb98cf56ce4",
-            "dirty": "False",
+            "commit": "843d368eb04aec6af08a8aed37c3d170072fb227",
+            "dirty": "True",
             "origin": "https://github.com/lyq9797/aigc_web.git"
         },
         "project": null,
@@ -159,14 +159,14 @@ We highly encourage switching to the new `scan` command which is easier to use, 
         },
         "torchaudio": {
             "name": "torchaudio",
-            "version": "2.6.0+cu124",
+            "version": "2.8.0+cu124",
             "requirements": [
                 {
-                    "raw": "torchaudio==2.6.0+cu124",
+                    "raw": "torchaudio==2.8.0+cu124",
                     "extras": [],
                     "marker": null,
                     "name": "torchaudio",
-                    "specifier": "==2.6.0+cu124",
+                    "specifier": "==2.8.0+cu124",
                     "url": null,
                     "found": "C:\\learn_codes\\code-python\\aigc_web\\requirements.txt"
                 }
@@ -174,14 +174,14 @@ We highly encourage switching to the new `scan` command which is easier to use, 
         },
         "torchvision": {
             "name": "torchvision",
-            "version": "0.21.0+cu124",
+            "version": "0.23.0+cu124",
             "requirements": [
                 {
-                    "raw": "torchvision==0.21.0+cu124",
+                    "raw": "torchvision==0.23.0+cu124",
                     "extras": [],
                     "marker": null,
                     "name": "torchvision",
-                    "specifier": "==0.21.0+cu124",
+                    "specifier": "==0.23.0+cu124",
                     "url": null,
                     "found": "C:\\learn_codes\\code-python\\aigc_web\\requirements.txt"
                 }
