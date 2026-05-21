@@ -61,7 +61,7 @@ class DeBERTaCRFTagger(nn.Module):
     def __init__(self, config: InferenceConfig, dropout_rate: float = 0.1):
         super().__init__()
         self.num_labels = config.num_labels
-        self.deberta = AutoModel.from_pretrained(config.model_name)
+        self.deberta = AutoModel.from_pretrained(config.model_name, revision=deberta_HASH)
         self.dropout = nn.Dropout(dropout_rate)
 
         hidden_size = self.deberta.config.hidden_size
