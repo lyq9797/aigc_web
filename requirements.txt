@@ -3,7 +3,7 @@ datasets==4.4.1
 defusedxml==0.7.1
 docx==0.2.4
 evaluate==0.4.6
-torch==2.6.0+cu124
+torch==2.8.0+cu124
 torchaudio==2.8.0+cu124
 torchvision==0.23.0+cu124
 transformers==5.8.1
