@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>登录 - AI 文本检测系统</title>
+  <link rel="stylesheet" href="/static/styles.css" />
+</head>
+<body>
+  <div class="bg-shape bg-one"></div>
+  <div class="bg-shape bg-two"></div>
+
+  <main class="auth-wrap">
+    <section class="card auth-box">
+      <h1 class="auth-title">用户登录</h1>
+      <p class="muted auth-subtitle">欢迎使用AI文本检测系统</p>
+
+      <label>用户名</label>
+      <input id="username" type="text" placeholder="请输入用户名" />
+
+      <label>密码</label>
+      <div class="password-input-wrap">
+        <input id="password" type="password" placeholder="请输入密码" />
+        <button id="togglePasswordBtn" type="button" class="password-eye" aria-label="显示或隐藏密码" title="显示/隐藏密码"></button>
+      </div>
+
+      <button id="loginBtn" class="primary big">登录</button>
+      <button id="goRegisterBtn" class="ghost big">新用户？去注册</button>
+      <p id="msg" class="msg"></p>
+    </section>
+  </main>
+
+  <script src="/static/common.js"></script>
+  <script src="/static/login.js"></script>
+</body>
+</html>
