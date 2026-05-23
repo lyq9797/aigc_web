@@ -1,0 +1,2596 @@
+
+
++===========================================================================================================================================================================================+
+
+
+DEPRECATED: this command (`check`) has been DEPRECATED, and will be unsupported beyond 01 June 2024.
+
+
+We highly encourage switching to the new `scan` command which is easier to use, more powerful, and can be set up to mimic the deprecated command if required.
+
+
++===========================================================================================================================================================================================+
+
+
+{
+    "report_meta": {
+        "scan_target": "files",
+        "scanned": [
+            "requirements.txt"
+        ],
+        "scanned_full_path": [
+            "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+        ],
+        "target_languages": [
+            "python"
+        ],
+        "policy_file": null,
+        "policy_file_source": "local",
+        "audit_and_monitor": false,
+        "api_key": false,
+        "account": "",
+        "local_database_path": null,
+        "safety_version": "3.7.0",
+        "timestamp": "2026-05-20 20:43:46",
+        "packages_found": 167,
+        "vulnerabilities_found": 0,
+        "vulnerabilities_ignored": 0,
+        "remediations_recommended": 0,
+        "telemetry": {
+            "safety_options": {
+                "files": {
+                    "-r": 1
+                },
+                "output": {
+                    "--output": 1
+                }
+            },
+            "safety_version": "3.7.0",
+            "safety_source": "cli",
+            "os_type": "Windows",
+            "os_release": "11",
+            "os_description": "Windows-11-10.0.26200-SP0",
+            "python_version": "3.12.7",
+            "safety_command": "check"
+        },
+        "git": {
+            "error": "not-git-repo"
+        },
+        "project": null,
+        "json_version": "1.1",
+        "remediations_attempted": 0,
+        "remediations_completed": 0,
+        "remediation_mode": "NON_INTERACTIVE"
+    },
+    "scanned_packages": {
+        "accelerate": {
+            "name": "accelerate",
+            "version": "1.12.0",
+            "requirements": [
+                {
+                    "raw": "accelerate==1.12.0",
+                    "extras": [],
+                    "marker": null,
+                    "name": "accelerate",
+                    "specifier": "==1.12.0",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "aiodns": {
+            "name": "aiodns",
+            "version": "3.5.0",
+            "requirements": [
+                {
+                    "raw": "aiodns==3.5.0",
+                    "extras": [],
+                    "marker": null,
+                    "name": "aiodns",
+                    "specifier": "==3.5.0",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "aiohappyeyeballs": {
+            "name": "aiohappyeyeballs",
+            "version": "2.6.1",
+            "requirements": [
+                {
+                    "raw": "aiohappyeyeballs==2.6.1",
+                    "extras": [],
+                    "marker": null,
+                    "name": "aiohappyeyeballs",
+                    "specifier": "==2.6.1",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "aiohttp": {
+            "name": "aiohttp",
+            "version": "3.13.5",
+            "requirements": [
+                {
+                    "raw": "aiohttp==3.13.5",
+                    "extras": [],
+                    "marker": null,
+                    "name": "aiohttp",
+                    "specifier": "==3.13.5",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "aiosignal": {
+            "name": "aiosignal",
+            "version": "1.4.0",
+            "requirements": [
+                {
+                    "raw": "aiosignal==1.4.0",
+                    "extras": [],
+                    "marker": null,
+                    "name": "aiosignal",
+                    "specifier": "==1.4.0",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "annotated-doc": {
+            "name": "annotated-doc",
+            "version": "0.0.4",
+            "requirements": [
+                {
+                    "raw": "annotated-doc==0.0.4",
+                    "extras": [],
+                    "marker": null,
+                    "name": "annotated-doc",
+                    "specifier": "==0.0.4",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "annotated-types": {
+            "name": "annotated-types",
+            "version": "0.6.0",
+            "requirements": [
+                {
+                    "raw": "annotated-types==0.6.0",
+                    "extras": [],
+                    "marker": null,
+                    "name": "annotated-types",
+                    "specifier": "==0.6.0",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "anyio": {
+            "name": "anyio",
+            "version": "4.10.0",
+            "requirements": [
+                {
+                    "raw": "anyio==4.10.0",
+                    "extras": [],
+                    "marker": null,
+                    "name": "anyio",
+                    "specifier": "==4.10.0",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "arrow": {
+            "name": "arrow",
+            "version": "1.4.0",
+            "requirements": [
+                {
+                    "raw": "arrow==1.4.0",
+                    "extras": [],
+                    "marker": null,
+                    "name": "arrow",
+                    "specifier": "==1.4.0",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "asttokens": {
+            "name": "asttokens",
+            "version": "3.0.1",
+            "requirements": [
+                {
+                    "raw": "asttokens==3.0.1",
+                    "extras": [],
+                    "marker": null,
+                    "name": "asttokens",
+                    "specifier": "==3.0.1",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "attrs": {
+            "name": "attrs",
+            "version": "25.4.0",
+            "requirements": [
+                {
+                    "raw": "attrs==25.4.0",
+                    "extras": [],
+                    "marker": null,
+                    "name": "attrs",
+                    "specifier": "==25.4.0",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "backcall": {
+            "name": "backcall",
+            "version": "0.2.0",
+            "requirements": [
+                {
+                    "raw": "backcall==0.2.0",
+                    "extras": [],
+                    "marker": null,
+                    "name": "backcall",
+                    "specifier": "==0.2.0",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "beautifulsoup4": {
+            "name": "beautifulsoup4",
+            "version": "4.14.3",
+            "requirements": [
+                {
+                    "raw": "beautifulsoup4==4.14.3",
+                    "extras": [],
+                    "marker": null,
+                    "name": "beautifulsoup4",
+                    "specifier": "==4.14.3",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "binaryornot": {
+            "name": "binaryornot",
+            "version": "0.4.4",
+            "requirements": [
+                {
+                    "raw": "binaryornot==0.4.4",
+                    "extras": [],
+                    "marker": null,
+                    "name": "binaryornot",
+                    "specifier": "==0.4.4",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "bleach": {
+            "name": "bleach",
+            "version": "6.3.0",
+            "requirements": [
+                {
+                    "raw": "bleach==6.3.0",
+                    "extras": [],
+                    "marker": null,
+                    "name": "bleach",
+                    "specifier": "==6.3.0",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "bottleneck": {
+            "name": "bottleneck",
+            "version": "1.4.2",
+            "requirements": [
+                {
+                    "raw": "Bottleneck==1.4.2",
+                    "extras": [],
+                    "marker": null,
+                    "name": "Bottleneck",
+                    "specifier": "==1.4.2",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "brotlicffi": {
+            "name": "brotlicffi",
+            "version": "1.2.0.1",
+            "requirements": [
+                {
+                    "raw": "brotlicffi==1.2.0.1",
+                    "extras": [],
+                    "marker": null,
+                    "name": "brotlicffi",
+                    "specifier": "==1.2.0.1",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "certifi": {
+            "name": "certifi",
+            "version": "2026.1.4",
+            "requirements": [
+                {
+                    "raw": "certifi==2026.1.4",
+                    "extras": [],
+                    "marker": null,
+                    "name": "certifi",
+                    "specifier": "==2026.1.4",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "cffi": {
+            "name": "cffi",
+            "version": "2.0.0",
+            "requirements": [
+                {
+                    "raw": "cffi==2.0.0",
+                    "extras": [],
+                    "marker": null,
+                    "name": "cffi",
+                    "specifier": "==2.0.0",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "chardet": {
+            "name": "chardet",
+            "version": "5.2.0",
+            "requirements": [
+                {
+                    "raw": "chardet==5.2.0",
+                    "extras": [],
+                    "marker": null,
+                    "name": "chardet",
+                    "specifier": "==5.2.0",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "charset-normalizer": {
+            "name": "charset-normalizer",
+            "version": "3.4.4",
+            "requirements": [
+                {
+                    "raw": "charset-normalizer==3.4.4",
+                    "extras": [],
+                    "marker": null,
+                    "name": "charset-normalizer",
+                    "specifier": "==3.4.4",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "click": {
+            "name": "click",
+            "version": "8.2.1",
+            "requirements": [
+                {
+                    "raw": "click==8.2.1",
+                    "extras": [],
+                    "marker": null,
+                    "name": "click",
+                    "specifier": "==8.2.1",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "colorama": {
+            "name": "colorama",
+            "version": "0.4.6",
+            "requirements": [
+                {
+                    "raw": "colorama==0.4.6",
+                    "extras": [],
+                    "marker": null,
+                    "name": "colorama",
+                    "specifier": "==0.4.6",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "contourpy": {
+            "name": "contourpy",
+            "version": "1.3.3",
+            "requirements": [
+                {
+                    "raw": "contourpy==1.3.3",
+                    "extras": [],
+                    "marker": null,
+                    "name": "contourpy",
+                    "specifier": "==1.3.3",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "cookiecutter": {
+            "name": "cookiecutter",
+            "version": "2.6.0",
+            "requirements": [
+                {
+                    "raw": "cookiecutter==2.6.0",
+                    "extras": [],
+                    "marker": null,
+                    "name": "cookiecutter",
+                    "specifier": "==2.6.0",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "cycler": {
+            "name": "cycler",
+            "version": "0.12.1",
+            "requirements": [
+                {
+                    "raw": "cycler==0.12.1",
+                    "extras": [],
+                    "marker": null,
+                    "name": "cycler",
+                    "specifier": "==0.12.1",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "datasets": {
+            "name": "datasets",
+            "version": "4.4.1",
+            "requirements": [
+                {
+                    "raw": "datasets==4.4.1",
+                    "extras": [],
+                    "marker": null,
+                    "name": "datasets",
+                    "specifier": "==4.4.1",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "decorator": {
+            "name": "decorator",
+            "version": "5.3.1",
+            "requirements": [
+                {
+                    "raw": "decorator==5.3.1",
+                    "extras": [],
+                    "marker": null,
+                    "name": "decorator",
+                    "specifier": "==5.3.1",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "defusedxml": {
+            "name": "defusedxml",
+            "version": "0.7.1",
+            "requirements": [
+                {
+                    "raw": "defusedxml==0.7.1",
+                    "extras": [],
+                    "marker": null,
+                    "name": "defusedxml",
+                    "specifier": "==0.7.1",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "dill": {
+            "name": "dill",
+            "version": "0.4.0",
+            "requirements": [
+                {
+                    "raw": "dill==0.4.0",
+                    "extras": [],
+                    "marker": null,
+                    "name": "dill",
+                    "specifier": "==0.4.0",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "distro": {
+            "name": "distro",
+            "version": "1.9.0",
+            "requirements": [
+                {
+                    "raw": "distro==1.9.0",
+                    "extras": [],
+                    "marker": null,
+                    "name": "distro",
+                    "specifier": "==1.9.0",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "dnspython": {
+            "name": "dnspython",
+            "version": "2.8.0",
+            "requirements": [
+                {
+                    "raw": "dnspython==2.8.0",
+                    "extras": [],
+                    "marker": null,
+                    "name": "dnspython",
+                    "specifier": "==2.8.0",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "docopt": {
+            "name": "docopt",
+            "version": "0.6.2",
+            "requirements": [
+                {
+                    "raw": "docopt==0.6.2",
+                    "extras": [],
+                    "marker": null,
+                    "name": "docopt",
+                    "specifier": "==0.6.2",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "email-validator": {
+            "name": "email-validator",
+            "version": "2.3.0",
+            "requirements": [
+                {
+                    "raw": "email-validator==2.3.0",
+                    "extras": [],
+                    "marker": null,
+                    "name": "email-validator",
+                    "specifier": "==2.3.0",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "evaluate": {
+            "name": "evaluate",
+            "version": "0.4.6",
+            "requirements": [
+                {
+                    "raw": "evaluate==0.4.6",
+                    "extras": [],
+                    "marker": null,
+                    "name": "evaluate",
+                    "specifier": "==0.4.6",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "executing": {
+            "name": "executing",
+            "version": "2.2.1",
+            "requirements": [
+                {
+                    "raw": "executing==2.2.1",
+                    "extras": [],
+                    "marker": null,
+                    "name": "executing",
+                    "specifier": "==2.2.1",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "fastapi": {
+            "name": "fastapi",
+            "version": "0.128.0",
+            "requirements": [
+                {
+                    "raw": "fastapi==0.128.0",
+                    "extras": [],
+                    "marker": null,
+                    "name": "fastapi",
+                    "specifier": "==0.128.0",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "fastapi-cli": {
+            "name": "fastapi-cli",
+            "version": "0.0.20",
+            "requirements": [
+                {
+                    "raw": "fastapi-cli==0.0.20",
+                    "extras": [],
+                    "marker": null,
+                    "name": "fastapi-cli",
+                    "specifier": "==0.0.20",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "fastjsonschema": {
+            "name": "fastjsonschema",
+            "version": "2.21.2",
+            "requirements": [
+                {
+                    "raw": "fastjsonschema==2.21.2",
+                    "extras": [],
+                    "marker": null,
+                    "name": "fastjsonschema",
+                    "specifier": "==2.21.2",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "filelock": {
+            "name": "filelock",
+            "version": "3.29.0",
+            "requirements": [
+                {
+                    "raw": "filelock==3.29.0",
+                    "extras": [],
+                    "marker": null,
+                    "name": "filelock",
+                    "specifier": "==3.29.0",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "fonttools": {
+            "name": "fonttools",
+            "version": "4.63.0",
+            "requirements": [
+                {
+                    "raw": "fonttools==4.63.0",
+                    "extras": [],
+                    "marker": null,
+                    "name": "fonttools",
+                    "specifier": "==4.63.0",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "frozenlist": {
+            "name": "frozenlist",
+            "version": "1.8.0",
+            "requirements": [
+                {
+                    "raw": "frozenlist==1.8.0",
+                    "extras": [],
+                    "marker": null,
+                    "name": "frozenlist",
+                    "specifier": "==1.8.0",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "fsspec": {
+            "name": "fsspec",
+            "version": "2025.10.0",
+            "requirements": [
+                {
+                    "raw": "fsspec==2025.10.0",
+                    "extras": [],
+                    "marker": null,
+                    "name": "fsspec",
+                    "specifier": "==2025.10.0",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "gmpy2": {
+            "name": "gmpy2",
+            "version": "2.2.1",
+            "requirements": [
+                {
+                    "raw": "gmpy2==2.2.1",
+                    "extras": [],
+                    "marker": null,
+                    "name": "gmpy2",
+                    "specifier": "==2.2.1",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "h11": {
+            "name": "h11",
+            "version": "0.16.0",
+            "requirements": [
+                {
+                    "raw": "h11==0.16.0",
+                    "extras": [],
+                    "marker": null,
+                    "name": "h11",
+                    "specifier": "==0.16.0",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "hf-xet": {
+            "name": "hf-xet",
+            "version": "1.1.8",
+            "requirements": [
+                {
+                    "raw": "hf-xet==1.1.8",
+                    "extras": [],
+                    "marker": null,
+                    "name": "hf-xet",
+                    "specifier": "==1.1.8",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "httpcore": {
+            "name": "httpcore",
+            "version": "1.0.9",
+            "requirements": [
+                {
+                    "raw": "httpcore==1.0.9",
+                    "extras": [],
+                    "marker": null,
+                    "name": "httpcore",
+                    "specifier": "==1.0.9",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "httptools": {
+            "name": "httptools",
+            "version": "0.7.1",
+            "requirements": [
+                {
+                    "raw": "httptools==0.7.1",
+                    "extras": [],
+                    "marker": null,
+                    "name": "httptools",
+                    "specifier": "==0.7.1",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "httpx": {
+            "name": "httpx",
+            "version": "0.28.1",
+            "requirements": [
+                {
+                    "raw": "httpx==0.28.1",
+                    "extras": [],
+                    "marker": null,
+                    "name": "httpx",
+                    "specifier": "==0.28.1",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "huggingface-hub": {
+            "name": "huggingface-hub",
+            "version": "0.34.4",
+            "requirements": [
+                {
+                    "raw": "huggingface_hub==0.34.4",
+                    "extras": [],
+                    "marker": null,
+                    "name": "huggingface_hub",
+                    "specifier": "==0.34.4",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "idna": {
+            "name": "idna",
+            "version": "3.11",
+            "requirements": [
+                {
+                    "raw": "idna==3.11",
+                    "extras": [],
+                    "marker": null,
+                    "name": "idna",
+                    "specifier": "==3.11",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "ipython": {
+            "name": "ipython",
+            "version": "8.12.3",
+            "requirements": [
+                {
+                    "raw": "ipython==8.12.3",
+                    "extras": [],
+                    "marker": null,
+                    "name": "ipython",
+                    "specifier": "==8.12.3",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "jedi": {
+            "name": "jedi",
+            "version": "0.20.0",
+            "requirements": [
+                {
+                    "raw": "jedi==0.20.0",
+                    "extras": [],
+                    "marker": null,
+                    "name": "jedi",
+                    "specifier": "==0.20.0",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "jinja2": {
+            "name": "jinja2",
+            "version": "3.1.6",
+            "requirements": [
+                {
+                    "raw": "Jinja2==3.1.6",
+                    "extras": [],
+                    "marker": null,
+                    "name": "Jinja2",
+                    "specifier": "==3.1.6",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "jiter": {
+            "name": "jiter",
+            "version": "0.12.0",
+            "requirements": [
+                {
+                    "raw": "jiter==0.12.0",
+                    "extras": [],
+                    "marker": null,
+                    "name": "jiter",
+                    "specifier": "==0.12.0",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "joblib": {
+            "name": "joblib",
+            "version": "1.5.3",
+            "requirements": [
+                {
+                    "raw": "joblib==1.5.3",
+                    "extras": [],
+                    "marker": null,
+                    "name": "joblib",
+                    "specifier": "==1.5.3",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "jsonschema": {
+            "name": "jsonschema",
+            "version": "4.26.0",
+            "requirements": [
+                {
+                    "raw": "jsonschema==4.26.0",
+                    "extras": [],
+                    "marker": null,
+                    "name": "jsonschema",
+                    "specifier": "==4.26.0",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "jsonschema-specifications": {
+            "name": "jsonschema-specifications",
+            "version": "2025.9.1",
+            "requirements": [
+                {
+                    "raw": "jsonschema-specifications==2025.9.1",
+                    "extras": [],
+                    "marker": null,
+                    "name": "jsonschema-specifications",
+                    "specifier": "==2025.9.1",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "jupyter-client": {
+            "name": "jupyter-client",
+            "version": "8.8.0",
+            "requirements": [
+                {
+                    "raw": "jupyter_client==8.8.0",
+                    "extras": [],
+                    "marker": null,
+                    "name": "jupyter_client",
+                    "specifier": "==8.8.0",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "jupyter-core": {
+            "name": "jupyter-core",
+            "version": "5.9.1",
+            "requirements": [
+                {
+                    "raw": "jupyter_core==5.9.1",
+                    "extras": [],
+                    "marker": null,
+                    "name": "jupyter_core",
+                    "specifier": "==5.9.1",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "jupyterlab-pygments": {
+            "name": "jupyterlab-pygments",
+            "version": "0.3.0",
+            "requirements": [
+                {
+                    "raw": "jupyterlab_pygments==0.3.0",
+                    "extras": [],
+                    "marker": null,
+                    "name": "jupyterlab_pygments",
+                    "specifier": "==0.3.0",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "kiwisolver": {
+            "name": "kiwisolver",
+            "version": "1.4.9",
+            "requirements": [
+                {
+                    "raw": "kiwisolver==1.4.9",
+                    "extras": [],
+                    "marker": null,
+                    "name": "kiwisolver",
+                    "specifier": "==1.4.9",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "lxml": {
+            "name": "lxml",
+            "version": "5.3.0",
+            "requirements": [
+                {
+                    "raw": "lxml==5.3.0",
+                    "extras": [],
+                    "marker": null,
+                    "name": "lxml",
+                    "specifier": "==5.3.0",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "markdown-it-py": {
+            "name": "markdown-it-py",
+            "version": "4.0.0",
+            "requirements": [
+                {
+                    "raw": "markdown-it-py==4.0.0",
+                    "extras": [],
+                    "marker": null,
+                    "name": "markdown-it-py",
+                    "specifier": "==4.0.0",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "markupsafe": {
+            "name": "markupsafe",
+            "version": "3.0.2",
+            "requirements": [
+                {
+                    "raw": "MarkupSafe==3.0.2",
+                    "extras": [],
+                    "marker": null,
+                    "name": "MarkupSafe",
+                    "specifier": "==3.0.2",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "matplotlib": {
+            "name": "matplotlib",
+            "version": "3.10.8",
+            "requirements": [
+                {
+                    "raw": "matplotlib==3.10.8",
+                    "extras": [],
+                    "marker": null,
+                    "name": "matplotlib",
+                    "specifier": "==3.10.8",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "matplotlib-inline": {
+            "name": "matplotlib-inline",
+            "version": "0.2.2",
+            "requirements": [
+                {
+                    "raw": "matplotlib-inline==0.2.2",
+                    "extras": [],
+                    "marker": null,
+                    "name": "matplotlib-inline",
+                    "specifier": "==0.2.2",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "mdurl": {
+            "name": "mdurl",
+            "version": "0.1.2",
+            "requirements": [
+                {
+                    "raw": "mdurl==0.1.2",
+                    "extras": [],
+                    "marker": null,
+                    "name": "mdurl",
+                    "specifier": "==0.1.2",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "mistune": {
+            "name": "mistune",
+            "version": "3.2.1",
+            "requirements": [
+                {
+                    "raw": "mistune==3.2.1",
+                    "extras": [],
+                    "marker": null,
+                    "name": "mistune",
+                    "specifier": "==3.2.1",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "mkl-fft": {
+            "name": "mkl-fft",
+            "version": "1.3.11",
+            "requirements": [
+                {
+                    "raw": "mkl_fft==1.3.11",
+                    "extras": [],
+                    "marker": null,
+                    "name": "mkl_fft",
+                    "specifier": "==1.3.11",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "mkl-random": {
+            "name": "mkl-random",
+            "version": "1.2.8",
+            "requirements": [
+                {
+                    "raw": "mkl_random==1.2.8",
+                    "extras": [],
+                    "marker": null,
+                    "name": "mkl_random",
+                    "specifier": "==1.2.8",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "mkl-service": {
+            "name": "mkl-service",
+            "version": "2.4.0",
+            "requirements": [
+                {
+                    "raw": "mkl-service==2.4.0",
+                    "extras": [],
+                    "marker": null,
+                    "name": "mkl-service",
+                    "specifier": "==2.4.0",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "mpmath": {
+            "name": "mpmath",
+            "version": "1.3.0",
+            "requirements": [
+                {
+                    "raw": "mpmath==1.3.0",
+                    "extras": [],
+                    "marker": null,
+                    "name": "mpmath",
+                    "specifier": "==1.3.0",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "multidict": {
+            "name": "multidict",
+            "version": "6.7.0",
+            "requirements": [
+                {
+                    "raw": "multidict==6.7.0",
+                    "extras": [],
+                    "marker": null,
+                    "name": "multidict",
+                    "specifier": "==6.7.0",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "multiprocess": {
+            "name": "multiprocess",
+            "version": "0.70.18",
+            "requirements": [
+                {
+                    "raw": "multiprocess==0.70.18",
+                    "extras": [],
+                    "marker": null,
+                    "name": "multiprocess",
+                    "specifier": "==0.70.18",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "nbclient": {
+            "name": "nbclient",
+            "version": "0.10.4",
+            "requirements": [
+                {
+                    "raw": "nbclient==0.10.4",
+                    "extras": [],
+                    "marker": null,
+                    "name": "nbclient",
+                    "specifier": "==0.10.4",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "nbconvert": {
+            "name": "nbconvert",
+            "version": "7.17.1",
+            "requirements": [
+                {
+                    "raw": "nbconvert==7.17.1",
+                    "extras": [],
+                    "marker": null,
+                    "name": "nbconvert",
+                    "specifier": "==7.17.1",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "nbformat": {
+            "name": "nbformat",
+            "version": "5.10.4",
+            "requirements": [
+                {
+                    "raw": "nbformat==5.10.4",
+                    "extras": [],
+                    "marker": null,
+                    "name": "nbformat",
+                    "specifier": "==5.10.4",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "networkx": {
+            "name": "networkx",
+            "version": "3.5",
+            "requirements": [
+                {
+                    "raw": "networkx==3.5",
+                    "extras": [],
+                    "marker": null,
+                    "name": "networkx",
+                    "specifier": "==3.5",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "nltk": {
+            "name": "nltk",
+            "version": "3.9.4",
+            "requirements": [
+                {
+                    "raw": "nltk==3.9.4",
+                    "extras": [],
+                    "marker": null,
+                    "name": "nltk",
+                    "specifier": "==3.9.4",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "numexpr": {
+            "name": "numexpr",
+            "version": "2.11.0",
+            "requirements": [
+                {
+                    "raw": "numexpr==2.11.0",
+                    "extras": [],
+                    "marker": null,
+                    "name": "numexpr",
+                    "specifier": "==2.11.0",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "numpy": {
+            "name": "numpy",
+            "version": "2.0.1",
+            "requirements": [
+                {
+                    "raw": "numpy==2.0.1",
+                    "extras": [],
+                    "marker": null,
+                    "name": "numpy",
+                    "specifier": "==2.0.1",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "openai": {
+            "name": "openai",
+            "version": "2.14.0",
+            "requirements": [
+                {
+                    "raw": "openai==2.14.0",
+                    "extras": [],
+                    "marker": null,
+                    "name": "openai",
+                    "specifier": "==2.14.0",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "packaging": {
+            "name": "packaging",
+            "version": "25.0",
+            "requirements": [
+                {
+                    "raw": "packaging==25.0",
+                    "extras": [],
+                    "marker": null,
+                    "name": "packaging",
+                    "specifier": "==25.0",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "pandas": {
+            "name": "pandas",
+            "version": "2.3.3",
+            "requirements": [
+                {
+                    "raw": "pandas==2.3.3",
+                    "extras": [],
+                    "marker": null,
+                    "name": "pandas",
+                    "specifier": "==2.3.3",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "pandocfilters": {
+            "name": "pandocfilters",
+            "version": "1.5.1",
+            "requirements": [
+                {
+                    "raw": "pandocfilters==1.5.1",
+                    "extras": [],
+                    "marker": null,
+                    "name": "pandocfilters",
+                    "specifier": "==1.5.1",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "parso": {
+            "name": "parso",
+            "version": "0.8.7",
+            "requirements": [
+                {
+                    "raw": "parso==0.8.7",
+                    "extras": [],
+                    "marker": null,
+                    "name": "parso",
+                    "specifier": "==0.8.7",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "pickleshare": {
+            "name": "pickleshare",
+            "version": "0.7.5",
+            "requirements": [
+                {
+                    "raw": "pickleshare==0.7.5",
+                    "extras": [],
+                    "marker": null,
+                    "name": "pickleshare",
+                    "specifier": "==0.7.5",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "pillow": {
+            "name": "pillow",
+            "version": "12.2.0",
+            "requirements": [
+                {
+                    "raw": "pillow==12.2.0",
+                    "extras": [],
+                    "marker": null,
+                    "name": "pillow",
+                    "specifier": "==12.2.0",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "pip": {
+            "name": "pip",
+            "version": "26.1.1",
+            "requirements": [
+                {
+                    "raw": "pip==26.1.1",
+                    "extras": [],
+                    "marker": null,
+                    "name": "pip",
+                    "specifier": "==26.1.1",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "pipreqs": {
+            "name": "pipreqs",
+            "version": "0.5.0",
+            "requirements": [
+                {
+                    "raw": "pipreqs==0.5.0",
+                    "extras": [],
+                    "marker": null,
+                    "name": "pipreqs",
+                    "specifier": "==0.5.0",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "platformdirs": {
+            "name": "platformdirs",
+            "version": "4.9.6",
+            "requirements": [
+                {
+                    "raw": "platformdirs==4.9.6",
+                    "extras": [],
+                    "marker": null,
+                    "name": "platformdirs",
+                    "specifier": "==4.9.6",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "prompt-toolkit": {
+            "name": "prompt-toolkit",
+            "version": "3.0.52",
+            "requirements": [
+                {
+                    "raw": "prompt_toolkit==3.0.52",
+                    "extras": [],
+                    "marker": null,
+                    "name": "prompt_toolkit",
+                    "specifier": "==3.0.52",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "propcache": {
+            "name": "propcache",
+            "version": "0.4.1",
+            "requirements": [
+                {
+                    "raw": "propcache==0.4.1",
+                    "extras": [],
+                    "marker": null,
+                    "name": "propcache",
+                    "specifier": "==0.4.1",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "protobuf": {
+            "name": "protobuf",
+            "version": "7.35.0",
+            "requirements": [
+                {
+                    "raw": "protobuf==7.35.0",
+                    "extras": [],
+                    "marker": null,
+                    "name": "protobuf",
+                    "specifier": "==7.35.0",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "psutil": {
+            "name": "psutil",
+            "version": "7.1.3",
+            "requirements": [
+                {
+                    "raw": "psutil==7.1.3",
+                    "extras": [],
+                    "marker": null,
+                    "name": "psutil",
+                    "specifier": "==7.1.3",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "pure-eval": {
+            "name": "pure-eval",
+            "version": "0.2.3",
+            "requirements": [
+                {
+                    "raw": "pure_eval==0.2.3",
+                    "extras": [],
+                    "marker": null,
+                    "name": "pure_eval",
+                    "specifier": "==0.2.3",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "pyarrow": {
+            "name": "pyarrow",
+            "version": "21.0.0",
+            "requirements": [
+                {
+                    "raw": "pyarrow==21.0.0",
+                    "extras": [],
+                    "marker": null,
+                    "name": "pyarrow",
+                    "specifier": "==21.0.0",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "pycares": {
+            "name": "pycares",
+            "version": "4.10.0",
+            "requirements": [
+                {
+                    "raw": "pycares==4.10.0",
+                    "extras": [],
+                    "marker": null,
+                    "name": "pycares",
+                    "specifier": "==4.10.0",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "pycparser": {
+            "name": "pycparser",
+            "version": "2.23",
+            "requirements": [
+                {
+                    "raw": "pycparser==2.23",
+                    "extras": [],
+                    "marker": null,
+                    "name": "pycparser",
+                    "specifier": "==2.23",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "pydantic": {
+            "name": "pydantic",
+            "version": "2.12.4",
+            "requirements": [
+                {
+                    "raw": "pydantic==2.12.4",
+                    "extras": [],
+                    "marker": null,
+                    "name": "pydantic",
+                    "specifier": "==2.12.4",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "pydantic-core": {
+            "name": "pydantic-core",
+            "version": "2.41.5",
+            "requirements": [
+                {
+                    "raw": "pydantic_core==2.41.5",
+                    "extras": [],
+                    "marker": null,
+                    "name": "pydantic_core",
+                    "specifier": "==2.41.5",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "pydantic-extra-types": {
+            "name": "pydantic-extra-types",
+            "version": "2.11.0",
+            "requirements": [
+                {
+                    "raw": "pydantic-extra-types==2.11.0",
+                    "extras": [],
+                    "marker": null,
+                    "name": "pydantic-extra-types",
+                    "specifier": "==2.11.0",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "pydantic-settings": {
+            "name": "pydantic-settings",
+            "version": "2.12.0",
+            "requirements": [
+                {
+                    "raw": "pydantic-settings==2.12.0",
+                    "extras": [],
+                    "marker": null,
+                    "name": "pydantic-settings",
+                    "specifier": "==2.12.0",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "pygments": {
+            "name": "pygments",
+            "version": "2.20.0",
+            "requirements": [
+                {
+                    "raw": "Pygments==2.20.0",
+                    "extras": [],
+                    "marker": null,
+                    "name": "Pygments",
+                    "specifier": "==2.20.0",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "pyparsing": {
+            "name": "pyparsing",
+            "version": "3.2.5",
+            "requirements": [
+                {
+                    "raw": "pyparsing==3.2.5",
+                    "extras": [],
+                    "marker": null,
+                    "name": "pyparsing",
+                    "specifier": "==3.2.5",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "pyqt6": {
+            "name": "pyqt6",
+            "version": "6.9.1",
+            "requirements": [
+                {
+                    "raw": "PyQt6==6.9.1",
+                    "extras": [],
+                    "marker": null,
+                    "name": "PyQt6",
+                    "specifier": "==6.9.1",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "pyqt6-sip": {
+            "name": "pyqt6-sip",
+            "version": "13.10.2",
+            "requirements": [
+                {
+                    "raw": "PyQt6_sip==13.10.2",
+                    "extras": [],
+                    "marker": null,
+                    "name": "PyQt6_sip",
+                    "specifier": "==13.10.2",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "pysocks": {
+            "name": "pysocks",
+            "version": "1.7.1",
+            "requirements": [
+                {
+                    "raw": "PySocks==1.7.1",
+                    "extras": [],
+                    "marker": null,
+                    "name": "PySocks",
+                    "specifier": "==1.7.1",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "python-dateutil": {
+            "name": "python-dateutil",
+            "version": "2.9.0.post0",
+            "requirements": [
+                {
+                    "raw": "python-dateutil==2.9.0.post0",
+                    "extras": [],
+                    "marker": null,
+                    "name": "python-dateutil",
+                    "specifier": "==2.9.0.post0",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "python-docx": {
+            "name": "python-docx",
+            "version": "1.2.0",
+            "requirements": [
+                {
+                    "raw": "python-docx==1.2.0",
+                    "extras": [],
+                    "marker": null,
+                    "name": "python-docx",
+                    "specifier": "==1.2.0",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "python-dotenv": {
+            "name": "python-dotenv",
+            "version": "1.2.1",
+            "requirements": [
+                {
+                    "raw": "python-dotenv==1.2.1",
+                    "extras": [],
+                    "marker": null,
+                    "name": "python-dotenv",
+                    "specifier": "==1.2.1",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "python-multipart": {
+            "name": "python-multipart",
+            "version": "0.0.29",
+            "requirements": [
+                {
+                    "raw": "python-multipart==0.0.29",
+                    "extras": [],
+                    "marker": null,
+                    "name": "python-multipart",
+                    "specifier": "==0.0.29",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "python-slugify": {
+            "name": "python-slugify",
+            "version": "8.0.4",
+            "requirements": [
+                {
+                    "raw": "python-slugify==8.0.4",
+                    "extras": [],
+                    "marker": null,
+                    "name": "python-slugify",
+                    "specifier": "==8.0.4",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "pytorch-crf": {
+            "name": "pytorch-crf",
+            "version": "0.7.2",
+            "requirements": [
+                {
+                    "raw": "pytorch-crf==0.7.2",
+                    "extras": [],
+                    "marker": null,
+                    "name": "pytorch-crf",
+                    "specifier": "==0.7.2",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "pytz": {
+            "name": "pytz",
+            "version": "2025.2",
+            "requirements": [
+                {
+                    "raw": "pytz==2025.2",
+                    "extras": [],
+                    "marker": null,
+                    "name": "pytz",
+                    "specifier": "==2025.2",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "pywin32": {
+            "name": "pywin32",
+            "version": "311",
+            "requirements": [
+                {
+                    "raw": "pywin32==311",
+                    "extras": [],
+                    "marker": null,
+                    "name": "pywin32",
+                    "specifier": "==311",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "pyyaml": {
+            "name": "pyyaml",
+            "version": "6.0.3",
+            "requirements": [
+                {
+                    "raw": "PyYAML==6.0.3",
+                    "extras": [],
+                    "marker": null,
+                    "name": "PyYAML",
+                    "specifier": "==6.0.3",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "pyzmq": {
+            "name": "pyzmq",
+            "version": "27.1.0",
+            "requirements": [
+                {
+                    "raw": "pyzmq==27.1.0",
+                    "extras": [],
+                    "marker": null,
+                    "name": "pyzmq",
+                    "specifier": "==27.1.0",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "referencing": {
+            "name": "referencing",
+            "version": "0.37.0",
+            "requirements": [
+                {
+                    "raw": "referencing==0.37.0",
+                    "extras": [],
+                    "marker": null,
+                    "name": "referencing",
+                    "specifier": "==0.37.0",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "regex": {
+            "name": "regex",
+            "version": "2025.11.3",
+            "requirements": [
+                {
+                    "raw": "regex==2025.11.3",
+                    "extras": [],
+                    "marker": null,
+                    "name": "regex",
+                    "specifier": "==2025.11.3",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "requests": {
+            "name": "requests",
+            "version": "2.34.2",
+            "requirements": [
+                {
+                    "raw": "requests==2.34.2",
+                    "extras": [],
+                    "marker": null,
+                    "name": "requests",
+                    "specifier": "==2.34.2",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "rich": {
+            "name": "rich",
+            "version": "14.2.0",
+            "requirements": [
+                {
+                    "raw": "rich==14.2.0",
+                    "extras": [],
+                    "marker": null,
+                    "name": "rich",
+                    "specifier": "==14.2.0",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "rich-toolkit": {
+            "name": "rich-toolkit",
+            "version": "0.17.1",
+            "requirements": [
+                {
+                    "raw": "rich-toolkit==0.17.1",
+                    "extras": [],
+                    "marker": null,
+                    "name": "rich-toolkit",
+                    "specifier": "==0.17.1",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "rpds-py": {
+            "name": "rpds-py",
+            "version": "0.30.0",
+            "requirements": [
+                {
+                    "raw": "rpds-py==0.30.0",
+                    "extras": [],
+                    "marker": null,
+                    "name": "rpds-py",
+                    "specifier": "==0.30.0",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "safetensors": {
+            "name": "safetensors",
+            "version": "0.7.0",
+            "requirements": [
+                {
+                    "raw": "safetensors==0.7.0",
+                    "extras": [],
+                    "marker": null,
+                    "name": "safetensors",
+                    "specifier": "==0.7.0",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "scikit-learn": {
+            "name": "scikit-learn",
+            "version": "1.7.1",
+            "requirements": [
+                {
+                    "raw": "scikit-learn==1.7.1",
+                    "extras": [],
+                    "marker": null,
+                    "name": "scikit-learn",
+                    "specifier": "==1.7.1",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "scipy": {
+            "name": "scipy",
+            "version": "1.16.0",
+            "requirements": [
+                {
+                    "raw": "scipy==1.16.0",
+                    "extras": [],
+                    "marker": null,
+                    "name": "scipy",
+                    "specifier": "==1.16.0",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "seaborn": {
+            "name": "seaborn",
+            "version": "0.13.2",
+            "requirements": [
+                {
+                    "raw": "seaborn==0.13.2",
+                    "extras": [],
+                    "marker": null,
+                    "name": "seaborn",
+                    "specifier": "==0.13.2",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "sentencepiece": {
+            "name": "sentencepiece",
+            "version": "0.2.1",
+            "requirements": [
+                {
+                    "raw": "sentencepiece==0.2.1",
+                    "extras": [],
+                    "marker": null,
+                    "name": "sentencepiece",
+                    "specifier": "==0.2.1",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "setuptools": {
+            "name": "setuptools",
+            "version": "80.9.0",
+            "requirements": [
+                {
+                    "raw": "setuptools==80.9.0",
+                    "extras": [],
+                    "marker": null,
+                    "name": "setuptools",
+                    "specifier": "==80.9.0",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "shellingham": {
+            "name": "shellingham",
+            "version": "1.5.4",
+            "requirements": [
+                {
+                    "raw": "shellingham==1.5.4",
+                    "extras": [],
+                    "marker": null,
+                    "name": "shellingham",
+                    "specifier": "==1.5.4",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "sip": {
+            "name": "sip",
+            "version": "6.12.0",
+            "requirements": [
+                {
+                    "raw": "sip==6.12.0",
+                    "extras": [],
+                    "marker": null,
+                    "name": "sip",
+                    "specifier": "==6.12.0",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "six": {
+            "name": "six",
+            "version": "1.17.0",
+            "requirements": [
+                {
+                    "raw": "six==1.17.0",
+                    "extras": [],
+                    "marker": null,
+                    "name": "six",
+                    "specifier": "==1.17.0",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "sniffio": {
+            "name": "sniffio",
+            "version": "1.3.1",
+            "requirements": [
+                {
+                    "raw": "sniffio==1.3.1",
+                    "extras": [],
+                    "marker": null,
+                    "name": "sniffio",
+                    "specifier": "==1.3.1",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "soupsieve": {
+            "name": "soupsieve",
+            "version": "2.8.3",
+            "requirements": [
+                {
+                    "raw": "soupsieve==2.8.3",
+                    "extras": [],
+                    "marker": null,
+                    "name": "soupsieve",
+                    "specifier": "==2.8.3",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "stack-data": {
+            "name": "stack-data",
+            "version": "0.6.3",
+            "requirements": [
+                {
+                    "raw": "stack-data==0.6.3",
+                    "extras": [],
+                    "marker": null,
+                    "name": "stack-data",
+                    "specifier": "==0.6.3",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "starlette": {
+            "name": "starlette",
+            "version": "0.49.1",
+            "requirements": [
+                {
+                    "raw": "starlette==0.49.1",
+                    "extras": [],
+                    "marker": null,
+                    "name": "starlette",
+                    "specifier": "==0.49.1",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "sympy": {
+            "name": "sympy",
+            "version": "1.13.1",
+            "requirements": [
+                {
+                    "raw": "sympy==1.13.1",
+                    "extras": [],
+                    "marker": null,
+                    "name": "sympy",
+                    "specifier": "==1.13.1",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "text-unidecode": {
+            "name": "text-unidecode",
+            "version": "1.3",
+            "requirements": [
+                {
+                    "raw": "text-unidecode==1.3",
+                    "extras": [],
+                    "marker": null,
+                    "name": "text-unidecode",
+                    "specifier": "==1.3",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "threadpoolctl": {
+            "name": "threadpoolctl",
+            "version": "3.5.0",
+            "requirements": [
+                {
+                    "raw": "threadpoolctl==3.5.0",
+                    "extras": [],
+                    "marker": null,
+                    "name": "threadpoolctl",
+                    "specifier": "==3.5.0",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "tinycss2": {
+            "name": "tinycss2",
+            "version": "1.4.0",
+            "requirements": [
+                {
+                    "raw": "tinycss2==1.4.0",
+                    "extras": [],
+                    "marker": null,
+                    "name": "tinycss2",
+                    "specifier": "==1.4.0",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "tokenizers": {
+            "name": "tokenizers",
+            "version": "0.22.1",
+            "requirements": [
+                {
+                    "raw": "tokenizers==0.22.1",
+                    "extras": [],
+                    "marker": null,
+                    "name": "tokenizers",
+                    "specifier": "==0.22.1",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "torch": {
+            "name": "torch",
+            "version": "2.8.0+cu124",
+            "requirements": [
+                {
+                    "raw": "torch==2.8.0+cu124",
+                    "extras": [],
+                    "marker": null,
+                    "name": "torch",
+                    "specifier": "==2.8.0+cu124",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "torchaudio": {
+            "name": "torchaudio",
+            "version": "2.6.0+cu124",
+            "requirements": [
+                {
+                    "raw": "torchaudio==2.6.0+cu124",
+                    "extras": [],
+                    "marker": null,
+                    "name": "torchaudio",
+                    "specifier": "==2.6.0+cu124",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "torchvision": {
+            "name": "torchvision",
+            "version": "0.21.0+cu124",
+            "requirements": [
+                {
+                    "raw": "torchvision==0.21.0+cu124",
+                    "extras": [],
+                    "marker": null,
+                    "name": "torchvision",
+                    "specifier": "==0.21.0+cu124",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "tornado": {
+            "name": "tornado",
+            "version": "6.5.5",
+            "requirements": [
+                {
+                    "raw": "tornado==6.5.5",
+                    "extras": [],
+                    "marker": null,
+                    "name": "tornado",
+                    "specifier": "==6.5.5",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "tqdm": {
+            "name": "tqdm",
+            "version": "4.67.1",
+            "requirements": [
+                {
+                    "raw": "tqdm==4.67.1",
+                    "extras": [],
+                    "marker": null,
+                    "name": "tqdm",
+                    "specifier": "==4.67.1",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "traitlets": {
+            "name": "traitlets",
+            "version": "5.15.0",
+            "requirements": [
+                {
+                    "raw": "traitlets==5.15.0",
+                    "extras": [],
+                    "marker": null,
+                    "name": "traitlets",
+                    "specifier": "==5.15.0",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "transformers": {
+            "name": "transformers",
+            "version": "5.8.1",
+            "requirements": [
+                {
+                    "raw": "transformers==5.8.1",
+                    "extras": [],
+                    "marker": null,
+                    "name": "transformers",
+                    "specifier": "==5.8.1",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "typer": {
+            "name": "typer",
+            "version": "0.20.0",
+            "requirements": [
+                {
+                    "raw": "typer==0.20.0",
+                    "extras": [],
+                    "marker": null,
+                    "name": "typer",
+                    "specifier": "==0.20.0",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "typer-slim": {
+            "name": "typer-slim",
+            "version": "0.20.0",
+            "requirements": [
+                {
+                    "raw": "typer-slim==0.20.0",
+                    "extras": [],
+                    "marker": null,
+                    "name": "typer-slim",
+                    "specifier": "==0.20.0",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "typing-extensions": {
+            "name": "typing-extensions",
+            "version": "4.15.0",
+            "requirements": [
+                {
+                    "raw": "typing_extensions==4.15.0",
+                    "extras": [],
+                    "marker": null,
+                    "name": "typing_extensions",
+                    "specifier": "==4.15.0",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "typing-inspection": {
+            "name": "typing-inspection",
+            "version": "0.4.2",
+            "requirements": [
+                {
+                    "raw": "typing-inspection==0.4.2",
+                    "extras": [],
+                    "marker": null,
+                    "name": "typing-inspection",
+                    "specifier": "==0.4.2",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "tzdata": {
+            "name": "tzdata",
+            "version": "2025.2",
+            "requirements": [
+                {
+                    "raw": "tzdata==2025.2",
+                    "extras": [],
+                    "marker": null,
+                    "name": "tzdata",
+                    "specifier": "==2025.2",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "urllib3": {
+            "name": "urllib3",
+            "version": "2.7.0",
+            "requirements": [
+                {
+                    "raw": "urllib3==2.7.0",
+                    "extras": [],
+                    "marker": null,
+                    "name": "urllib3",
+                    "specifier": "==2.7.0",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "uvicorn": {
+            "name": "uvicorn",
+            "version": "0.40.0",
+            "requirements": [
+                {
+                    "raw": "uvicorn==0.40.0",
+                    "extras": [],
+                    "marker": null,
+                    "name": "uvicorn",
+                    "specifier": "==0.40.0",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "watchfiles": {
+            "name": "watchfiles",
+            "version": "1.1.1",
+            "requirements": [
+                {
+                    "raw": "watchfiles==1.1.1",
+                    "extras": [],
+                    "marker": null,
+                    "name": "watchfiles",
+                    "specifier": "==1.1.1",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "wcwidth": {
+            "name": "wcwidth",
+            "version": "0.7.0",
+            "requirements": [
+                {
+                    "raw": "wcwidth==0.7.0",
+                    "extras": [],
+                    "marker": null,
+                    "name": "wcwidth",
+                    "specifier": "==0.7.0",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "webencodings": {
+            "name": "webencodings",
+            "version": "0.5.1",
+            "requirements": [
+                {
+                    "raw": "webencodings==0.5.1",
+                    "extras": [],
+                    "marker": null,
+                    "name": "webencodings",
+                    "specifier": "==0.5.1",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "websockets": {
+            "name": "websockets",
+            "version": "15.0.1",
+            "requirements": [
+                {
+                    "raw": "websockets==15.0.1",
+                    "extras": [],
+                    "marker": null,
+                    "name": "websockets",
+                    "specifier": "==15.0.1",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "wheel": {
+            "name": "wheel",
+            "version": "0.47.0",
+            "requirements": [
+                {
+                    "raw": "wheel==0.47.0",
+                    "extras": [],
+                    "marker": null,
+                    "name": "wheel",
+                    "specifier": "==0.47.0",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "win-inet-pton": {
+            "name": "win-inet-pton",
+            "version": "1.1.0",
+            "requirements": [
+                {
+                    "raw": "win_inet_pton==1.1.0",
+                    "extras": [],
+                    "marker": null,
+                    "name": "win_inet_pton",
+                    "specifier": "==1.1.0",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "winloop": {
+            "name": "winloop",
+            "version": "0.3.1",
+            "requirements": [
+                {
+                    "raw": "winloop==0.3.1",
+                    "extras": [],
+                    "marker": null,
+                    "name": "winloop",
+                    "specifier": "==0.3.1",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "xxhash": {
+            "name": "xxhash",
+            "version": "3.5.0",
+            "requirements": [
+                {
+                    "raw": "xxhash==3.5.0",
+                    "extras": [],
+                    "marker": null,
+                    "name": "xxhash",
+                    "specifier": "==3.5.0",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "yarg": {
+            "name": "yarg",
+            "version": "0.1.9",
+            "requirements": [
+                {
+                    "raw": "yarg==0.1.9",
+                    "extras": [],
+                    "marker": null,
+                    "name": "yarg",
+                    "specifier": "==0.1.9",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        },
+        "yarl": {
+            "name": "yarl",
+            "version": "1.22.0",
+            "requirements": [
+                {
+                    "raw": "yarl==1.22.0",
+                    "extras": [],
+                    "marker": null,
+                    "name": "yarl",
+                    "specifier": "==1.22.0",
+                    "url": null,
+                    "found": "C:\\\u7814\u7a76\u751f\\\u7814\u4e00\u4e0b\\\u6742\\20260519-\u5f00\u6e90\u5956\u52b1\u8ba1\u5212\\\u738b\u9896\u5e08\u59d0-\u6bd5\u4e1a\u7cfb\u7edf\\aigc_web\\requirements.txt"
+                }
+            ]
+        }
+    },
+    "affected_packages": {},
+    "announcements": [],
+    "vulnerabilities": [],
+    "ignored_vulnerabilities": [],
+    "remediations": {},
+    "remediations_results": {
+        "vulnerabilities_fixed": [],
+        "remediations_applied": {},
+        "remediations_skipped": {}
+    }
+}
+
+
++===========================================================================================================================================================================================+
+
+
+DEPRECATED: this command (`check`) has been DEPRECATED, and will be unsupported beyond 01 June 2024.
+
+
+We highly encourage switching to the new `scan` command which is easier to use, more powerful, and can be set up to mimic the deprecated command if required.
+
+
++===========================================================================================================================================================================================+
+
+
