@@ -17,8 +17,6 @@
 │   ├── file_parser.py     # 文件解析工具
 │   ├── schemas.py         # 数据模型定义
 │   └── service.py         # 业务服务逻辑
-├── deberta_CRF(new)_single_text.py  # DeBERTa+CRF 模型单文本推理
-├── test_single_text.py             # 单文本测试脚本
 ├── requirements.txt                # 项目依赖列表
 ├── SECURITY.md                     # 安全说明文档
 ├── readme.md                       # 项目说明文档
