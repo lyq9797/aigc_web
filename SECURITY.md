@@ -13,6 +13,7 @@
   | B603 | subprocess调用存在潜在命令注入风险 | LOW | 确认命令内部构造无用户输入，添加安全注释说明 |
   | B110 | 空except静默失败，异常处理不当 | LOW | 完善异常处理逻辑，添加日志记录 |
 - **最终结果**：重新扫描无任何高危/中危/低危安全漏洞
+- **结果文件**：本次扫描结果已存入 `security_reports/bandit_scan_result.json` 文件中
 
 ## 三、依赖包安全扫描（Safety）
 - **工具版本**：Safety 3.2.1
@@ -38,13 +39,15 @@
   | brotlicffi | 1.1.0.0 | 1 | Medium | 升级至1.2.0.1，修复解压炸弹漏洞 |
   | aiohttp | 3.13.2 | 18 | High | 升级至3.13.5，修复请求走私、信息泄露、DoS等18个漏洞 |
 - **最终结果**：重新扫描无任何已知CVE漏洞
+- **结果文件**：本次扫描结果已存入 `security_reports/safety_scan_result.json` 文件中
 
 ## 四、多语言静态分析（Semgrep）
 - **工具版本**：Semgrep 1.163.0
-- **扫描规则**：OWASP Top 10 安全规则集
+- **扫描规则**：OWASP Top 10 安全规则集 + 通用安全规则集
 - **扫描范围**：全项目Python代码
 - **发现问题与修复措施**：无任何安全问题
 - **最终结果**：扫描无任何安全警告和漏洞
+- **结果文件**：本次扫描结果已分别存入 `security_reports/semgrep_owasp_scan_result.json` 和 `security_reports/semgrep_security_scan_result.json` 文件中
 
 ## 五、安全加固措施总结
 1. **数据安全**：所有PyTorch模型和数据加载均使用`weights_only=True`安全模式，彻底消除反序列化风险

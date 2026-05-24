@@ -1,8 +1,0 @@
-.idea/
-__pycache__/
-perf/
-sbadmin2-1.0.7/
-bower_components/
-*.pyc
-*.pyo
-*.json
