@@ -14,11 +14,11 @@ WORD_MODEL_PATH = os.getenv(
 WORD_MODEL_NAME = os.getenv("WORD_MODEL_NAME", "microsoft/deberta-v3-base")
 WORD_BOUNDARY_BACKEND_SCRIPT = os.getenv(
     "WORD_BOUNDARY_BACKEND_SCRIPT",
-    r"work2\\deberta_CRF(new)_single_text.py",
+    r"detectors\\deberta_CRF(new)_single_text.py",
 )
 
 # Sentence-level backend placeholder path (referenced for compatibility notes)
 SENTENCE_BACKEND_SCRIPT = os.getenv(
     "SENTENCE_BACKEND_SCRIPT",
-    r"work1\\test_single_text.py",
+    r"detectors\\test_single_text.py",
 )
