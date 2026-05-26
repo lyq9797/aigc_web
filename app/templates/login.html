@@ -1,35 +1,86 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
+  <!-- 页面元信息 -->
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="AI 文本检测系统 - 用户安全登录入口" />
   <title>登录 - AI 文本检测系统</title>
+
+  <!-- 样式资源 -->
+  <!-- 【安全说明】生产环境建议配合 CSP (Content-Security-Policy) 限制 style-src 加载源 -->
   <link rel="stylesheet" href="/static/styles.css" />
 </head>
 <body>
-  <div class="bg-shape bg-one"></div>
-  <div class="bg-shape bg-two"></div>
+  <!-- 背景装饰元素 (纯视觉，对屏幕阅读器隐藏) -->
+  <div class="bg-shape bg-one" aria-hidden="true"></div>
+  <div class="bg-shape bg-two" aria-hidden="true"></div>
 
-  <main class="auth-wrap">
-    <section class="card auth-box">
-      <h1 class="auth-title">用户登录</h1>
-      <p class="muted auth-subtitle">欢迎使用AI文本检测系统</p>
+  <!-- 主内容区域 -->
+  <main class="auth-wrap" role="main">
+    <section class="card auth-box" aria-labelledby="authTitle">
+      <h1 id="authTitle" class="auth-title">用户登录</h1>
+      <p class="muted auth-subtitle">欢迎使用 AI 文本检测系统</p>
 
-      <label>用户名</label>
-      <input id="username" type="text" placeholder="请输入用户名" />
+      <!--
+        【安全与规范说明】
+        1. 使用 <form> 标签包裹以支持浏览器密码管理器的自动填充和回车键提交。
+        2. 添加 novalidate 属性禁用浏览器默认校验，由前端 JS 统一处理校验逻辑。
+        3. JS 中必须监听 submit 事件并调用 e.preventDefault() 以防止页面刷新。
+      -->
+      <form id="loginForm" class="auth-form" novalidate>
 
-      <label>密码</label>
-      <div class="password-input-wrap">
-        <input id="password" type="password" placeholder="请输入密码" />
-        <button id="togglePasswordBtn" type="button" class="password-eye" aria-label="显示或隐藏密码" title="显示/隐藏密码"></button>
-      </div>
+        <!-- 用户名输入区 -->
+        <label for="username">用户名</label>
+        <input
+          id="username"
+          name="username"
+          type="text"
+          placeholder="请输入用户名"
+          autocomplete="username"
+          required
+        />
 
-      <button id="loginBtn" class="primary big">登录</button>
-      <button id="goRegisterBtn" class="ghost big">新用户？去注册</button>
-      <p id="msg" class="msg"></p>
+        <!-- 密码输入区 -->
+        <label for="password">密码</label>
+        <div class="password-input-wrap">
+          <input
+            id="password"
+            name="password"
+            type="password"
+            placeholder="请输入密码"
+            autocomplete="current-password"
+            required
+          />
+          <!-- 密码可见性切换按钮 -->
+          <button
+            id="togglePasswordBtn"
+            type="button"
+            class="password-eye"
+            aria-label="显示或隐藏密码"
+            aria-pressed="false"
+            title="显示/隐藏密码"
+          ></button>
+        </div>
+
+        <!-- 操作按钮区 -->
+        <button id="loginBtn" type="submit" class="primary big">登录</button>
+        <button id="goRegisterBtn" type="button" class="ghost big">新用户？去注册</button>
+
+        <!-- 消息提示区 -->
+        <!-- 【安全检测注释】前端渲染此消息时，必须使用 textContent 而非 innerHTML，以防止存储型/反射型 XSS 攻击 -->
+        <!-- 【安全检测注释】生产环境必须强制使用 HTTPS 传输，防止凭证在传输层被中间人(MITM)嗅探 -->
+        <p id="msg" class="msg" role="alert" aria-live="assertive"></p>
+
+      </form>
     </section>
   </main>
 
+  <!-- 脚本资源 -->
+  <!-- 【安全检测注释】
+    1. 建议在生产环境通过 HTTP 响应头配置 Content-Security-Policy (CSP)，严格限制 script-src。
+    2. 若部署在 CDN 或子路径，建议为脚本添加 integrity (SRI) 属性以防止供应链篡改。
+  -->
   <script src="/static/common.js"></script>
   <script src="/static/login.js"></script>
 </body>
