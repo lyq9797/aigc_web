@@ -8,9 +8,7 @@
 ├── app/                    # 应用核心目录
 │   ├── detectors/          # 文本/单词级检测核心引擎
 │   │   ├── __pycache__/    # Python编译缓存文件
-│   │   ├── deberta_CRF(new)_single_text.py  # DeBERTa+CRF模型推理
 │   │   ├── sentence_level.py                # 句子级检测逻辑
-│   │   ├── test_single_text.py              # 单文本测试脚本
 │   │   ├── utils.py                         # 通用工具函数
 │   │   ├── word_level.py                    # 单词级检测逻辑
 │   │   ├── word_model_runtime.py            # 词模型运行时
@@ -37,6 +35,10 @@
 │   ├── safety_scan_result.json         # Safety依赖扫描结果
 │   ├── semgrep_owasp_scan_result.json  # Semgrep OWASP规则扫描结果
 │   └── semgrep_security_scan_result.json # Semgrep安全规则扫描结果
+├── work1/       # 网页端应用目录
+│   └── test_single_text.py              # 网页端使用的单文本测试
+├── work2/       # 网页端应用目录
+│   └── deberta_CRF(new)_single_text.py  # DeBERTa+CRF模型推理
 ├── README.md               # 项目说明文档
 ├── requirements.txt        # 项目依赖列表
 └── SECURITY.md             # 安全说明文档
