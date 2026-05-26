@@ -1,79 +1,127 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
+  <!-- 页面元信息 -->
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="AI 文本检测系统 - 用户认证与文本分析" />
   <title>AI 文本检测系统</title>
+
+  <!-- 样式资源 -->
+  <!-- 【安全说明】生产环境建议配合 CSP (Content-Security-Policy) 限制样式加载源 -->
   <link rel="stylesheet" href="/static/styles.css" />
 </head>
 <body>
-  <div class="bg-shape bg-one"></div>
-  <div class="bg-shape bg-two"></div>
+  <!-- 背景装饰元素 (纯视觉，对屏幕阅读器隐藏) -->
+  <div class="bg-shape bg-one" aria-hidden="true"></div>
+  <div class="bg-shape bg-two" aria-hidden="true"></div>
 
-  <header class="topbar">
+  <!-- 顶部导航栏 -->
+  <header class="topbar" role="banner">
     <h1>AI 文本检测系统</h1>
-    <div class="user-panel">
-      <span id="currentUser" class="muted">未登录</span>
-      <button id="logoutBtn" class="ghost">退出</button>
-    </div>
+    <nav class="user-panel" aria-label="用户操作">
+      <span id="currentUser" class="muted" aria-label="当前用户状态">未登录</span>
+      <button id="logoutBtn" class="ghost" type="button">退出</button>
+    </nav>
   </header>
 
-  <main class="layout">
-    <section class="card auth-card">
-      <h2>用户认证</h2>
-      <div class="auth-tabs">
-        <button id="tabLogin" class="tab active">登录</button>
-        <button id="tabRegister" class="tab">注册</button>
+  <!-- 主内容区域 -->
+  <main class="layout" role="main">
+
+    <!-- ==========================================
+         模块 1：用户认证 (登录 / 注册)
+         ========================================== -->
+    <section class="card auth-card" aria-labelledby="authHeading">
+      <h2 id="authHeading">用户认证</h2>
+
+      <!-- 标签页导航 (遵循 WAI-ARIA Tabs 模式) -->
+      <div class="auth-tabs" role="tablist" aria-label="认证方式选择">
+        <button id="tabLogin" class="tab active" role="tab" aria-selected="true" aria-controls="loginPanel" type="button">登录</button>
+        <button id="tabRegister" class="tab" role="tab" aria-selected="false" aria-controls="registerPanel" type="button" tabindex="-1">注册</button>
       </div>
 
-      <div id="loginPanel" class="auth-panel">
-        <label>用户名</label>
-        <input id="loginUsername" type="text" placeholder="输入用户名" />
-        <label>密码</label>
-        <input id="loginPassword" type="password" placeholder="输入密码" />
-        <button id="loginBtn" class="primary">登录</button>
+      <!-- 登录表单面板 -->
+      <div id="loginPanel" class="auth-panel" role="tabpanel" aria-labelledby="tabLogin">
+        <!-- 【安全说明】使用 autocomplete 帮助密码管理器安全填充，避免用户重用弱密码 -->
+        <label for="loginUsername">用户名</label>
+        <input id="loginUsername" type="text" placeholder="输入用户名" autocomplete="username" required />
+
+        <label for="loginPassword">密码</label>
+        <input id="loginPassword" type="password" placeholder="输入密码" autocomplete="current-password" required />
+
+        <button id="loginBtn" class="primary" type="button">登录</button>
       </div>
 
-      <div id="registerPanel" class="auth-panel hidden">
-        <label>用户名</label>
-        <input id="registerUsername" type="text" placeholder="3-50 字符" />
-        <label>密码</label>
-        <input id="registerPassword" type="password" placeholder="至少 6 位" />
-        <button id="registerBtn" class="primary">注册</button>
+      <!-- 注册表单面板 (默认隐藏) -->
+      <div id="registerPanel" class="auth-panel hidden" role="tabpanel" aria-labelledby="tabRegister" hidden>
+        <label for="registerUsername">用户名</label>
+        <input id="registerUsername" type="text" placeholder="3-50 字符" autocomplete="username" minlength="3" maxlength="50" required />
+
+        <label for="registerPassword">密码</label>
+        <input id="registerPassword" type="password" placeholder="至少 6 位" autocomplete="new-password" minlength="6" required />
+
+        <button id="registerBtn" class="primary" type="button">注册</button>
       </div>
 
-      <p id="authMsg" class="msg"></p>
+      <!-- 认证消息提示区 -->
+      <!-- 【安全检测注释】前端渲染此消息时，必须使用 textContent 而非 innerHTML，以防止存储型/反射型 XSS 攻击 -->
+      <p id="authMsg" class="msg" role="alert" aria-live="assertive"></p>
     </section>
 
-    <section class="card detect-card">
-      <h2>文本检测</h2>
+    <!-- ==========================================
+         模块 2：文本检测输入区
+         ========================================== -->
+    <section class="card detect-card" aria-labelledby="detectHeading">
+      <h2 id="detectHeading">文本检测</h2>
+
       <div class="control-row">
-        <button id="sampleBtn" class="ghost">加载示例文本</button>
-        <button id="clearBtn" class="ghost">清除</button>
+        <button id="sampleBtn" class="ghost" type="button">加载示例文本</button>
+        <button id="clearBtn" class="ghost" type="button">清除</button>
       </div>
-      <textarea id="inputText" rows="10" placeholder="在这里粘贴或输入待检测文本..."></textarea>
-      <button id="detectBtn" class="primary big">开始检测</button>
-      <p id="detectMsg" class="msg"></p>
+
+      <label for="inputText" class="sr-only">待检测文本输入框</label>
+      <textarea id="inputText" rows="10" placeholder="在这里粘贴或输入待检测文本..." aria-required="true"></textarea>
+
+      <button id="detectBtn" class="primary big" type="button">开始检测</button>
+
+      <!-- 检测状态消息提示区 -->
+      <p id="detectMsg" class="msg" role="status" aria-live="polite"></p>
     </section>
 
-    <section class="card result-card">
-      <h2>检测结果</h2>
-      <div id="switchInfo" class="switch-info muted">切换点：暂无</div>
+    <!-- ==========================================
+         模块 3：检测结果展示区
+         ========================================== -->
+    <section class="card result-card" aria-labelledby="resultHeading">
+      <h2 id="resultHeading">检测结果</h2>
 
-      <h3>单词级高亮</h3>
-      <div id="wordHighlight" class="highlight-box">暂无结果</div>
+      <div id="switchInfo" class="switch-info muted" aria-live="polite">切换点：暂无</div>
 
-      <h3>句子级结果</h3>
-      <div id="sentenceList" class="sentence-list"></div>
+      <h3 id="wordHighlightHeading">单词级高亮</h3>
+      <!-- 【安全检测注释】高亮内容若包含用户原始输入，渲染时需进行 HTML 实体转义，防止 DOM 型 XSS -->
+      <div id="wordHighlight" class="highlight-box" role="region" aria-labelledby="wordHighlightHeading" aria-live="polite">暂无结果</div>
+
+      <h3 id="sentenceResultHeading">句子级结果</h3>
+      <div id="sentenceList" class="sentence-list" role="list" aria-labelledby="sentenceResultHeading" aria-live="polite"></div>
     </section>
 
-    <section class="card history-card">
-      <h2>历史检测记录</h2>
-      <button id="refreshHistoryBtn" class="ghost">刷新记录</button>
-      <div id="historyList" class="history-list"></div>
+    <!-- ==========================================
+         模块 4：历史检测记录
+         ========================================== -->
+    <section class="card history-card" aria-labelledby="historyHeading">
+      <h2 id="historyHeading">历史检测记录</h2>
+      <button id="refreshHistoryBtn" class="ghost" type="button">刷新记录</button>
+
+      <!-- 历史记录列表 -->
+      <div id="historyList" class="history-list" role="list" aria-live="polite"></div>
     </section>
+
   </main>
 
+  <!-- 脚本资源 -->
+  <!-- 【安全检测注释】
+    1. 建议在生产环境通过 HTTP 响应头配置 Content-Security-Policy (CSP)，限制 script-src。
+    2. 若部署在子路径，建议为脚本添加 integrity (SRI) 属性以防止供应链篡改。
+  -->
   <script src="/static/app.js"></script>
 </body>
 </html>
