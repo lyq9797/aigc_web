@@ -1,6 +1,6 @@
 {
   "errors": [],
-  "generated_at": "2026-05-20T11:39:12Z",
+  "generated_at": "2026-05-27T08:55:06Z",
   "metrics": {
     ".\\app\\__init__.py": {
       "CONFIDENCE.HIGH": 0,
@@ -24,20 +24,20 @@
       "SEVERITY.LOW": 0,
       "SEVERITY.MEDIUM": 0,
       "SEVERITY.UNDEFINED": 0,
-      "loc": 64,
+      "loc": 185,
       "nosec": 0,
       "skipped_tests": 0
     },
     ".\\app\\config.py": {
       "CONFIDENCE.HIGH": 0,
       "CONFIDENCE.LOW": 0,
-      "CONFIDENCE.MEDIUM": 0,
+      "CONFIDENCE.MEDIUM": 1,
       "CONFIDENCE.UNDEFINED": 0,
       "SEVERITY.HIGH": 0,
-      "SEVERITY.LOW": 0,
+      "SEVERITY.LOW": 1,
       "SEVERITY.MEDIUM": 0,
       "SEVERITY.UNDEFINED": 0,
-      "loc": 19,
+      "loc": 66,
       "nosec": 0,
       "skipped_tests": 0
     },
@@ -50,7 +50,7 @@
       "SEVERITY.LOW": 0,
       "SEVERITY.MEDIUM": 0,
       "SEVERITY.UNDEFINED": 0,
-      "loc": 110,
+      "loc": 169,
       "nosec": 0,
       "skipped_tests": 0
     },
@@ -76,7 +76,7 @@
       "SEVERITY.LOW": 0,
       "SEVERITY.MEDIUM": 0,
       "SEVERITY.UNDEFINED": 0,
-      "loc": 133,
+      "loc": 245,
       "nosec": 0,
       "skipped_tests": 2
     },
@@ -89,7 +89,7 @@
       "SEVERITY.LOW": 0,
       "SEVERITY.MEDIUM": 0,
       "SEVERITY.UNDEFINED": 0,
-      "loc": 25,
+      "loc": 62,
       "nosec": 0,
       "skipped_tests": 0
     },
@@ -102,7 +102,7 @@
       "SEVERITY.LOW": 0,
       "SEVERITY.MEDIUM": 0,
       "SEVERITY.UNDEFINED": 0,
-      "loc": 220,
+      "loc": 368,
       "nosec": 0,
       "skipped_tests": 2
     },
@@ -115,7 +115,7 @@
       "SEVERITY.LOW": 0,
       "SEVERITY.MEDIUM": 0,
       "SEVERITY.UNDEFINED": 0,
-      "loc": 138,
+      "loc": 254,
       "nosec": 0,
       "skipped_tests": 0
     },
@@ -128,7 +128,7 @@
       "SEVERITY.LOW": 0,
       "SEVERITY.MEDIUM": 0,
       "SEVERITY.UNDEFINED": 0,
-      "loc": 89,
+      "loc": 156,
       "nosec": 0,
       "skipped_tests": 0
     },
@@ -141,7 +141,7 @@
       "SEVERITY.LOW": 0,
       "SEVERITY.MEDIUM": 0,
       "SEVERITY.UNDEFINED": 0,
-      "loc": 86,
+      "loc": 191,
       "nosec": 0,
       "skipped_tests": 0
     },
@@ -154,7 +154,7 @@
       "SEVERITY.LOW": 0,
       "SEVERITY.MEDIUM": 0,
       "SEVERITY.UNDEFINED": 0,
-      "loc": 17,
+      "loc": 77,
       "nosec": 0,
       "skipped_tests": 0
     },
@@ -167,11 +167,24 @@
       "SEVERITY.LOW": 0,
       "SEVERITY.MEDIUM": 0,
       "SEVERITY.UNDEFINED": 0,
-      "loc": 24,
+      "loc": 86,
       "nosec": 0,
       "skipped_tests": 0
     },
-    ".\\deberta_CRF(new)_single_text.py": {
+    ".\\work1\\test_single_text.py": {
+      "CONFIDENCE.HIGH": 3,
+      "CONFIDENCE.LOW": 0,
+      "CONFIDENCE.MEDIUM": 0,
+      "CONFIDENCE.UNDEFINED": 0,
+      "SEVERITY.HIGH": 0,
+      "SEVERITY.LOW": 0,
+      "SEVERITY.MEDIUM": 3,
+      "SEVERITY.UNDEFINED": 0,
+      "loc": 280,
+      "nosec": 0,
+      "skipped_tests": 0
+    },
+    ".\\work2\\deberta_CRF(new)_single_text.py": {
       "CONFIDENCE.HIGH": 0,
       "CONFIDENCE.LOW": 0,
       "CONFIDENCE.MEDIUM": 0,
@@ -180,36 +193,104 @@
       "SEVERITY.LOW": 0,
       "SEVERITY.MEDIUM": 0,
       "SEVERITY.UNDEFINED": 0,
-      "loc": 171,
+      "loc": 247,
       "nosec": 0,
       "skipped_tests": 0
-    },
-    ".\\test_single_text.py": {
-      "CONFIDENCE.HIGH": 0,
-      "CONFIDENCE.LOW": 0,
-      "CONFIDENCE.MEDIUM": 0,
-      "CONFIDENCE.UNDEFINED": 0,
-      "SEVERITY.HIGH": 0,
-      "SEVERITY.LOW": 0,
-      "SEVERITY.MEDIUM": 0,
-      "SEVERITY.UNDEFINED": 0,
-      "loc": 225,
-      "nosec": 0,
-      "skipped_tests": 2
     },
     "_totals": {
-      "CONFIDENCE.HIGH": 0,
+      "CONFIDENCE.HIGH": 3,
       "CONFIDENCE.LOW": 0,
-      "CONFIDENCE.MEDIUM": 0,
+      "CONFIDENCE.MEDIUM": 1,
       "CONFIDENCE.UNDEFINED": 0,
       "SEVERITY.HIGH": 0,
-      "SEVERITY.LOW": 0,
-      "SEVERITY.MEDIUM": 0,
+      "SEVERITY.LOW": 1,
+      "SEVERITY.MEDIUM": 3,
       "SEVERITY.UNDEFINED": 0,
-      "loc": 1321,
+      "loc": 2386,
       "nosec": 0,
-      "skipped_tests": 6
+      "skipped_tests": 4
     }
   },
-  "results": []
+  "results": [
+    {
+      "code": "41 # \u82e5\u5728\u751f\u4ea7\u73af\u5883\u4e2d\u4f7f\u7528\u6b64\u9ed8\u8ba4\u503c\uff0c\u653b\u51fb\u8005\u53ef\u8f7b\u6613\u4f2a\u9020 JWT Token \u83b7\u53d6\u7cfb\u7edf\u6700\u9ad8\u6743\u9650\u3002\n42 _DEFAULT_SECRET_KEY = \"change-this-in-production\"\n43 SECRET_KEY: Final[str] = os.getenv(\"AIGC_WEB_SECRET\", _DEFAULT_SECRET_KEY)\n",
+      "col_offset": 22,
+      "end_col_offset": 49,
+      "filename": ".\\app\\config.py",
+      "issue_confidence": "MEDIUM",
+      "issue_cwe": {
+        "id": 259,
+        "link": "https://cwe.mitre.org/data/definitions/259.html"
+      },
+      "issue_severity": "LOW",
+      "issue_text": "Possible hardcoded password: 'change-this-in-production'",
+      "line_number": 42,
+      "line_range": [
+        42
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b105_hardcoded_password_string.html",
+      "test_id": "B105",
+      "test_name": "hardcoded_password_string"
+    },
+    {
+      "code": "117         # nosec B615: \u672c\u5730\u53d7\u4fe1\u4efb\u6a21\u578b\u8def\u5f84\uff0c\u65e0\u4f9b\u5e94\u94fe\u6295\u6bd2\u98ce\u9669\n118         self.tokenizer = transformers.AutoTokenizer.from_pretrained(model_path)\n119         self.model = transformers.AutoModelForCausalLM.from_pretrained(model_path)\n",
+      "col_offset": 25,
+      "end_col_offset": 79,
+      "filename": ".\\work1\\test_single_text.py",
+      "issue_confidence": "HIGH",
+      "issue_cwe": {
+        "id": 494,
+        "link": "https://cwe.mitre.org/data/definitions/494.html"
+      },
+      "issue_severity": "MEDIUM",
+      "issue_text": "Unsafe Hugging Face Hub download without revision pinning in from_pretrained()",
+      "line_number": 118,
+      "line_range": [
+        118
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b615_huggingface_unsafe_download.html",
+      "test_id": "B615",
+      "test_name": "huggingface_unsafe_download"
+    },
+    {
+      "code": "118         self.tokenizer = transformers.AutoTokenizer.from_pretrained(model_path)\n119         self.model = transformers.AutoModelForCausalLM.from_pretrained(model_path)\n120 \n",
+      "col_offset": 21,
+      "end_col_offset": 82,
+      "filename": ".\\work1\\test_single_text.py",
+      "issue_confidence": "HIGH",
+      "issue_cwe": {
+        "id": 494,
+        "link": "https://cwe.mitre.org/data/definitions/494.html"
+      },
+      "issue_severity": "MEDIUM",
+      "issue_text": "Unsafe Hugging Face Hub download without revision pinning in from_pretrained()",
+      "line_number": 119,
+      "line_range": [
+        119
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b615_huggingface_unsafe_download.html",
+      "test_id": "B615",
+      "test_name": "huggingface_unsafe_download"
+    },
+    {
+      "code": "255                 \"SECURITY WARNING: Falling back to unsafe torch.load (weights_only not supported). Upgrade PyTorch!\")\n256             model = torch.load(str(model_path), map_location=self.device)\n257 \n",
+      "col_offset": 20,
+      "end_col_offset": 73,
+      "filename": ".\\work1\\test_single_text.py",
+      "issue_confidence": "HIGH",
+      "issue_cwe": {
+        "id": 502,
+        "link": "https://cwe.mitre.org/data/definitions/502.html"
+      },
+      "issue_severity": "MEDIUM",
+      "issue_text": "Use of unsafe PyTorch load",
+      "line_number": 256,
+      "line_range": [
+        256
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b614_pytorch_load.html",
+      "test_id": "B614",
+      "test_name": "pytorch_load"
+    }
+  ]
 }
