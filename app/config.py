@@ -39,21 +39,9 @@ DB_PATH: Final[Path] = BASE_DIR / "aigc_web.db"
 # 【安全检测核心说明 - 弱密钥防御】
 # 默认值 "change-this-in-production" 仅用于本地开发。
 # 若在生产环境中使用此默认值，攻击者可轻易伪造 JWT Token 获取系统最高权限。
-_DEFAULT_SECRET_KEY = "change-this-in-production-IMMEDIATELY"
-SECRET_KEY: Final[str] = os.getenv("AIGC_WEB_SECRET", _DEFAULT_SECRET_KEY)
-if SECRET_KEY == _DEFAULT_SECRET_KEY:
-    import warnings
-    warnings.warn("Using default SECRET_KEY! This is INSECURE in production!", UserWarning)
-
-if SECRET_KEY == _DEFAULT_SECRET_KEY:
-    if not IS_DEBUG:
-        # 生产环境必须配置强密钥，直接阻断启动
-        raise RuntimeError(
-            "【安全致命错误】生产环境必须通过环境变量 'AIGC_WEB_SECRET' 配置高强度的随机密钥！"
-            "请使用 `openssl rand -hex 32` 生成并设置。"
-        )
-    else:
-        logger.warning("【安全警告】当前正在使用默认的弱 SECRET_KEY，请确保此环境仅用于本地开发！")
+SECRET_KEY: Final[str] = os.getenv("AIGC_WEB_SECRET")
+if not SECRET_KEY:
+    raise RuntimeError("AIGC_WEB_SECRET environment variable must be set in production")
 
 
 # Token 过期时间（小时）
