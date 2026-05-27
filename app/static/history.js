@@ -1,505 +1,498 @@
-const currentUserEl = document.getElementById('currentUser');
-const logoutBtn = document.getElementById('logoutBtn');
-const goDetectBtn = document.getElementById('goDetectBtn');
-const clearHistoryBtn = document.getElementById('clearHistoryBtn');
-const sidebarToggleBtn = document.getElementById('sidebarToggleBtn');
-const historyShell = document.getElementById('historyShell');
-const historyList = document.getElementById('historyList');
-const detailEmpty = document.getElementById('detailEmpty');
-const detailPanel = document.getElementById('detailPanel');
-const detailTime = document.getElementById('detailTime');
-const detailInput = document.getElementById('detailInput');
-const detailWords = document.getElementById('detailWords');
-const detailSentences = document.getElementById('detailSentences');
-const exportHistoryBtn = document.getElementById('exportHistoryBtn');
-const exportHistoryMenu = document.getElementById('exportHistoryMenu');
-const exportHistoryTxtBtn = document.getElementById('exportHistoryTxtBtn');
-const exportHistoryJsonBtn = document.getElementById('exportHistoryJsonBtn');
+/**
+ * AI 文本检测系统 - 历史记录页面核心逻辑 (History Page Logic)
+ * 
+ * 【安全检测全局说明】
+ * 1. 本文件包含历史数据渲染与导出逻辑，需严格防范 DOM 型 XSS 与数据泄露。
+ * 2. 所有来自后端的动态数据（包括 ID、标签、置信度、文本）在插入 DOM 前必须经过严格转义。
+ */
+(function (AppUtils) {
+  'use strict';
 
-let historyRows = [];
-let selectedHistoryId = null;
-let selectedHistoryRow = null;
-
-if (!requireLogin()) {
-  throw new Error('未登录');
-}
-
-mountUserInfo(currentUserEl);
-
-if (logoutBtn) {
-  logoutBtn.addEventListener('click', () => {
-    Auth.clear();
-    window.location.href = '/login';
-  });
-}
-
-if (goDetectBtn) {
-  goDetectBtn.addEventListener('click', () => {
-    window.location.href = '/detect';
-  });
-}
-
-function renderWordHighlight(words) {
-  if (!detailWords) {
-    return;
-  }
-  if (!words || !words.length) {
-    detailWords.textContent = '暂无结果';
-    return;
-  }
-  detailWords.innerHTML = words
-    .map((w) => {
-      const cls = w.label_id === 1 ? 'aigt' : 'hwt';
-      return `<span class="word ${cls}" title="${w.label} | 置信度 ${w.confidence}">${escapeHtml(w.token)}</span>`;
-    })
-    .join(' ');
-}
-
-function renderSentences(sentences) {
-  if (!detailSentences) {
-    return;
-  }
-  if (!sentences || !sentences.length) {
-    detailSentences.innerHTML = '<div class="muted">暂无结果</div>';
+  // 校验公共模块是否加载
+  if (!AppUtils || !AppUtils.api) {
+    console.error('AppUtils 未加载，请确保 common.js 在 history.js 之前引入');
     return;
   }
 
-  detailSentences.innerHTML = sentences
-    .map((s) => {
+  const { Auth, api, escapeHtml, requireLogin } = AppUtils;
+
+  /* ==========================================
+   * 1. 常量与配置 (Constants & Configuration)
+   * ========================================== */
+  const CONFIG = {
+    API_PATHS: {
+      HISTORY: '/api/history',
+    },
+    ROUTES: {
+      LOGIN: '/login',
+      DETECT: '/detect',
+    },
+  };
+
+  /* ==========================================
+   * 2. 状态与 DOM 缓存 (State & DOM Cache)
+   * ========================================== */
+  
+  /** 集中管理页面运行时状态 */
+  const state = {
+    rows: [],
+    selectedId: null,
+    selectedRow: null,
+    exportFormat: 'txt',
+  };
+
+  /** 缓存所有需要频繁访问的 DOM 元素 */
+  const el = {
+    currentUser: document.getElementById('currentUser'),
+    logoutBtn: document.getElementById('logoutBtn'),
+    goDetectBtn: document.getElementById('goDetectBtn'),
+    clearHistoryBtn: document.getElementById('clearHistoryBtn'),
+    sidebarToggleBtn: document.getElementById('sidebarToggleBtn'),
+    historyShell: document.getElementById('historyShell'),
+    historyList: document.getElementById('historyList'),
+    detailEmpty: document.getElementById('detailEmpty'),
+    detailPanel: document.getElementById('detailPanel'),
+    detailTime: document.getElementById('detailTime'),
+    detailInput: document.getElementById('detailInput'),
+    detailWords: document.getElementById('detailWords'),
+    detailSentences: document.getElementById('detailSentences'),
+    exportHistoryBtn: document.getElementById('exportHistoryBtn'),
+    exportHistoryMenu: document.getElementById('exportHistoryMenu'),
+    exportHistoryTxtBtn: document.getElementById('exportHistoryTxtBtn'),
+    exportHistoryJsonBtn: document.getElementById('exportHistoryJsonBtn'),
+  };
+
+  /* ==========================================
+   * 3. 工具函数 (Utilities)
+   * ========================================== */
+
+  /** 统一获取错误信息 */
+  function getErrorMessage(err, fallback = '操作失败') {
+    if (typeof err === 'string') return err;
+    if (err && typeof err.message === 'string') return err.message;
+    return fallback;
+  }
+
+  /** 触发浏览器文件下载 */
+  function downloadTextFile(filename, content, mimeType) {
+    const blob = new Blob([content], { type: mimeType });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  /** 解析日期字符串，兼容后端返回的各种格式 */
+  function parseDate(raw) {
+    if (!raw) return new Date();
+    const text = String(raw).replace(' ', 'T').replace(/(\.\d{3})\d+/, '$1');
+    const dt = new Date(text);
+    return Number.isNaN(dt.getTime()) ? new Date() : dt;
+  }
+
+  /** 日期格式化：YYYY-MM-DD HH:mm */
+  function formatDateTime(raw) {
+    const d = parseDate(raw);
+    const pad = (n) => String(n).padStart(2, '0');
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  }
+
+  /** 日期格式化：YYYYMMDD_HHmmss (用于文件名) */
+  function formatFileTime(raw) {
+    const d = parseDate(raw);
+    const pad = (n) => String(n).padStart(2, '0');
+    return `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}_${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}`;
+  }
+
+  /** 提取时间部分 HH:mm */
+  function formatClock(raw) {
+    const d = parseDate(raw);
+    return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+  }
+
+  /** 提取日期部分 YYYY-MM-DD */
+  function formatDay(raw) {
+    const d = parseDate(raw);
+    const pad = (n) => String(n).padStart(2, '0');
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  }
+
+  /* ==========================================
+   * 4. UI 渲染 (UI Rendering)
+   * ========================================== */
+
+  function renderWordHighlight(words) {
+    if (!el.detailWords) return;
+    if (!words || !words.length) {
+      el.detailWords.textContent = '暂无结果';
+      return;
+    }
+
+    const html = words.map((w) => {
+      const isAi = Number(w.label_id) === 1 || String(w.label || '').toUpperCase() === 'AIGT';
+      const cls = isAi ? 'aigt' : 'hwt';
+      const label = isAi ? 'AIGT' : 'HWT';
+      const confidence = w.confidence ?? '-';
+      
+      // 【安全检测核心】对 title 属性内的动态数据进行转义，防止 HTML 属性注入 (Attribute Injection)
+      const safeTitle = `${escapeHtml(label)} | 置信度 ${escapeHtml(String(confidence))}`;
+      const safeToken = escapeHtml(String(w.token ?? ''));
+      
+      return `<span class="word ${cls}" title="${safeTitle}">${safeToken}</span>`;
+    }).join(' ');
+
+    el.detailWords.innerHTML = html;
+  }
+
+  function renderSentences(sentences) {
+    if (!el.detailSentences) return;
+    if (!sentences || !sentences.length) {
+      el.detailSentences.innerHTML = '<div class="muted">暂无结果</div>';
+      return;
+    }
+
+    const html = sentences.map((s) => {
       const cls = s.label === 'AIGT' ? 'aigt' : 'hwt';
+      // 【安全检测核心】对标签和置信度进行转义，防止存储型 XSS 通过后端数据回显攻击
+      const safeLabel = escapeHtml(String(s.label ?? ''));
+      const safeConfidence = escapeHtml(String(s.confidence ?? '-'));
+      const safeText = escapeHtml(String(s.text ?? ''));
+      
       return `
         <div class="sentence-item ${cls}">
-          <div><strong>句子 ${s.index + 1}</strong> | 标签: ${s.label} | 置信度: ${s.confidence}</div>
-          <div>${escapeHtml(s.text)}</div>
+          <div><strong>句子 ${(s.index ?? 0) + 1}</strong> | 标签: ${safeLabel} | 置信度: ${safeConfidence}</div>
+          <div>${safeText}</div>
         </div>
       `;
-    })
-    .join('');
-}
+    }).join('');
 
-function formatExportDateTime(date) {
-  const value = date instanceof Date ? date : new Date();
-  const y = value.getFullYear();
-  const m = String(value.getMonth() + 1).padStart(2, '0');
-  const d = String(value.getDate()).padStart(2, '0');
-  const h = String(value.getHours()).padStart(2, '0');
-  const min = String(value.getMinutes()).padStart(2, '0');
-  const s = String(value.getSeconds()).padStart(2, '0');
-  return `${y}-${m}-${d} ${h}:${min}:${s}`;
-}
-
-function formatExportFileTime(date) {
-  const value = date instanceof Date ? date : new Date();
-  const y = value.getFullYear();
-  const m = String(value.getMonth() + 1).padStart(2, '0');
-  const d = String(value.getDate()).padStart(2, '0');
-  const h = String(value.getHours()).padStart(2, '0');
-  const min = String(value.getMinutes()).padStart(2, '0');
-  const s = String(value.getSeconds()).padStart(2, '0');
-  return `${y}${m}${d}_${h}${min}${s}`;
-}
-
-function downloadTextFile(filename, content, mimeType) {
-  const blob = new Blob([content], { type: mimeType });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = filename;
-  document.body.appendChild(link);
-  link.click();
-  link.remove();
-  URL.revokeObjectURL(url);
-}
-
-function sanitizeExportResult(result) {
-  const words = Array.isArray(result?.words)
-    ? result.words.map((word) => ({
-      ...word,
-      confidence: undefined,
-    }))
-    : [];
-  const sentences = Array.isArray(result?.sentences) ? result.sentences : [];
-
-  return {
-    ...result,
-    words,
-    sentences,
-  };
-}
-
-function buildExportData() {
-  if (!selectedHistoryRow) {
-    return null;
+    el.detailSentences.innerHTML = html;
   }
 
-  return {
-    type: 'history',
-    record_id: selectedHistoryRow.id,
-    created_at: selectedHistoryRow.created_at,
-    created_at_local: formatDateTime(selectedHistoryRow.created_at),
-    input_text: selectedHistoryRow.input_text || '',
-    result: sanitizeExportResult(selectedHistoryRow.result || {}),
-    exported_at: new Date().toISOString(),
-    exported_at_local: formatExportDateTime(new Date()),
-  };
-}
+  /** 按时间对历史记录进行分组 */
+  function classifyByTime(rows) {
+    const now = new Date();
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+    const oneDay = 24 * 60 * 60 * 1000;
 
-function buildExportText() {
-  const data = buildExportData();
-  if (!data) {
-    return '';
+    const groups = { today: [], week: [], older: [] };
+
+    rows.forEach((row) => {
+      const dt = parseDate(row.created_at);
+      const itemStart = new Date(dt.getFullYear(), dt.getMonth(), dt.getDate()).getTime();
+      const dayDiff = Math.floor((todayStart - itemStart) / oneDay);
+
+      if (dayDiff <= 0) groups.today.push(row);
+      else if (dayDiff <= 7) groups.week.push(row);
+      else groups.older.push(row);
+    });
+
+    return groups;
   }
 
-  const words = Array.isArray(data.result?.words) ? data.result.words : [];
-  const sentences = Array.isArray(data.result?.sentences) ? data.result.sentences : [];
-
-  const wordLines = words.length
-    ? words.map((word, index) => {
-      const isAi = Number(word.label_id) === 1 || String(word.label || '').toUpperCase() === 'AIGT';
-      const label = isAi ? 'AIGT' : 'HWT';
-      return `${index + 1}. ${String(word.token ?? '')}\t${label}`;
-    }).join('\n')
-    : '暂无结果';
-
-  const sentenceLines = sentences.length
-    ? sentences.map((sentence, index) => {
-      const confidence = sentence.confidence ?? '-';
-      return `${index + 1}. ${sentence.label}\t${confidence}\t${String(sentence.text ?? '')}`;
-    }).join('\n')
-    : '暂无结果';
-
-  return [
-    'AI 文本检测结果',
-    `记录ID：${data.record_id}`,
-    `原始时间：${data.created_at_local}`,
-    `导出时间：${data.exported_at_local}`,
-    '',
-    '原始文本',
-    data.input_text || '暂无内容',
-    '',
-    '单词级结果',
-    '序号\t单词\t标签',
-    wordLines,
-    '',
-    '句子级结果',
-    '序号\t标签\t置信度\t文本',
-    sentenceLines,
-    '',
-  ].join('\n');
-}
-
-function exportHistoryResult() {
-  if (!selectedHistoryRow) {
-    return;
-  }
-
-  const timeTag = formatExportFileTime(new Date(selectedHistoryRow.created_at || Date.now()));
-  if (currentHistoryExportFormat === 'json') {
-    const filename = `history_result_${selectedHistoryRow.id}_${timeTag}.json`;
-    downloadTextFile(filename, `${JSON.stringify(buildExportData(), null, 2)}\n`, 'application/json;charset=utf-8');
-    return;
-  }
-
-  const filename = `history_result_${selectedHistoryRow.id}_${timeTag}.txt`;
-  downloadTextFile(filename, buildExportText(), 'text/plain;charset=utf-8');
-}
-
-let currentHistoryExportFormat = 'txt';
-
-function openHistoryExportMenu() {
-  if (!exportHistoryMenu || exportHistoryBtn.disabled) {
-    return;
-  }
-  const isHidden = exportHistoryMenu.classList.toggle('hidden');
-  exportHistoryMenu.setAttribute('aria-hidden', String(isHidden));
-}
-
-function chooseHistoryExportFormat(format) {
-  currentHistoryExportFormat = format;
-  exportHistoryMenu?.classList.add('hidden');
-  exportHistoryMenu?.setAttribute('aria-hidden', 'true');
-  exportHistoryResult();
-}
-
-function updateHistoryExportState() {
-  if (!exportHistoryBtn) {
-    return;
-  }
-  exportHistoryBtn.disabled = !selectedHistoryRow;
-}
-
-function parseCreatedAt(raw) {
-  const text = String(raw || '');
-  const normalized = text.replace(' ', 'T').replace(/(\.\d{3})\d+/, '$1');
-  const dt = new Date(normalized);
-  if (Number.isNaN(dt.getTime())) {
-    return new Date();
-  }
-  return dt;
-}
-
-function formatDay(raw) {
-  const dt = parseCreatedAt(raw);
-  const y = dt.getFullYear();
-  const m = String(dt.getMonth() + 1).padStart(2, '0');
-  const d = String(dt.getDate()).padStart(2, '0');
-  return `${y}-${m}-${d}`;
-}
-
-function formatClock(raw) {
-  const dt = parseCreatedAt(raw);
-  const h = String(dt.getHours()).padStart(2, '0');
-  const m = String(dt.getMinutes()).padStart(2, '0');
-  return `${h}:${m}`;
-}
-
-function formatDateTime(raw) {
-  const dt = parseCreatedAt(raw);
-  const y = dt.getFullYear();
-  const m = String(dt.getMonth() + 1).padStart(2, '0');
-  const d = String(dt.getDate()).padStart(2, '0');
-  const h = String(dt.getHours()).padStart(2, '0');
-  const min = String(dt.getMinutes()).padStart(2, '0');
-  return `${y}-${m}-${d} ${h}:${min}`;
-}
-
-function classifyByTime(rows) {
-  const now = new Date();
-  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const oneDay = 24 * 60 * 60 * 1000;
-
-  const groups = {
-    today: [],
-    week: [],
-    older: [],
-  };
-
-  rows.forEach((row) => {
-    const dt = parseCreatedAt(row.created_at);
-    const itemStart = new Date(dt.getFullYear(), dt.getMonth(), dt.getDate());
-    const dayDiff = Math.floor((todayStart - itemStart) / oneDay);
-
-    if (dayDiff <= 0) {
-      groups.today.push(row);
-    } else if (dayDiff <= 7) {
-      groups.week.push(row);
-    } else {
-      groups.older.push(row);
+  function renderGroup(title, rows) {
+    if (!rows.length) {
+      return `
+        <section class="history-group">
+          <h4 class="history-group-title">${escapeHtml(title)}</h4>
+          <div class="muted">暂无记录</div>
+        </section>
+      `;
     }
-  });
 
-  return groups;
-}
+    const items = rows.map((r) => {
+      const rawText = String(r.input_text || '');
+      const preview = rawText.slice(0, 48);
+      const hasMore = rawText.length > 48;
+      
+      // 【安全说明】对 data-id 进行转义，防止恶意 ID 导致属性注入
+      const safeId = escapeHtml(String(r.id)); 
+      
+      return `
+        <article class="history-thumb" data-id="${safeId}" tabindex="0" role="button" aria-label="查看记录 ${safeId}">
+          <div class="history-thumb-time">${escapeHtml(formatClock(r.created_at))}</div>
+          <div class="history-thumb-text">${escapeHtml(preview)}${hasMore ? '...' : ''}</div>
+          <div class="history-thumb-date muted">${escapeHtml(formatDay(r.created_at))}</div>
+        </article>
+      `;
+    }).join('');
 
-function renderGroup(title, rows) {
-  if (!rows.length) {
     return `
       <section class="history-group">
-        <h4 class="history-group-title">${title}</h4>
-        <div class="muted">暂无记录</div>
+        <h4 class="history-group-title">${escapeHtml(title)}</h4>
+        <div class="history-thumb-list">${items}</div>
       </section>
     `;
   }
 
-  const items = rows
-    .map((r) => {
-      const preview = String(r.input_text || '').slice(0, 48);
-      return `
-        <article class="history-thumb" data-id="${r.id}">
-          <div class="history-thumb-time">${formatClock(r.created_at)}</div>
-          <div class="history-thumb-text">${escapeHtml(preview)}${String(r.input_text || '').length > 48 ? '...' : ''}</div>
-          <div class="history-thumb-date muted">${formatDay(r.created_at)}</div>
-        </article>
-      `;
-    })
-    .join('');
-
-  return `
-    <section class="history-group">
-      <h4 class="history-group-title">${title}</h4>
-      <div class="history-thumb-list">${items}</div>
-    </section>
-  `;
-}
-
-function renderSidebarGroups(rows) {
-  if (!historyList) {
-    return;
-  }
-  const groups = classifyByTime(rows);
-  historyList.innerHTML = [
-    renderGroup('今日', groups.today),
-    renderGroup('7天内', groups.week),
-    renderGroup('更久', groups.older),
-  ].join('');
-}
-
-function showDetailsById(itemId) {
-  const row = historyRows.find((item) => Number(item.id) === Number(itemId));
-  if (!row) {
-    return;
+  function renderSidebarGroups(rows) {
+    if (!el.historyList) return;
+    const groups = classifyByTime(rows);
+    el.historyList.innerHTML = [
+      renderGroup('今日', groups.today),
+      renderGroup('7天内', groups.week),
+      renderGroup('更久', groups.older),
+    ].join('');
   }
 
-  selectedHistoryId = Number(row.id);
-  selectedHistoryRow = row;
+  /* ==========================================
+   * 5. 导出功能逻辑 (Export Logic)
+   * ========================================== */
 
-  if (detailTime) {
-    detailTime.textContent = `时间：${formatDateTime(row.created_at)}`;
+  /** 清理导出数据，移除敏感或不必要的字段 */
+  function sanitizeExportResult(result) {
+    if (!result) return {};
+    const words = Array.isArray(result.words)
+      ? result.words.map((word) => ({ ...word, confidence: undefined }))
+      : [];
+    return { ...result, words, sentences: result.sentences || [] };
   }
-  if (detailInput) {
-    detailInput.textContent = String(row.input_text || '');
+
+  function buildExportData() {
+    if (!state.selectedRow) return null;
+
+    return {
+      type: 'history',
+      record_id: state.selectedRow.id,
+      created_at: state.selectedRow.created_at,
+      created_at_local: formatDateTime(state.selectedRow.created_at),
+      input_text: state.selectedRow.input_text || '',
+      result: sanitizeExportResult(state.selectedRow.result || {}),
+      exported_at: new Date().toISOString(),
+      exported_at_local: formatDateTime(new Date()),
+    };
   }
 
-  const result = row.result || {};
-  renderWordHighlight(result.words || []);
-  renderSentences(result.sentences || []);
+  function buildExportText() {
+    const data = buildExportData();
+    if (!data) return '';
 
-  detailEmpty?.classList.add('hidden');
-  detailPanel?.classList.remove('hidden');
-  updateHistoryExportState();
+    const words = data.result?.words || [];
+    const sentences = data.result?.sentences || [];
 
-  historyList?.querySelectorAll('.history-thumb').forEach((el) => {
-    const isActive = Number(el.dataset.id) === selectedHistoryId;
-    el.classList.toggle('active', isActive);
-  });
-}
+    const wordLines = words.length
+      ? words.map((w, i) => {
+          const isAi = Number(w.label_id) === 1 || String(w.label || '').toUpperCase() === 'AIGT';
+          return `${i + 1}. ${String(w.token ?? '')}\t${isAi ? 'AIGT' : 'HWT'}`;
+        }).join('\n')
+      : '暂无结果';
 
-async function loadHistory() {
-  try {
-    if (historyList) {
-      historyList.innerHTML = '<div class="muted">加载中...</div>';
-    }
-    historyRows = await api('/api/history', 'GET', null, true);
-    selectedHistoryId = null;
+    const sentenceLines = sentences.length
+      ? sentences.map((s, i) => `${i + 1}. ${s.label}\t${s.confidence ?? '-'}\t${String(s.text ?? '')}`).join('\n')
+      : '暂无结果';
 
-    if (!historyRows.length) {
-      if (historyList) {
-        historyList.innerHTML = '<div class="muted">暂无历史记录</div>';
-      }
-      selectedHistoryRow = null;
-      updateHistoryExportState();
-      detailPanel?.classList.add('hidden');
-      detailEmpty?.classList.remove('hidden');
-      if (detailEmpty) {
-        detailEmpty.textContent = '暂无历史记录';
-      }
-      return;
-    }
+    return [
+      'AI 文本检测结果',
+      `记录ID：${data.record_id}`,
+      `原始时间：${data.created_at_local}`,
+      `导出时间：${data.exported_at_local}`,
+      '',
+      '原始文本',
+      data.input_text || '暂无内容',
+      '',
+      '单词级结果',
+      '序号\t单词\t标签',
+      wordLines,
+      '',
+      '句子级结果',
+      '序号\t标签\t置信度\t文本',
+      sentenceLines,
+      '',
+    ].join('\n');
+  }
 
-    detailEmpty?.classList.remove('hidden');
-    if (detailEmpty) {
-      detailEmpty.textContent = '点击左侧任意历史缩略查看详情';
-    }
-    detailPanel?.classList.add('hidden');
-    selectedHistoryRow = null;
-    updateHistoryExportState();
-
-    renderSidebarGroups(historyRows);
-
-    showDetailsById(historyRows[0].id);
-  } catch (err) {
-    const errMsg = typeof err === 'string'
-      ? err
-      : (err && typeof err.message === 'string' ? err.message : '请求失败');
-    if (historyList) {
-      historyList.innerHTML = `<div class="muted">加载失败: ${escapeHtml(errMsg)}</div>`;
-    }
-    if (String(errMsg).includes('请先登录')) {
-      Auth.clear();
-      window.location.href = '/login';
+  function updateExportBtnState() {
+    if (el.exportHistoryBtn) {
+      el.exportHistoryBtn.disabled = !state.selectedRow;
     }
   }
-}
 
-if (historyList) {
-  historyList.addEventListener('click', (event) => {
-    const item = event.target.closest('.history-thumb[data-id]');
-    if (!item) {
-      return;
+  function toggleExportMenu(forceHide = false) {
+    if (!el.exportHistoryMenu) return;
+    const isHidden = forceHide ? true : el.exportHistoryMenu.classList.toggle('hidden');
+    el.exportHistoryMenu.setAttribute('aria-hidden', String(isHidden));
+  }
+
+  function handleExport(format) {
+    if (!state.selectedRow) return;
+    
+    const timeTag = formatFileTime(state.selectedRow.created_at || new Date());
+    const baseName = `history_result_${state.selectedRow.id}_${timeTag}`;
+    toggleExportMenu(true);
+
+    if (format === 'json') {
+      downloadTextFile(`${baseName}.json`, JSON.stringify(buildExportData(), null, 2) + '\n', 'application/json;charset=utf-8');
+    } else {
+      downloadTextFile(`${baseName}.txt`, buildExportText(), 'text/plain;charset=utf-8');
     }
-    showDetailsById(item.dataset.id);
-  });
-}
+  }
 
-document.addEventListener('click', (event) => {
-  if (!exportHistoryMenu || !exportHistoryBtn) {
-    return;
-  }
-  if (exportHistoryMenu.classList.contains('hidden')) {
-    return;
-  }
-  const target = event.target;
-  if (target === exportHistoryMenu) {
-    exportHistoryMenu.classList.add('hidden');
-    exportHistoryMenu.setAttribute('aria-hidden', 'true');
-    return;
-  }
-  if (target instanceof Node && (exportHistoryMenu.contains(target) || exportHistoryBtn.contains(target))) {
-    return;
-  }
-  exportHistoryMenu.classList.add('hidden');
-  exportHistoryMenu.setAttribute('aria-hidden', 'true');
-});
+  /* ==========================================
+   * 6. 核心业务逻辑 (Core Business Logic)
+   * ========================================== */
 
-document.addEventListener('keydown', (event) => {
-  if (event.key !== 'Escape' || !exportHistoryMenu) {
-    return;
-  }
-  if (exportHistoryMenu.classList.contains('hidden')) {
-    return;
-  }
-  exportHistoryMenu.classList.add('hidden');
-  exportHistoryMenu.setAttribute('aria-hidden', 'true');
-});
+  function showDetailsById(itemId) {
+    const row = state.rows.find((item) => Number(item.id) === Number(itemId));
+    if (!row) return;
 
-if (sidebarToggleBtn && historyShell) {
-  sidebarToggleBtn.addEventListener('click', () => {
-    historyShell.classList.toggle('sidebar-collapsed');
-    sidebarToggleBtn.textContent = historyShell.classList.contains('sidebar-collapsed') ? '展开边栏' : '收起边栏';
-  });
-}
+    state.selectedId = Number(row.id);
+    state.selectedRow = row;
 
-if (clearHistoryBtn) {
-  clearHistoryBtn.addEventListener('click', async () => {
+    if (el.detailTime) el.detailTime.textContent = `时间：${formatDateTime(row.created_at)}`;
+    // 【安全说明】使用 textContent 渲染原始文本，免疫 XSS
+    if (el.detailInput) el.detailInput.textContent = String(row.input_text || '');
+
+    const result = row.result || {};
+    renderWordHighlight(result.words || []);
+    renderSentences(result.sentences || []);
+
+    el.detailEmpty?.classList.add('hidden');
+    el.detailPanel?.classList.remove('hidden');
+    updateExportBtnState();
+
+    // 更新侧边栏激活状态
+    el.historyList?.querySelectorAll('.history-thumb').forEach((thumb) => {
+      const isActive = Number(thumb.dataset.id) === state.selectedId;
+      thumb.classList.toggle('active', isActive);
+      thumb.setAttribute('aria-selected', String(isActive));
+    });
+  }
+
+  async function loadHistory() {
     try {
-      await api('/api/history', 'DELETE', null, true);
+      if (el.historyList) el.historyList.innerHTML = '<div class="muted">加载中...</div>';
+      
+      state.rows = await api(CONFIG.API_PATHS.HISTORY, 'GET', null, true);
+      state.selectedId = null;
+      state.selectedRow = null;
+
+      if (!state.rows.length) {
+        if (el.historyList) el.historyList.innerHTML = '<div class="muted">暂无历史记录</div>';
+        if (el.detailEmpty) {
+          el.detailEmpty.textContent = '暂无历史记录';
+          el.detailEmpty.classList.remove('hidden');
+        }
+        el.detailPanel?.classList.add('hidden');
+        updateExportBtnState();
+        return;
+      }
+
+      if (el.detailEmpty) {
+        el.detailEmpty.textContent = '点击左侧任意历史缩略查看详情';
+        el.detailEmpty.classList.remove('hidden');
+      }
+      el.detailPanel?.classList.add('hidden');
+      updateExportBtnState();
+
+      renderSidebarGroups(state.rows);
+      showDetailsById(state.rows[0].id);
+    } catch (err) {
+      const errMsg = getErrorMessage(err, '请求失败');
+      if (el.historyList) {
+        // 【安全说明】使用 escapeHtml 处理错误信息，防止反射型 XSS
+        el.historyList.innerHTML = `<div class="muted">加载失败: ${escapeHtml(errMsg)}</div>`;
+      }
+      
+      // 若 Token 失效，自动登出
+      if (errMsg.includes('请先登录') || errMsg.includes('会话已过期')) {
+        Auth.clear();
+        window.location.href = CONFIG.ROUTES.LOGIN;
+      }
+    }
+  }
+
+  async function clearHistory() {
+    try {
+      await api(CONFIG.API_PATHS.HISTORY, 'DELETE', null, true);
       await loadHistory();
     } catch (err) {
-      const errMsg = typeof err === 'string'
-        ? err
-        : (err && typeof err.message === 'string' ? err.message : '请求失败');
-      if (historyList) {
-        historyList.innerHTML = `<div class="muted">清除失败: ${escapeHtml(errMsg)}</div>`;
+      const errMsg = getErrorMessage(err, '请求失败');
+      if (el.historyList) {
+        el.historyList.innerHTML = `<div class="muted">清除失败: ${escapeHtml(errMsg)}</div>`;
       }
     }
-  });
-}
-
-if (exportHistoryBtn) {
-  exportHistoryBtn.addEventListener('click', openHistoryExportMenu);
-  updateHistoryExportState();
-}
-
-if (exportHistoryTxtBtn) {
-  exportHistoryTxtBtn.addEventListener('click', () => chooseHistoryExportFormat('txt'));
-}
-
-if (exportHistoryJsonBtn) {
-  exportHistoryJsonBtn.addEventListener('click', () => chooseHistoryExportFormat('json'));
-}
-
-document.addEventListener('click', (event) => {
-  if (!exportHistoryMenu || !exportHistoryBtn) {
-    return;
   }
-  if (exportHistoryMenu.classList.contains('hidden')) {
-    return;
-  }
-  const target = event.target;
-  if (target instanceof Node && (exportHistoryMenu.contains(target) || exportHistoryBtn.contains(target))) {
-    return;
-  }
-  exportHistoryMenu.classList.add('hidden');
-});
 
-loadHistory();
+  /* ==========================================
+   * 7. 事件绑定与初始化 (Event Binding & Init)
+   * ========================================== */
+
+  function bindEvents() {
+    // 导航与认证
+    el.logoutBtn?.addEventListener('click', () => {
+      Auth.clear();
+      window.location.href = CONFIG.ROUTES.LOGIN;
+    });
+    el.goDetectBtn?.addEventListener('click', () => {
+      window.location.href = CONFIG.ROUTES.DETECT;
+    });
+
+    // 历史记录列表点击 (事件委托)
+    el.historyList?.addEventListener('click', (event) => {
+      const item = event.target.closest('.history-thumb[data-id]');
+      if (item) showDetailsById(item.dataset.id);
+    });
+
+    // 侧边栏折叠
+    if (el.sidebarToggleBtn && el.historyShell) {
+      el.sidebarToggleBtn.addEventListener('click', () => {
+        const isCollapsed = el.historyShell.classList.toggle('sidebar-collapsed');
+        el.sidebarToggleBtn.textContent = isCollapsed ? '展开边栏' : '收起边栏';
+        el.sidebarToggleBtn.setAttribute('aria-expanded', String(!isCollapsed));
+      });
+    }
+
+    // 清空历史
+    el.clearHistoryBtn?.addEventListener('click', clearHistory);
+
+    // 导出菜单交互
+    el.exportHistoryBtn?.addEventListener('click', () => {
+      if (!el.exportHistoryBtn.disabled) toggleExportMenu();
+    });
+    el.exportHistoryTxtBtn?.addEventListener('click', () => handleExport('txt'));
+    el.exportHistoryJsonBtn?.addEventListener('click', () => handleExport('json'));
+
+    // 全局点击关闭导出菜单 (已合并原代码中重复的监听器)
+    document.addEventListener('click', (event) => {
+      if (!el.exportHistoryMenu || el.exportHistoryMenu.classList.contains('hidden')) return;
+      
+      const target = event.target;
+      if (target === el.exportHistoryMenu || 
+          (target instanceof Node && (el.exportHistoryMenu.contains(target) || el.exportHistoryBtn?.contains(target)))) {
+        return;
+      }
+      toggleExportMenu(true);
+    });
+
+    // ESC 键关闭导出菜单 (无障碍支持)
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape' && el.exportHistoryMenu && !el.exportHistoryMenu.classList.contains('hidden')) {
+        toggleExportMenu(true);
+      }
+    });
+  }
+
+  function init() {
+    // 【安全检测注释】前端路由守卫仅用于提升 UX，真正的鉴权必须在后端 API 网关层完成
+    if (!requireLogin()) {
+      throw new Error('未登录，拦截跳转');
+    }
+
+    // 挂载用户信息（假设 mountUserInfo 已在 common.js 中处理，此处直接渲染）
+    if (el.currentUser) {
+      el.currentUser.textContent = `当前用户: ${Auth.username || '未知用户'}`;
+    }
+
+    bindEvents();
+    updateExportBtnState();
+    loadHistory();
+  }
+
+  // 启动应用
+  init();
+
+})(window.AppUtils);
