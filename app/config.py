@@ -39,8 +39,11 @@ DB_PATH: Final[Path] = BASE_DIR / "aigc_web.db"
 # 【安全检测核心说明 - 弱密钥防御】
 # 默认值 "change-this-in-production" 仅用于本地开发。
 # 若在生产环境中使用此默认值，攻击者可轻易伪造 JWT Token 获取系统最高权限。
-_DEFAULT_SECRET_KEY = "change-this-in-production"
+_DEFAULT_SECRET_KEY = "change-this-in-production-IMMEDIATELY"
 SECRET_KEY: Final[str] = os.getenv("AIGC_WEB_SECRET", _DEFAULT_SECRET_KEY)
+if SECRET_KEY == _DEFAULT_SECRET_KEY:
+    import warnings
+    warnings.warn("Using default SECRET_KEY! This is INSECURE in production!", UserWarning)
 
 if SECRET_KEY == _DEFAULT_SECRET_KEY:
     if not IS_DEBUG:
