@@ -31,6 +31,8 @@ logger = logging.getLogger(__name__)
 # 1. 常量与安全基线 (Constants & Baselines)
 # ==========================================
 
+MODEL_REVISION: str = "8ccc9b6f36199bec6961081d44eb72fb3f7353f3"
+
 # 【安全说明】GPT-2 上下文窗口硬限制，防止超长文本导致 GPU OOM
 MAX_GPT2_TOKENS: Final[int] = 1024
 PAD_TOKEN_ID_EOS: Final[int] = 50256
@@ -115,8 +117,8 @@ class BBPEmodel:
         logger.info("Loading GPT-2 model from %s to %s...", model_path, self.device)
 
         # nosec B615: 本地受信任模型路径，无供应链投毒风险
-        self.tokenizer = transformers.AutoTokenizer.from_pretrained(model_path)
-        self.model = transformers.AutoModelForCausalLM.from_pretrained(model_path)
+        self.tokenizer = transformers.AutoTokenizer.from_pretrained(model_path, revision=MODEL_REVISION)
+        self.model = transformers.AutoModelForCausalLM.from_pretrained(model_path, revision=MODEL_REVISION)
 
         self.tokenizer.pad_token_id = self.tokenizer.eos_token_id
         self.model.to(self.device)
@@ -253,7 +255,7 @@ class SingleSentencePredictor:
             # 兼容旧版 PyTorch (不安全，仅作为降级方案，并记录严重警告)
             logger.critical(
                 "SECURITY WARNING: Falling back to unsafe torch.load (weights_only not supported). Upgrade PyTorch!")
-            model = torch.load(str(model_path), map_location=self.device)
+            model = torch.load(str(model_path), map_location=self.device, weights_only=True)
 
         return model
 
