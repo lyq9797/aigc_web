@@ -1,0 +1,16 @@
+# .semgrepignore
+*.json
+*.txt
+*.md
+*.csv
+*.pt
+*.pth
+*.jmx
+__pycache__/
+venv/
+data/
+perf/
+security_reports/
+.idea/
+app/static/
+app/templates/
