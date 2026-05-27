@@ -128,7 +128,7 @@ def verify_password(plain_password: str, encoded_hash: str) -> bool:
 
     except Exception as e:
         # 记录调试日志，但不向客户端暴露具体错误
-        logger.debug("Password verification failed due to malformed hash: %s", e)
+        logger.debug("Password verification failed due to malformed hash")
         return False
 
 
