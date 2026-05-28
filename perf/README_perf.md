@@ -51,3 +51,5 @@ Main charts/tables:
 - Thread groups run sequentially (10 -> 20 -> 50 -> 100), so results can be compared by group name.
 - If you want stricter real-time behavior, reduce ramp-up for each group.
 - If your homepage changes to `/`, keep sampler path as `/login` or update assertion rules for 302 redirect.
+
+### Thanks for watching!
