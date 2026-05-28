@@ -296,3 +296,8 @@ def clear_history(current_user: dict[str, Any] = Depends(get_current_user)) -> d
     deleted = db.clear_detections(current_user["id"])
     logger.info("User %s cleared %d detection records.", current_user["username"], deleted)
     return {"deleted": deleted}
+# ============================================
+# 补充说明：main.py 代码注释维护
+# 提交日期标识：2026.4.14
+# 脚本执行时间：2026-05-28 12:34:57
+# ============================================
