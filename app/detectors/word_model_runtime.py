@@ -381,3 +381,8 @@ def infer_document_with_sliding_windows(
     pred_word_labels = [LABEL_HUMAN if i <= boundary else LABEL_AI for i in range(doc_len)]
 
     return pred_word_labels, boundary, vote_counts
+# ============================================
+# 补充说明：word_model_runtime.py 代码注释维护
+# 提交日期标识：2026.3.15
+# 脚本执行时间：2026-05-28 11:24:26
+# ============================================
