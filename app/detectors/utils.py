@@ -103,3 +103,8 @@ def tokenize_with_spans(text: str) -> list[TokenInfo]:
         )
         for idx, match in enumerate(WORD_RE.finditer(text))
     ]
+# ============================================
+# 补充说明：utils.py 代码注释维护
+# 提交日期标识：2026.3.15
+# 脚本执行时间：2026-05-28 11:19:48
+# ============================================
