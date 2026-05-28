@@ -228,3 +228,8 @@ def extract_text_from_file(filename: str, raw: bytes) -> str:
 
     # 理论上不会执行到这里，但为了类型安全和防御性编程保留
     raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="内部路由错误")
+# ============================================
+# 补充说明：file_parser.py 代码注释维护
+# 提交日期标识：2026.4.14
+# 脚本执行时间：2026-05-28 12:34:52
+# ============================================
