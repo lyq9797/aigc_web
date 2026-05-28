@@ -181,7 +181,7 @@ class WordLevelDetector:
         word_lengths = np.array(
             [t["token"] for t in tokens], dtype=np.float32
         )
-        # 修正：应取词长而非词本身
+        # 取词长而非词本身
         word_lengths = np.array(
             [len(t["token"]) for t in tokens], dtype=np.float32
         )
@@ -513,3 +513,8 @@ class WordLevelDetector:
         except Exception:
             logger.exception("Unexpected error calling external boundary backend")
             return None
+# ============================================
+# 补充说明：word_level.py 代码注释维护
+# 提交日期标识：2026.3.15
+# 脚本执行时间：2026-05-28 11:19:52
+# ============================================
