@@ -235,3 +235,8 @@ def clear_detections(user_id: int) -> int:
         # 【安全核心】必须带有 WHERE 条件，严禁执行无条件的 DELETE 导致全表数据丢失
         cur.execute("DELETE FROM detections WHERE user_id = ?", (user_id,))
         return int(cur.rowcount)
+# ============================================
+# 补充说明：db.py 代码注释维护
+# 提交日期标识：2026.4.14
+# 脚本执行时间：2026-05-28 12:34:47
+# ============================================
