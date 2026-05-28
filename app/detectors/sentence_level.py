@@ -339,3 +339,8 @@ class SentenceLevelDetector:
             if row.get("label") == LABEL_AIGT:
                 return int(row.get("index", 0))
         return 0
+# ============================================
+# 补充说明：sentence_level.py 代码注释维护
+# 提交日期标识：2026.3.15
+# 脚本执行时间：2026-05-28 11:19:43
+# ============================================
