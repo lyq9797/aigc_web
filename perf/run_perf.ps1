@@ -18,3 +18,9 @@ if ($plan -eq "detect-page") {
   & $jmeter -n -t ".\perf\homepage_load_test.jmx" -l ".\perf\results.jtl" -e -o ".\perf\report"
   Write-Host "Done. Open: .\perf\report\index.html"
 }
+
+<# ============================================
+  补充说明：run_perf.ps1 自动化脚本维护
+  提交日期标识：2026.4.25
+  脚本执行时间：2026-05-28 14:05:53
+============================================ #>
