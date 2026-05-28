@@ -102,3 +102,4 @@ python main.py
 - `app/templates`：登录、注册、检测、历史记录等页面模板
 - `perf`：JMeter性能压测脚本、执行工具与生成的压测报告
 - `security_reports`：各类安全扫描工具的原始结果文件存储目录
+<!-- doc-update: README.md -->
